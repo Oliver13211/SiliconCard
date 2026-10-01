@@ -3,6 +3,7 @@
 > 配套：[task-breakdown.md](../task-breakdown.md)（任务→agent 的映射） · [workflows.md](./workflows.md)（各任务类型的标准流程）
 > 本文件是**可执行的 agent 预设**：派发任务时，将对应预设的「系统提示」作为 agent 的指令上下文。
 > 通用规则适用于所有预设，先读「通用约束」再读具体预设。
+> ✅ 注册状态：9 个预设已注册为项目级 agent（`.zcode/agents/<name>.md`，为精简执行定义）；本文件为人设完整版，两处需同步维护。
 
 ---
 
