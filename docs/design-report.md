@@ -1,7 +1,7 @@
 # 硅牌 SiliconCard · 游戏设计报告
 
-> 版本 v0.1（待审核） · 2026-10-01
-> 状态：设计探讨已完成三节确认，本文档为定稿汇总，**待用户最终审核**
+> 版本 v1.0 · 2026-10-01
+> 状态：✅ 用户审核通过（2026-10-01），作为项目设计基线；开放问题已在 §7 拍板
 
 ---
 
@@ -148,7 +148,7 @@ engine.viewFor(state, playerId)                  // 视角裁剪：联机时对�
 
 ### 3.5 技术栈清单
 
-TypeScript 5 · React 18 · Three.js · Vite · yarn workspaces · zustand · ws · vitest · tsx（CLI）· GitHub Actions。
+TypeScript 5 · React 19 · Three.js · Vite · yarn workspaces（Yarn 4）· zustand · ws · vitest · tsx（CLI）· GitHub Actions。
 
 ### 3.6 测试策略
 
@@ -161,7 +161,7 @@ TypeScript 5 · React 18 · Three.js · Vite · yarn workspaces · zustand · ws
 
 ## 4. 交付里程碑
 
-> ⚠️ M2/M3 顺序用户未明确表态，**默认采用 Agent 先（M1 → M3 → M2）**，审核时可调换。
+> ✅ 已确认（2026-10-01）：Agent 接口先于局域网对战（M1 → M3 → M2）。
 
 | 里程碑 | 内容 | 出口标准 |
 |---|---|---|
@@ -192,8 +192,8 @@ TypeScript 5 · React 18 · Three.js · Vite · yarn workspaces · zustand · ws
 - 真实产品图片资产；
 - 卡牌交易/掉落等任何商业化机制。
 
-## 7. 开放问题（待用户审核时拍板）
+## 7. 已拍板决策（2026-10-01 审核通过）
 
-1. **M2/M3 顺序**：当前默认 Agent 先（M1→M3→M2）；
-2. **卡名商标尺度**：直接用「RTX 5090」「RX 9070 XT」真实型号，还是改为「绿厂旗舰 5090」式半虚构名？当前设计按前者，审核时可全表替换；
-3. **黑红梗尺度**：A 卡光追、N 卡烧接口等均为圈内自嘲向，如需收敛可调整文案分级。
+1. **M2/M3 顺序**：Agent 接口先于局域网对战（M1 → M3 → M2）；
+2. **卡名商标尺度**：直接使用真实型号名（RTX 5090、RX 9070 XT 等）；
+3. **黑红梗尺度**：圈内自嘲向全开（A 卡光追、烧接口等），红线为不攻击真实个人。
