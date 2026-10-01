@@ -1,5 +1,7 @@
 # 硅牌 SiliconCard
 
+[![CI](https://github.com/Oliver13211/SiliconCard/actions/workflows/ci.yml/badge.svg)](https://github.com/Oliver13211/SiliconCard/actions/workflows/ci.yml)
+
 > 显卡与硬件梗主题的 1v1 卡牌对战 Web 游戏 — Three.js + React
 
 把显卡和硬件圈的百态搬上牌桌：旗舰卡烧接口、A 卡光追、矿卡重生、信仰充值……

@@ -3,7 +3,7 @@
 > 配套文档：[design-report.md](./design-report.md) · [agent 预设](./agents/presets.md) · [workflow](./agents/workflows.md)
 > 任务 ID 规则：`<里程碑>-<类型><序号>`。类型前缀：INF 基建 / ENG 引擎 / CNT 内容 / R3D 3D渲染 / UI 界面 / AI 人机 / NET 联机 / AGT Agent接口 / QA 质量 / DOC 文档
 > 每个任务标注**执行 agent 预设**，详见 [presets.md](./agents/presets.md)
-> **进度注记（2026-10-01）**：M0-INF1、M0-INF2 已随项目脚手架完成（workspaces + TS + ESLint/Prettier + Vite client）；M0-INF3（CI）与 M0-DOC1 / M0-ENG1 待派发。
+> **进度注记（2026-10-01）**：✅ **M0 全部完成**——M0-INF1/2 随脚手架完成；M0-INF3（CI）、M0-DOC1（docs/rules.md v1.0）、M0-ENG1（core 类型契约 + 黄金回放框架）已完成并合入 main。下一步：M1（引擎链 M1-ENG1 为关键路径起点）。
 
 ---
 
