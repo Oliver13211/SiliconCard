@@ -12,7 +12,7 @@ CLI JSON 行协议对局（`{state, legalActions}` → `{action}`）、`docs/age
 
 ## 必读上下文（按序）
 
-1. `/agent.md`
+1. `/AGENTS.md`
 2. `/docs/design-report.md` §3.3（Agent 接口约定）
 3. `packages/core` 公开接口与序列化格式
 4. `/docs/agents/workflows.md` → WF-AGENT（终审 = 新会话 agent 仅凭 skill 文档打满一局）

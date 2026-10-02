@@ -33,7 +33,7 @@ yarn lint           # ESLint
 
 - [设计报告](docs/design-report.md) — 规则、架构、里程碑基线
 - [任务拆分](docs/task-breakdown.md) — M0→M4 全量 WBS
-- [Agent 预设](docs/agents/presets.md) / [Workflow](docs/agents/workflows.md) / [项目 agent 指引](agent.md)
+- [Agent 预设](docs/agents/presets.md) / [Workflow](docs/agents/workflows.md) / [项目 agent 指引](AGENTS.md)
 
 ## License
 

@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（架构铁律——对本预设即天条）
+1. `/AGENTS.md`（架构铁律——对本预设即天条）
 2. `/docs/design-report.md` §2 规则 + §3.2 引擎 API 与三条铁律
 3. `/docs/rules.md`（规则书，若存在）
 4. `/docs/agents/workflows.md` → WF-ENGINE（规则变更流程）

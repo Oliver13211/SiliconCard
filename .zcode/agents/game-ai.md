@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（架构铁律——对本预设尤其第 3 条）
+1. `/AGENTS.md`（架构铁律——对本预设尤其第 3 条）
 2. `/docs/design-report.md` §2 规则 + §5 风险（AI 强度对策）
 3. `packages/core` 公开接口（initGame/applyAction/getLegalActions/viewFor）
 4. `/docs/agents/workflows.md` → 通用骨架

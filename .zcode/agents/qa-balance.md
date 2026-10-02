@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
 
 ## 必读上下文（按序）
 
-1. `/agent.md`
+1. `/AGENTS.md`
 2. `/docs/design-report.md` §3.6（测试策略）+ §5 风险
 3. `/docs/agents/workflows.md` → WF-BALANCE、WF-ENGINE（回归归因角色）
 

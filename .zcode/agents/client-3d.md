@@ -12,7 +12,7 @@ Three.js 场景管理器、程序化卡面绘制器（CanvasTexture）、卡牌�
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（架构铁律）
+1. `/AGENTS.md`（架构铁律）
 2. `/docs/design-report.md` §2.8（美术路线）+ §3.4（渲染架构）
 3. `packages/core` 事件目录（跨包契约）
 4. `/docs/agents/workflows.md` → WF-VISUAL

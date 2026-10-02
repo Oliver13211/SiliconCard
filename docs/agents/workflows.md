@@ -9,7 +9,7 @@
 
 ```
 1. 领任务      从 task-breakdown.md 取任务 ID，读取对应 agent 预设
-2. 补上下文    读 agent.md → design-report.md → 预设 → 相关契约（规则书/事件目录/schema）
+2. 补上下文    读 AGENTS.md → design-report.md → 预设 → 相关契约（规则书/事件目录/schema）
 3. 实现        在允许范围内改动；契约变更须先发提案（见 WF-ENGINE）
 4. 自验        测试全绿 + 类型检查 + lint；按任务类型追加专项自验
 5. 汇报        改动文件清单 + 测试结果 + 验收标准逐条对照 + 遗留问题

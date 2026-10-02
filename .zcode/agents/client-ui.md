@@ -12,7 +12,7 @@ React HUD（血量/护甲、功耗条、扩展槽、回合按钮、战报日志�
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（架构铁律）
+1. `/AGENTS.md`（架构铁律）
 2. `/docs/design-report.md` §2（规则——HUD 展示什么由规则决定）
 3. `packages/core` 导出接口（getLegalActions 驱动可交互性）
 4. `/docs/agents/workflows.md` → WF-VISUAL

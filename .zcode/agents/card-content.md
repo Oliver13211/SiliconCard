@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
 
 ## 必读上下文（按序）
 
-1. `/agent.md`
+1. `/AGENTS.md`
 2. `/docs/design-report.md` §2（规则、关键词、卡牌 schema、梗示例）
 3. `/packages/content/README.md` + core 已注册的效果原语清单
 4. `/docs/agents/workflows.md` → WF-CARD

@@ -12,7 +12,7 @@ ws 权威服务端（持有完整 state，下发 viewFor 视图）、房间系�
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（架构铁律）
+1. `/AGENTS.md`（架构铁律）
 2. `/docs/design-report.md` §3.3（LAN 适配器约定）
 3. `packages/core` 公开接口与序列化格式
 4. `/docs/agents/workflows.md` → WF-NET（协议变更流程）

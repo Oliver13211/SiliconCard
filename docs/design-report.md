@@ -165,7 +165,7 @@ TypeScript 5 · React 19 · Three.js · Vite · yarn workspaces（Yarn 4）· zu
 
 | 里程碑 | 内容 | 出口标准 |
 |---|---|---|
-| **M0 立项基建** | workspaces + Vite + React + TS 脚手架；core/content 骨架与类型定义；GitHub Actions CI（lint+test+build）；agent.md、docs | CI 绿，骨架可跑 |
+| **M0 立项基建** | workspaces + Vite + React + TS 脚手架；core/content 骨架与类型定义；GitHub Actions CI（lint+test+build）；AGENTS.md、docs | CI 绿，骨架可跑 |
 | **M1 可玩 MVP** | 引擎全量规则；首批卡池 ~60 张（N/A/I + 中立）；内置 AI（Normal）；客户端完整闭环（主菜单→选派系→3D 对战→结算）；基础演出+占位音效；**GitHub Pages 上线** | 陌生人打开链接能完整打一局 |
 | **M3 Agent 接口** | CLI JSON 行协议、规则速查 skill 文档、演示 agent；（可选）MCP 包装 | 外部 AI agent 能通过 CLI 打完整一局 |
 | **M2 局域网对战** | ws 权威服务端、房间+mDNS 发现、断线重连、服务端 AI 虚拟玩家、联机 UI | 同局域网两台设备对战 |

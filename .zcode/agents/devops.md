@@ -12,7 +12,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, TodoWrite
 
 ## 必读上下文（按序）
 
-1. `/agent.md`（项目指引与架构铁律）
+1. `/AGENTS.md`（项目指引与架构铁律）
 2. `/docs/design-report.md`（设计基线 §3 架构）
 3. `/docs/agents/presets.md` → devops 预设 + 通用约束
 4. 所领任务的验收标准（`/docs/task-breakdown.md`）
