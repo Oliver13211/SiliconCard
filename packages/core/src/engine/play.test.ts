@@ -440,15 +440,15 @@ describe('driver 效果原语（rules.md §5）', () => {
     expect(a.state.rng.state).not.toBe(TEST_SEED >>> 0)
   })
 
-  it('destroy / handler 属 M1-ENG6：响亮抛错，状态保持不变（lockMana 已于 M1-ENG4 提前实装）', () => {
-    const cases: Array<[string, string]> = [
-      ['h1', 't-destroy'],
-      ['h1', 't-handler'],
+  it('destroy 属 M1-ENG6、未注册 handler：均响亮抛错，状态保持不变（lockMana 已于 M1-ENG4 提前实装；handler 逃生舱已于 M1-ENG5 接线，未注册 name 仍响亮失败）', () => {
+    const cases: Array<[string, string, RegExp]> = [
+      ['h1', 't-destroy', /M1-ENG6/],
+      ['h1', 't-handler', /未注册/],
     ]
-    for (const [uid, cardId] of cases) {
+    for (const [uid, cardId, pattern] of cases) {
       const state = playState({ hand: [handCard(uid, cardId)], board: [makeUnit({ ownerId: 'P2', instanceId: 'u-e1' })] })
       const before = stableHash(state)
-      expect(() => applyAction(state, playP1(uid, cardId === 't-destroy' ? unitRef('u-e1') : undefined))).toThrow(/M1-ENG6/)
+      expect(() => applyAction(state, playP1(uid, cardId === 't-destroy' ? unitRef('u-e1') : undefined))).toThrow(pattern)
       expect(stableHash(state)).toBe(before)
     }
   })

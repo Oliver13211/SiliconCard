@@ -13,12 +13,14 @@
 import { describe, expect, it } from 'vitest'
 import type { CardDefinition } from '../types/cards'
 import type { Action } from '../types/actions'
+import type { GameEvent } from '../types/events'
 import type { DeckSpec, GameSetup, GameState } from '../types/state'
 import { makeDistinctDeckSpec, TEST_SEED } from '../testing/state'
 import { recordReplay, runReplay, assertGoldenReplay } from '../testing/replay'
 import { createEngine } from './index'
 import type { AttackAction } from './combat'
 import type { PlayCardAction } from './play'
+import type { UseHeroPowerAction } from './heroPower'
 import { registerCardDefinitions } from './registry'
 
 const engine = createEngine()
@@ -450,6 +452,183 @@ describe('黄金回放：亡语连锁 / 跳闸 / onAttack·onDamaged 的对局�
     const other = runReplay(engine, recordReplay(keywordGoldenSetup(TEST_SEED + 1), keywordGoldenActions(TEST_SEED + 1, 24)))
     const base = runReplay(engine, recording)
     expect(other.stateHash).not.toBe(base.stateHash)
+  })
+
+  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+    const { stateHash } = runReplay(engine, recording)
+    expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
+  })
+})
+
+// —— M1-ENG5：派系技能（USE_HERO_POWER）的黄金回放 ——
+
+const POWER_TOKEN: CardDefinition = {
+  id: 'gp-token', name: '白嫖测试卡', faction: 'neutral', type: 'gpu',
+  cost: 0, attack: 1, health: 1, // 0 费：出牌不挤占派系技能功耗（200W）
+}
+registerCardDefinitions([POWER_TOKEN])
+
+function powerDeck(): DeckSpec {
+  return { cards: [{ cardId: 'gp-token', count: 30 }] }
+}
+
+/** heroPowerSetup：双方各持一系技能（P1 skillA 派系 / P2 skillB 派系），30 张 0 费白板 */
+function powerSetup(seed: number, p1Faction: string, p2Faction: string): GameSetup {
+  return {
+    seed,
+    players: [
+      { id: 'P1', faction: p1Faction, deck: powerDeck() },
+      { id: 'P2', faction: p2Faction, deck: powerDeck() },
+    ],
+  }
+}
+
+/**
+ * 探针式录制（M1-ENG5）：每回合行动方先打出至多 2 张牌，再按 getLegalActions
+ * 顺序使用一次派系技能（首个 USE_HERO_POWER，目标即首个合法候选），最后 END_TURN。
+ * 同 seed 下探针结果恒定，故可作回放输入（与 M1-ENG2/3/4 探针同一模式）。
+ * 节奏：自身第 1 回合供电 100W < 200W 技能放不出，第 2 自身回合起每回合一次。
+ */
+function powerPlayActions(seed: number, setup: GameSetup, rounds: number): Action[] {
+  let state: GameState = engine.initGame(setup)
+  const actions: Action[] = []
+  for (let i = 0; i < rounds; i++) {
+    if (state.phase !== 'main') break
+    const active = state.activePlayer
+    let plays = 0
+    while (plays < 2) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is PlayCardAction => a.type === 'PLAY_CARD')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      plays++
+    }
+    const power = engine
+      .getLegalActions(state, active)
+      .find((a): a is UseHeroPowerAction => a.type === 'USE_HERO_POWER')
+    if (power) {
+      actions.push(power)
+      state = engine.applyAction(state, power).state
+    }
+    if (state.phase !== 'main') break
+    const end: Action = { type: 'END_TURN', playerId: active }
+    actions.push(end)
+    state = engine.applyAction(state, end).state
+  }
+  return actions
+}
+
+/** 技能事件序列 → 逐次结果（ray_tracing_try：'hit' / 'miss'；其余技能恒 'resolved'） */
+function heroPowerOutcomes(events: readonly GameEvent[]): string[] {
+  const outcomes: string[] = []
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i]
+    if (event === undefined || event.type !== 'HERO_POWER_USED') continue
+    if (event.skillId !== 'ray_tracing_try') {
+      outcomes.push('resolved')
+      continue
+    }
+    const next = events[i + 1]
+    outcomes.push(
+      next?.type === 'KEYWORD_TRIGGERED' && next.detail === '光追失败' ? 'miss' : 'hit',
+    )
+  }
+  return outcomes
+}
+
+describe('黄金回放：派系技能 DLSS / 驱动更新的对局片段（M1-ENG5）', () => {
+  // P1 nvidia「DLSS」+ P2 intel「驱动更新」：buff 与抽牌两条非随机技能路径
+  const actions = powerPlayActions(TEST_SEED, powerSetup(TEST_SEED, 'nvidia', 'intel'), 8)
+  const recording = recordReplay(powerSetup(TEST_SEED, 'nvidia', 'intel'), actions)
+
+  it('动作序列确实包含双方派系技能（各 ≥ 2 次）', () => {
+    const powers = actions.filter((a): a is UseHeroPowerAction => a.type === 'USE_HERO_POWER')
+    expect(powers.filter((a) => a.playerId === 'P1').length).toBeGreaterThanOrEqual(2)
+    expect(powers.filter((a) => a.playerId === 'P2').length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('回放产生 HERO_POWER_USED{dlss / driver_update}；DLSS 加攻、驱动更新抽牌真实发生', () => {
+    const { finalState, events } = runReplay(engine, recording)
+    const used = events.filter((e) => e.type === 'HERO_POWER_USED')
+    expect(used.filter((e) => e.skillId === 'dlss').length).toBeGreaterThanOrEqual(2)
+    expect(used.filter((e) => e.skillId === 'driver_update').length).toBeGreaterThanOrEqual(2)
+    // 驱动更新：P2 手牌增长可观测（0 费白板出 2 张 / 回合，抽 1 张 / 回合，净 +1）
+    expect(finalState.players.P2.hand.length).toBeGreaterThanOrEqual(2)
+    // buff 无目录事件：以事件序核验（HERO_POWER_USED 后无伤害事件即 buff 路径）
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i]
+      if (event !== undefined && event.type === 'HERO_POWER_USED' && event.skillId === 'dlss') {
+        expect(events[i + 1]?.type).not.toBe('DAMAGE_DEALT')
+      }
+    }
+  })
+
+  it('确定性：同 seed + 动作两次运行，状态哈希与事件流逐字节一致', () => {
+    const a = runReplay(engine, recording)
+    const b = runReplay(engine, recording)
+    expect(a.stateHash).toBe(b.stateHash)
+    expect(a.events).toEqual(b.events)
+    expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
+  })
+
+  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+    const { stateHash } = runReplay(engine, recording)
+    expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
+  })
+})
+
+describe('黄金回放：派系技能 开光追试试 / 清灰 的对局片段（M1-ENG5）', () => {
+  // P1 amd「开光追试试」（30% 失败）+ P2 neutral「清灰」。
+  // TEST_SEED 下探针 16 回合：光追 8 用 7 命中 1 失败（第 5 次失败）——失败在回放中确定性发生
+  const setup = powerSetup(TEST_SEED, 'amd', 'neutral')
+  const actions = powerPlayActions(TEST_SEED, setup, 16)
+  const recording = recordReplay(setup, actions)
+
+  it('回放中双方技能各使用 ≥ 2 次；光追失败（KEYWORD_TRIGGERED{detail: 光追失败}）至少发生一次', () => {
+    const { events } = runReplay(engine, recording)
+    const used = events.filter((e) => e.type === 'HERO_POWER_USED')
+    expect(used.filter((e) => e.skillId === 'ray_tracing_try').length).toBeGreaterThanOrEqual(2)
+    expect(used.filter((e) => e.skillId === 'dust_off').length).toBeGreaterThanOrEqual(2)
+    // 30% 失败在 TEST_SEED 下确定性发生（mulberry32 探针序列的既定事实）
+    expect(events.some((e) => e.type === 'KEYWORD_TRIGGERED' && e.detail === '光追失败')).toBe(true)
+    // 清灰伤害归因为 heroPower（§6 事件目录）
+    expect(events.some((e) => e.type === 'DAMAGE_DEALT' && e.source.kind === 'heroPower')).toBe(true)
+  })
+
+  it('30% 失败由 seed 唯一决定：同 seed 命中/失败模式恒定；跨 seed 两种结果均出现（异 seed 翻盘）', () => {
+    const base = heroPowerOutcomes(runReplay(engine, recording).events)
+    expect(base).toContain('miss') // TEST_SEED 下确有失败
+    expect(base).toContain('hit') // TEST_SEED 下确有命中
+    // 换 seed 重放（探针随 seed 确定性重生成）：命中/失败模式随之改变——结果由 seed 决定
+    const outcomesBySeed = [1, 2, 3, 4, 5, 6, 7, 8].map((s) => {
+      const seed = (TEST_SEED + s * 17) >>> 0
+      const seedActions = powerPlayActions(seed, powerSetup(seed, 'amd', 'neutral'), 10)
+      return heroPowerOutcomes(
+        runReplay(engine, recordReplay(powerSetup(seed, 'amd', 'neutral'), seedActions)).events,
+      )
+    })
+    expect(outcomesBySeed.some((outcomes) => outcomes.includes('miss'))).toBe(true)
+    expect(outcomesBySeed.some((outcomes) => outcomes.includes('hit'))).toBe(true)
+  })
+
+  it('确定性：同 seed + 动作两次运行，状态哈希与事件流逐字节一致', () => {
+    const a = runReplay(engine, recording)
+    const b = runReplay(engine, recording)
+    expect(a.stateHash).toBe(b.stateHash)
+    expect(a.events).toEqual(b.events)
+    expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
+  })
+
+  it('对局状态自洽（技能伤害不致崩局；单位属性非负）', () => {
+    const { finalState } = runReplay(engine, recording)
+    expect(finalState.phase).toBe('main') // 技能只点名场上单位（board 序首个候选），CPU 不掉血
+    for (const unit of finalState.board) {
+      expect(unit.attack).toBeGreaterThanOrEqual(0)
+      expect(unit.health).toBeGreaterThanOrEqual(0)
+    }
+    expect(finalState.players.P1.heroPowerUsed).toBe(false) // 结算停在 P2 回合，P1 已随回合开始重置
   })
 
   it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {

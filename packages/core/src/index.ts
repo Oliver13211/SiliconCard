@@ -7,7 +7,7 @@
  * - 一切交互经 Engine 四函数：initGame / applyAction / getLegalActions / viewFor；
  * - 一切产出经 GameEvent 事件流。
  */
-export const CORE_VERSION = '0.0.2'
+export const CORE_VERSION = '0.0.3'
 
 export * from './constants'
 export * from './types/cards'
@@ -16,5 +16,18 @@ export * from './types/state'
 export * from './types/events'
 export * from './engine'
 export { createEngine } from './engine/index'
+// —— 派系技能注册（M1-ENG5）：宿主注入/覆盖派系技能（内置四系见 factions/builtin.ts，
+// 随 engine/factions.ts 模块加载自动注册；content 包就绪后同 factionId 后写覆盖）——
+export {
+  registerFactionSkills,
+  getFactionSkill,
+  clearFactionSkills,
+  resetFactionSkills,
+  findFactionSkillIssues,
+} from './engine/factions'
+export type { FactionSkillDefinition } from './engine/factions'
+// —— 命名 handler 逃生舱（§5）：content 侧特殊逻辑按 name 注册后经 { op:'handler' } 引用 ——
+export { registerEffectHandler } from './effects/handlers'
+export type { EffectHandler } from './effects/handlers'
 export * from './testing/hash'
 export * from './testing/replay'

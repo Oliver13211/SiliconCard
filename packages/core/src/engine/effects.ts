@@ -12,13 +12,15 @@
  *
  * M1-ENG2 覆盖原语：damage / heal / buff / grantKeyword / removeKeyword / draw /
  * summon / gainArmor；M1-ENG4 增补：lockMana（跳闸数值通道，overload 关键词裁定见
- * triggers.ts）。destroy / revive / handler 逃生舱留 M1-ENG6（命中即抛错，
- * 宁可响亮失败也不静默吞步骤）。
+ * triggers.ts）。M1-ENG5 接线 handler 逃生舱（§5 命名 handler，注册表见
+ * effects/handlers.ts，首个内置 handler 为开光追试试 ray_tracing_try）；
+ * destroy / revive 留 M1-ENG6（命中即抛错，宁可响亮失败也不静默吞步骤）。
  */
 
 import type { EffectStep, InstanceId, TargetPool, TargetSelector } from '../types/cards'
 import type { DamageSource, GameEvent } from '../types/events'
 import type { BoardUnit, GameState, PlayerId, TargetRef } from '../types/state'
+import { getEffectHandler } from '../effects/handlers'
 import type { Rng } from './prng'
 import { getCardDefinition } from './registry'
 import { damageHero, drawCard, opponentOf } from './turn'
@@ -40,6 +42,12 @@ export interface EffectContext {
    * 传给伤害/增益原语，供死亡管线与 onDamaged 触发续接（上限见 triggers.ts）。
    */
   triggerDepth?: number
+  /**
+   * 伤害归因覆盖（M1-ENG5）：缺省 { kind:'effect', ref: sourceCardId }；
+   * 派系技能（USE_HERO_POWER）传 { kind:'heroPower', playerId }——§6 事件目录
+   * 的技能伤害归因通道，dust_off / 光追命中的 DAMAGE_DEALT 由此携带。
+   */
+  damageSource?: DamageSource
 }
 
 /** 按数组顺序结算效果步骤（§5：深度优先、单层队列，嵌套触发即同步展开） */
@@ -48,7 +56,7 @@ export function resolveEffectSteps(ctx: EffectContext, steps: readonly EffectSte
 }
 
 function effectDamageSource(ctx: EffectContext): DamageSource {
-  return { kind: 'effect', ref: ctx.sourceCardId }
+  return ctx.damageSource ?? { kind: 'effect', ref: ctx.sourceCardId }
 }
 
 function effectPlayerId(ctx: EffectContext, player: 'sourceOwner' | 'opposingPlayer'): PlayerId {
@@ -150,9 +158,16 @@ function resolveEffectStep(ctx: EffectContext, step: EffectStep): void {
       // destroy 落地时经 removeUnitFromBoard(cause 'destroy') 结算：不抵挡质保、
       // 照常触发亡语（M1-ENG4 死亡管线已就绪）。
       throw new Error(`效果原语 ${step.op} 属 M1-ENG6 范围，尚未实现`)
-    case 'handler':
-      // TODO(M1-ENG6): 命名 handler 逃生舱——core/src/effects 按 name 注册后在此分发。
-      throw new Error(`handler 逃生舱（${step.name}）属 M1-ENG6 范围，尚未实现`)
+    case 'handler': {
+      // 命名 handler 逃生舱（§5，M1-ENG5 接线）：注册表见 effects/handlers.ts。
+      // 未注册的 name 属 content 数据缺陷或未实装，响亮抛错，不静默吞步骤。
+      const handler = getEffectHandler(step.name)
+      if (!handler) {
+        throw new Error(`效果 handler「${step.name}」未注册（core/src/effects/handlers.ts §5 逃生舱）`)
+      }
+      handler(ctx)
+      return
+    }
   }
 }
 

@@ -2,6 +2,7 @@
  * initGame —— 开局构建（docs/rules.md §2.1）。
  *
  * 顺序：卡组校验（总数 = DECK_SIZE、cardId 已注册且定义合法，否则 DECK_INVALID）
+ * → 派系技能校验（双方 faction 均已注册且定义合法，M1-ENG5，见 factions.ts）
  * → 按 seed 洗双方牌库（先 P1 后 P2）→ 交替发起手（P1 先抽，各 OPENING_HAND_SIZE 张）
  * → GAME_START → 进入 P1 的第 1 回合。
  *
@@ -20,6 +21,7 @@ import {
 import { RuleError } from '../engine'
 import type { GameEvent } from '../types/events'
 import type { DeckEntry, GameSetup, GameState, PlayerSetup, PlayerState } from '../types/state'
+import { findFactionSkillIssues, getFactionSkill } from './factions'
 import { beginTurn, drawCard } from './turn'
 import type { Rng } from './prng'
 import { createRng } from './prng'
@@ -34,6 +36,8 @@ export function initGame(setup: GameSetup): GameState {
   validateSetupPosition(p2Setup, 'P2')
   validateDeck(p1Setup)
   validateDeck(p2Setup)
+  validateFactionSkill(p1Setup)
+  validateFactionSkill(p2Setup)
 
   const events: GameEvent[] = []
   const rng = createRng(setup.seed >>> 0)
@@ -108,6 +112,32 @@ function validateDeck(player: PlayerSetup): void {
     throw new RuleError('DECK_INVALID', `${player.id}: 卡组总数必须为 ${DECK_SIZE}，实际 ${total}`, {
       playerId: player.id,
       total,
+    })
+  }
+}
+
+/**
+ * 派系技能校验（§4「派系技能不是卡牌」+ §3 USE_HERO_POWER，M1-ENG5）：
+ * 双方 faction 必须已注册技能且定义通过 findFactionSkillIssues 结构校验，否则开局拒绝。
+ * 错误码沿用开局期既有通道 DECK_INVALID（RuleErrorCode 本次不扩值，裁定见 M1-ENG5
+ * 汇报）；detail.reason='faction_skill_unregistered' / 'faction_skill_invalid' 机读区分。
+ */
+function validateFactionSkill(player: PlayerSetup): void {
+  const skill = getFactionSkill(player.faction)
+  if (!skill) {
+    throw new RuleError(
+      'DECK_INVALID',
+      `${player.id}: 派系 ${player.faction} 未注册派系技能（宿主需先 registerFactionSkills）`,
+      { playerId: player.id, factionId: player.faction, reason: 'faction_skill_unregistered' },
+    )
+  }
+  const issue = findFactionSkillIssues(skill)
+  if (issue) {
+    throw new RuleError('DECK_INVALID', `${player.id}: 派系 ${player.faction} 技能定义不合法：${issue}`, {
+      playerId: player.id,
+      factionId: player.faction,
+      reason: 'faction_skill_invalid',
+      issue,
     })
   }
 }

@@ -3,7 +3,7 @@
 > 配套文档：[design-report.md](./design-report.md) · [agent 预设](./agents/presets.md) · [workflow](./agents/workflows.md)
 > 任务 ID 规则：`<里程碑>-<类型><序号>`。类型前缀：INF 基建 / ENG 引擎 / CNT 内容 / R3D 3D渲染 / UI 界面 / AI 人机 / NET 联机 / AGT Agent接口 / QA 质量 / DOC 文档
 > 每个任务标注**执行 agent 预设**，详见 [presets.md](./agents/presets.md)
-> **进度注记（2026-10-01）**：✅ **M0 全部完成**（INF1/2/3 + DOC1 + ENG1）。M1 进行中：✅ M1-ENG1（回合机）、ENG2（出牌结算）、ENG3（攻击结算）、ENG4（关键词系统）已合入；下一棒 M1-ENG5（派系技能框架）。
+> **进度注记（2026-10-01）**：✅ **M0 全部完成**（INF1/2/3 + DOC1 + ENG1）。M1 进行中：✅ M1-ENG1（回合机）、ENG2（出牌结算）、ENG3（攻击结算）、ENG4（关键词系统）、ENG5（派系技能框架，五种动作全通）已合入；下一棒 M1-ENG6（效果原语补全：destroy/revive/handler 接入 + turnStart/turnEnd 触发）。
 
 ---
 

@@ -5,7 +5,8 @@
  * 实现进度：M1-ENG1（回合机）+ M1-ENG2（出牌结算：PLAY_CARD / 效果解释器 /
  * 光环投影）+ M1-ENG3（攻击结算：ATTACK / taunt / 攻击次数 / 召唤失调）+
  * M1-ENG4（关键词系统：亡语死亡管线 / onAttack·onDamaged 触发 / overload 跳闸 /
- * lockMana 原语，见 triggers.ts）；派系技能（M1-ENG5）后续接入。
+ * lockMana 原语，见 triggers.ts）+ M1-ENG5（派系技能：USE_HERO_POWER /
+ * 注册框架 / 内置四系技能，见 heroPower.ts / factions.ts / effects/handlers.ts）。
  */
 
 import type { Engine } from '../engine'

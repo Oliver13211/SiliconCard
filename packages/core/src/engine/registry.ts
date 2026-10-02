@@ -63,6 +63,8 @@ const KNOWN_POOLS: readonly TargetSelector['pool'][] = [
   'opposingPlayer',
 ]
 
+export { KNOWN_POOLS }
+
 const KNOWN_AURA_STATS: readonly AuraSpec['stat'][] = ['attack', 'health', 'cost']
 const KNOWN_AURA_SCOPES: readonly AuraSpec['scope'][] = ['ownUnits', 'enemyUnits', 'allUnits']
 
@@ -98,7 +100,8 @@ export function findCardDefinitionIssues(def: CardDefinition): string | null {
   return findEffectSpecIssues(def.effect)
 }
 
-function findEffectSpecIssues(effect: EffectSpec | undefined): string | null {
+/** 校验 EffectSpec 中引擎消费的字段；派系技能定义（factions.ts）复用 */
+export function findEffectSpecIssues(effect: EffectSpec | undefined): string | null {
   if (!effect) return null
   if (!KNOWN_TRIGGERS.includes(effect.trigger)) return `未知效果触发时点 ${String(effect.trigger)}`
   for (const step of effect.steps ?? []) {

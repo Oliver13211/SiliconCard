@@ -2,14 +2,15 @@
  * applyAction / getLegalActions —— 动作入口与合法性闸门（docs/rules.md §3）。
  *
  * 实现进度：END_TURN / CONCEDE（M1-ENG1）、PLAY_CARD（M1-ENG2，见 play.ts）、
- * ATTACK（M1-ENG3，见 combat.ts）；USE_HERO_POWER（M1-ENG5）尚未实现，抛
- * UNKNOWN_ACTION（message 注明归属任务，供调用方等待后续里程碑）。
+ * ATTACK（M1-ENG3，见 combat.ts）、USE_HERO_POWER（M1-ENG5，见 heroPower.ts）——
+ * 五种动作全部实装，无 UNKNOWN_ACTION 占位（结构不明的动作仍抛 UNKNOWN_ACTION）。
  *
  * 状态隔离：入口先深拷贝（GameState 为纯 JSON 数据，JSON 往返即安全深拷贝），
  * 非法动作抛 RuleError 时原状态保持不变。
  *
  * RNG 接管：每次 applyAction 从 state.rng.state 接管引擎 PRNG，动作结算完成后
- * 写回——效果 random 选择器等一切随机经此链路，保证 seed + 动作序列确定性（§11）。
+ * 写回——效果 random 选择器、光追命中判定等一切随机经此链路，
+ * 保证 seed + 动作序列确定性（§11）。
  */
 
 import { RuleError } from '../engine'
@@ -18,16 +19,13 @@ import type { Action } from '../types/actions'
 import type { GameEvent } from '../types/events'
 import type { GameState, PlayerId } from '../types/state'
 import { applyAttack, legalAttackActions, type AttackAction } from './combat'
+import { applyUseHeroPower, legalHeroPowerActions, type UseHeroPowerAction } from './heroPower'
 import { createRng } from './prng'
 import { applyPlayCard, legalPlayCardActions, type PlayCardAction } from './play'
 import { applyTurnEndEffects, beginTurn, burnExcessHand, opponentOf } from './turn'
 
 export function cloneState(state: Readonly<GameState>): GameState {
   return JSON.parse(JSON.stringify(state)) as GameState
-}
-
-const UNIMPLEMENTED_TASK: Partial<Record<Action['type'], string>> = {
-  USE_HERO_POWER: 'M1-ENG5（派系技能）',
 }
 
 export function applyAction(state: Readonly<GameState>, action: Action): EngineResult {
@@ -81,11 +79,11 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
       return { state: next, events }
     }
     case 'USE_HERO_POWER': {
-      throw new RuleError(
-        'UNKNOWN_ACTION',
-        `${action.type} 尚未实现（属 ${UNIMPLEMENTED_TASK[action.type]}）；当前支持 END_TURN / CONCEDE / PLAY_CARD / ATTACK`,
-        { actionType: action.type },
-      )
+      // 派系技能（M1-ENG5）：合法性闸门与结算见 heroPower.ts；rng 传给效果解释器
+      // （ray_tracing_try 命中判定等随机步骤消费引擎 RNG）
+      applyUseHeroPower(next, action as UseHeroPowerAction, events, rng)
+      next.rng = { state: rng.getState() }
+      return { state: next, events }
     }
     default: {
       throw new RuleError('UNKNOWN_ACTION', '未知动作结构')
@@ -95,9 +93,10 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
 
 /**
  * 合法动作集（AI / Agent / UI 可交互性共用）：
- * 未结束 → 当前行动玩家 [END_TURN, CONCEDE, PLAY_CARD…, ATTACK…]；否则 []。
+ * 未结束 → 当前行动玩家 [END_TURN, CONCEDE, PLAY_CARD…, ATTACK…, USE_HERO_POWER…]；否则 []。
  * PLAY_CARD 枚举规则见 play.ts legalPlayCardActions（功耗/场位过滤 + chosen 目标展开）；
- * ATTACK 枚举规则见 combat.ts legalAttackActions（可攻击判定 + taunt/潜行/目标展开）。
+ * ATTACK 枚举规则见 combat.ts legalAttackActions（可攻击判定 + taunt/潜行/目标展开）；
+ * USE_HERO_POWER 枚举规则见 heroPower.ts legalHeroPowerActions（未用/功耗足 + chosen 目标展开）。
  */
 export function getLegalActions(state: Readonly<GameState>, playerId: PlayerId): readonly Action[] {
   if (state.phase === 'ended') return []
@@ -107,5 +106,6 @@ export function getLegalActions(state: Readonly<GameState>, playerId: PlayerId):
     { type: 'CONCEDE', playerId },
     ...legalPlayCardActions(state, playerId),
     ...legalAttackActions(state, playerId),
+    ...legalHeroPowerActions(state, playerId),
   ]
 }

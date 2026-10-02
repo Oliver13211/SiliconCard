@@ -18,7 +18,7 @@
 import { BOARD_LIMIT } from '../constants'
 import { RuleError } from '../engine'
 import type { Action } from '../types/actions'
-import type { CardDefinition, InstanceId, TargetPool } from '../types/cards'
+import type { CardDefinition, EffectStep, InstanceId, TargetPool } from '../types/cards'
 import type { GameEvent } from '../types/events'
 import type { GameState, HandCard, PlayerId, TargetRef } from '../types/state'
 import { applyHandCosts } from './aura'
@@ -65,7 +65,7 @@ export function applyPlayCard(
       mana: player.mana,
     })
   }
-  validateChosenTarget(state, action.playerId, def, action.target)
+  validateChosenTargetAgainstSteps(state, action.playerId, def.effect?.steps, action.target, '该牌')
   if (def.type !== 'driver' && countOwnUnits(state, action.playerId) >= BOARD_LIMIT) {
     throw new RuleError('BOARD_FULL', `扩展槽已满（${BOARD_LIMIT}），无法再入场 ${def.type}`, {
       boardLimit: BOARD_LIMIT,
@@ -119,13 +119,17 @@ export function applyPlayCard(
   checkGameEnd(state, events)
 }
 
-/** 收集卡牌效果中全部 chosen 选择器的目标池（多池取交集，v1 出牌仅携带单目标） */
-function chosenPools(def: CardDefinition): TargetPool[] {
+/** 收集效果步骤中全部 chosen 选择器的目标池（多池取交集，v1 出牌仅携带单目标） */
+export function chosenPoolsOfSteps(steps: readonly EffectStep[] | undefined): TargetPool[] {
   const pools: TargetPool[] = []
-  for (const step of def.effect?.steps ?? []) {
+  for (const step of steps ?? []) {
     if ('target' in step && step.target.kind === 'chosen') pools.push(step.target.pool)
   }
   return pools
+}
+
+function chosenPools(def: CardDefinition): TargetPool[] {
+  return chosenPoolsOfSteps(def.effect?.steps)
 }
 
 export function sameTarget(a: TargetRef, b: TargetRef): boolean {
@@ -134,17 +138,21 @@ export function sameTarget(a: TargetRef, b: TargetRef): boolean {
   return false
 }
 
-/** chosen 目标校验：必须命中全部 chosen 池的候选交集；detail 携带原因（§3 总则） */
-function validateChosenTarget(
+/**
+ * chosen 目标校验（对目标池集合；PLAY_CARD 与 USE_HERO_POWER 共用，M1-ENG5 抽出）：
+ * 必须命中全部池的候选交集；detail 携带原因（§3 总则）。
+ * subject 为错误消息主语（出牌『该牌』/ 技能『技能「清灰」』）。
+ */
+export function validateChosenTargetInPools(
   state: GameState,
   actorId: PlayerId,
-  def: CardDefinition,
+  pools: readonly TargetPool[],
   target: TargetRef | undefined,
+  subject: string,
 ): void {
-  const pools = chosenPools(def)
   if (pools.length === 0) return // 无 chosen 步骤：多余的 target 宽容忽略
   if (!target) {
-    throw new RuleError('INVALID_TARGET', '该牌需要指定一个目标', {
+    throw new RuleError('INVALID_TARGET', `${subject}需要指定一个目标`, {
       reason: 'target_required',
       pools,
     })
@@ -152,13 +160,41 @@ function validateChosenTarget(
   for (const pool of pools) {
     const candidates = targetCandidates(state, actorId, pool, null, { respectStealth: true })
     if (!candidates.some((candidate) => sameTarget(candidate, target))) {
-      throw new RuleError('INVALID_TARGET', `目标对该牌不可选（pool=${pool}；敌方潜行单位现身前不可被指定）`, {
+      throw new RuleError('INVALID_TARGET', `目标对${subject}不可选（pool=${pool}；敌方潜行单位现身前不可被指定）`, {
         reason: 'not_in_pool',
         pool,
         target,
       })
     }
   }
+}
+
+/** chosen 目标校验（对效果步骤集合）：池取步骤内全部 chosen 选择器 */
+export function validateChosenTargetAgainstSteps(
+  state: GameState,
+  actorId: PlayerId,
+  steps: readonly EffectStep[] | undefined,
+  target: TargetRef | undefined,
+  subject: string,
+): void {
+  validateChosenTargetInPools(state, actorId, chosenPoolsOfSteps(steps), target, subject)
+}
+
+/** chosen 池交集的目标枚举（getLegalActions 出牌 / 派系技能分支共用）：逐候选展开，潜行过滤开启 */
+export function expandChosenTargets(
+  state: Readonly<GameState>,
+  actorId: PlayerId,
+  pools: readonly TargetPool[],
+): TargetRef[] {
+  if (pools.length === 0) return []
+  let candidates = targetCandidates(state, actorId, pools[0] as TargetPool, null, {
+    respectStealth: true,
+  })
+  for (const pool of pools.slice(1)) {
+    const next = targetCandidates(state, actorId, pool, null, { respectStealth: true })
+    candidates = candidates.filter((candidate) => next.some((n) => sameTarget(n, candidate)))
+  }
+  return candidates
 }
 
 /**
@@ -180,14 +216,7 @@ export function legalPlayCardActions(state: Readonly<GameState>, playerId: Playe
       actions.push({ type: 'PLAY_CARD', playerId, uid: card.uid })
       continue
     }
-    let candidates = targetCandidates(state, playerId, pools[0] as TargetPool, null, {
-      respectStealth: true,
-    })
-    for (const pool of pools.slice(1)) {
-      const next = targetCandidates(state, playerId, pool, null, { respectStealth: true })
-      candidates = candidates.filter((candidate) => next.some((n) => sameTarget(n, candidate)))
-    }
-    for (const target of candidates) {
+    for (const target of expandChosenTargets(state, playerId, pools)) {
       actions.push({ type: 'PLAY_CARD', playerId, uid: card.uid, target })
     }
   }

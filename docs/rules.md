@@ -60,7 +60,7 @@
 | `art` | `{shape, palette, glow?}` | | 程序化卡面参数（client-3d 消费） |
 | `tags` | string[] | | 子类标记，如 `'miner'`（矿卡，供「矿难」筛选） |
 
-**派系技能不是卡牌**——由 `factions/*.json` 定义 `{ factionId, skillName, skillId, cost: 2, effect: EffectSpec }`，引擎按 USE_HERO_POWER 结算。
+**派系技能不是卡牌**——由 `factions/*.json` 定义 `{ factionId, skillName, skillId, cost: 200, effect: EffectSpec }`，引擎按 USE_HERO_POWER 结算；定义由宿主经 core 注册 API 注入（core 不读 content 包），**initGame 校验双方 faction 均已注册技能**（未注册 → `DECK_INVALID{reason:'faction_skill_unregistered'}`）。
 
 **accessory 在场形态（M1-ENG2 边界裁定，v1.0）**：打出后**进场上**成为 BoardUnit——占扩展槽并计入 `BOARD_LIMIT`、以 0/1 身板入场（定义无攻血字段）、不可攻击（attacksRemaining 恒 0）、可被效果指定、可死亡（光环随之回收）；driver 不占槽。
 
@@ -68,7 +68,7 @@
 
 - **声明式优先**：`EffectSpec.steps` 按**数组顺序**逐步结算；每步产生对应事件（伤害→`DAMAGE_DEALT` 等）；
 - **12 种原语**（`EffectStep`）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`；
-- **命名 handler 逃生舱**：steps 表达不了的逻辑（如「12VHPWR 熔毁」的特殊条件）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；
+- **命名 handler 逃生舱**：steps 表达不了的逻辑（如「开光追试试」的 30% 失败判定）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；**光追失败事件暂定形态（M1-ENG5，待契约评审）**：经 `KEYWORD_TRIGGERED` 发出，keyword 字段暂借 `'overload'`、`detail:'光追失败'`、`instanceId` 用 skillId；评审通过后改专属事件类型并通报 client-ui / client-3d；
 - **随机语义**：一切 `random` 选择与概率判定走引擎种子 RNG（§11），**顺序固定**：按步骤数组顺序、目标池的 board 顺序进行；
 - **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；
 - **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）；
