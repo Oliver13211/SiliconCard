@@ -1,9 +1,9 @@
 /**
  * applyAction / getLegalActions —— 动作入口与合法性闸门（docs/rules.md §3）。
  *
- * 实现进度：END_TURN / CONCEDE（M1-ENG1）、PLAY_CARD（M1-ENG2，见 play.ts）；
- * ATTACK（M1-ENG3）/ USE_HERO_POWER（M1-ENG5）尚未实现，抛 UNKNOWN_ACTION
- * （message 注明归属任务，供调用方等待后续里程碑）。
+ * 实现进度：END_TURN / CONCEDE（M1-ENG1）、PLAY_CARD（M1-ENG2，见 play.ts）、
+ * ATTACK（M1-ENG3，见 combat.ts）；USE_HERO_POWER（M1-ENG5）尚未实现，抛
+ * UNKNOWN_ACTION（message 注明归属任务，供调用方等待后续里程碑）。
  *
  * 状态隔离：入口先深拷贝（GameState 为纯 JSON 数据，JSON 往返即安全深拷贝），
  * 非法动作抛 RuleError 时原状态保持不变。
@@ -17,6 +17,7 @@ import type { EngineResult } from '../engine'
 import type { Action } from '../types/actions'
 import type { GameEvent } from '../types/events'
 import type { GameState, PlayerId } from '../types/state'
+import { applyAttack, legalAttackActions, type AttackAction } from './combat'
 import { createRng } from './prng'
 import { applyPlayCard, legalPlayCardActions, type PlayCardAction } from './play'
 import { applyTurnEndEffects, beginTurn, burnExcessHand, opponentOf } from './turn'
@@ -26,7 +27,6 @@ export function cloneState(state: Readonly<GameState>): GameState {
 }
 
 const UNIMPLEMENTED_TASK: Partial<Record<Action['type'], string>> = {
-  ATTACK: 'M1-ENG3（攻击结算）',
   USE_HERO_POWER: 'M1-ENG5（派系技能）',
 }
 
@@ -74,11 +74,16 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
       next.rng = { state: rng.getState() }
       return { state: next, events }
     }
-    case 'ATTACK':
+    case 'ATTACK': {
+      // 攻击无随机步骤，rng 原值写回（序列化状态保持逐字节一致）
+      applyAttack(next, action as AttackAction, events)
+      next.rng = { state: rng.getState() }
+      return { state: next, events }
+    }
     case 'USE_HERO_POWER': {
       throw new RuleError(
         'UNKNOWN_ACTION',
-        `${action.type} 尚未实现（属 ${UNIMPLEMENTED_TASK[action.type]}）；当前支持 END_TURN / CONCEDE / PLAY_CARD`,
+        `${action.type} 尚未实现（属 ${UNIMPLEMENTED_TASK[action.type]}）；当前支持 END_TURN / CONCEDE / PLAY_CARD / ATTACK`,
         { actionType: action.type },
       )
     }
@@ -90,8 +95,9 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
 
 /**
  * 合法动作集（AI / Agent / UI 可交互性共用）：
- * 未结束 → 当前行动玩家 [END_TURN, CONCEDE, PLAY_CARD…]；否则 []。
- * PLAY_CARD 枚举规则见 play.ts legalPlayCardActions（功耗/场位过滤 + chosen 目标展开）。
+ * 未结束 → 当前行动玩家 [END_TURN, CONCEDE, PLAY_CARD…, ATTACK…]；否则 []。
+ * PLAY_CARD 枚举规则见 play.ts legalPlayCardActions（功耗/场位过滤 + chosen 目标展开）；
+ * ATTACK 枚举规则见 combat.ts legalAttackActions（可攻击判定 + taunt/潜行/目标展开）。
  */
 export function getLegalActions(state: Readonly<GameState>, playerId: PlayerId): readonly Action[] {
   if (state.phase === 'ended') return []
@@ -100,5 +106,6 @@ export function getLegalActions(state: Readonly<GameState>, playerId: PlayerId):
     { type: 'END_TURN', playerId },
     { type: 'CONCEDE', playerId },
     ...legalPlayCardActions(state, playerId),
+    ...legalAttackActions(state, playerId),
   ]
 }

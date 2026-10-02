@@ -6,6 +6,8 @@
  * M1-ENG2 扩展：加入含 PLAY_CARD 的对局片段（driver 随机直伤 / gpu 战吼 /
  * accessory 光环），验证同 seed 两次运行哈希与事件流逐字节一致、
  * getLegalActions 枚举出的动作全部可被 applyAction 接受（无幽灵动作）。
+ * M1-ENG3 扩展：加入含 ATTACK 的攻击交换片段（taunt 拦截 / 双芯两次攻击 /
+ * 超频首回合攻击 / 质保消耗 / 攻击致死 / 攻击 hero 分胜负）。
  */
 
 import { describe, expect, it } from 'vitest'
@@ -15,6 +17,7 @@ import type { DeckSpec, GameSetup, GameState } from '../types/state'
 import { makeDistinctDeckSpec, TEST_SEED } from '../testing/state'
 import { recordReplay, runReplay, assertGoldenReplay } from '../testing/replay'
 import { createEngine } from './index'
+import type { AttackAction } from './combat'
 import type { PlayCardAction } from './play'
 import { registerCardDefinitions } from './registry'
 
@@ -221,3 +224,109 @@ describe('黄金回放：含 PLAY_CARD 的对局片段（M1-ENG2）', () => {
 function stableHashOf(engineLocal: typeof engine, recording: ReturnType<typeof recordReplay>): string {
   return runReplay(engineLocal, recording).stateHash
 }
+
+// —— M1-ENG3：含 ATTACK 攻击交换的黄金回放 ——
+
+const COMBAT_CARDS: CardDefinition[] = [
+  { id: 'cg-rusher', name: '冲锋白板', faction: 'neutral', type: 'gpu', cost: 100, attack: 3, health: 2 },
+  { id: 'cg-taunt', name: '信仰充值塔', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 6, keywords: ['taunt'] },
+  { id: 'cg-twin', name: '双芯原型', faction: 'neutral', type: 'gpu', cost: 100, attack: 2, health: 2, keywords: ['windfury'] },
+  { id: 'cg-overclock', name: '超频失败体', faction: 'neutral', type: 'gpu', cost: 200, attack: 4, health: 1, keywords: ['charge'] },
+  { id: 'cg-warranty', name: '三年质保卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 3, keywords: ['divine_shield'] },
+  { id: 'cg-ghost', name: '无输出亮机', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 2, keywords: ['stealth'] },
+]
+registerCardDefinitions(COMBAT_CARDS)
+
+function combatDeck(): DeckSpec {
+  return { cards: COMBAT_CARDS.map((c) => ({ cardId: c.id, count: 5 })) }
+}
+
+function combatSetup(seed: number): GameSetup {
+  return {
+    seed,
+    players: [
+      { id: 'P1', faction: 'nvidia', deck: combatDeck() },
+      { id: 'P2', faction: 'amd', deck: combatDeck() },
+    ],
+  }
+}
+
+/**
+ * 探针式录制（M1-ENG3）：每回合行动方先打出至多 2 张牌，再按 getLegalActions
+ * 枚举顺序贪心发起至多 6 次攻击，最后 END_TURN；对局结束即停。
+ * 同 seed 下探针结果恒定，故可作回放输入（与 M1-ENG2 探针同一模式）。
+ */
+function combatPlayActions(seed: number, rounds: number): Action[] {
+  let state: GameState = engine.initGame(combatSetup(seed))
+  const actions: Action[] = []
+  for (let i = 0; i < rounds; i++) {
+    if (state.phase !== 'main') break
+    const active = state.activePlayer
+    let plays = 0
+    while (plays < 2) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is PlayCardAction => a.type === 'PLAY_CARD')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      plays++
+    }
+    let attacks = 0
+    while (attacks < 6) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is AttackAction => a.type === 'ATTACK')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      attacks++
+    }
+    if (state.phase !== 'main') break
+    const end: Action = { type: 'END_TURN', playerId: active }
+    actions.push(end)
+    state = engine.applyAction(state, end).state
+  }
+  return actions
+}
+
+describe('黄金回放：含 ATTACK 攻击交换的对局片段（M1-ENG3）', () => {
+  // 实测节奏（同 seed 确定性）：40 回合内 turn 30 由 P2 获胜；46 次攻击、
+  // 31 次战斗死亡、质保消耗 6 次、潜行现身 5 次
+  const actions = combatPlayActions(TEST_SEED, 40)
+  const recording = recordReplay(combatSetup(TEST_SEED), actions)
+
+  it('动作序列确实包含攻击（taunt / 双芯 / 超频 / 质保 / 潜行混合卡组）', () => {
+    expect(actions.filter((a) => a.type === 'ATTACK').length).toBeGreaterThanOrEqual(30)
+  })
+
+  it('回放产生攻击类事件：ATTACK_DECLARED / 质保消耗 / 潜行现身 / 战斗致死', () => {
+    const { events } = runReplay(engine, recording)
+    expect(events.filter((e) => e.type === 'ATTACK_DECLARED').length).toBeGreaterThanOrEqual(30)
+    expect(events.some((e) => e.type === 'DAMAGE_DEALT' && e.shieldConsumed === true)).toBe(true)
+    expect(events.some((e) => e.type === 'KEYWORD_TRIGGERED' && e.keyword === 'stealth')).toBe(true)
+    expect(events.some((e) => e.type === 'KEYWORD_TRIGGERED' && e.keyword === 'divine_shield')).toBe(true)
+    expect(events.filter((e) => e.type === 'MINION_DIED' && e.cause === 'damage').length).toBeGreaterThanOrEqual(20)
+  })
+
+  it('贪心攻击最终打到 CPU 分出胜负', () => {
+    const { finalState, events } = runReplay(engine, recording)
+    expect(finalState.phase).toBe('ended')
+    expect(finalState.endReason).toBe('health_zero')
+    expect(finalState.winner).toBe('P2')
+    expect(events.at(-1)).toMatchObject({ type: 'GAME_END', reason: 'health_zero' })
+  })
+
+  it('确定性：同 seed + 攻击动作两次运行，状态哈希与事件流逐字节一致', () => {
+    const a = runReplay(engine, recording)
+    const b = runReplay(engine, recording)
+    expect(a.stateHash).toBe(b.stateHash)
+    expect(a.events).toEqual(b.events)
+    expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
+  })
+
+  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+    const { stateHash } = runReplay(engine, recording)
+    expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
+  })
+})

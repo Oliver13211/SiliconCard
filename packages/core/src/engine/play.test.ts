@@ -587,14 +587,14 @@ describe('getLegalActions 出牌枚举（M1-ENG2 扩展）', () => {
     ])
   })
 
-  it('功耗不足的牌不产生动作；ATTACK / USE_HERO_POWER 仍不出现（M1-ENG3/5）', () => {
+  it('功耗不足的牌不产生动作；场上无可攻击单位时无 ATTACK 动作；USE_HERO_POWER 不出现（M1-ENG5）', () => {
     const state = playState({ hand: [handCard('h1', 't-vanilla')], mana: 50 })
     const actions = getLegalActions(state, 'P1')
     expect(actions).toEqual([
       { type: 'END_TURN', playerId: 'P1' },
       { type: 'CONCEDE', playerId: 'P1' },
     ])
-    expect(actions.some((a) => a.type === 'ATTACK' || a.type === 'USE_HERO_POWER')).toBe(false)
+    expect(actions.some((a) => a.type === 'USE_HERO_POWER')).toBe(false)
   })
 
   it('gpu 场满时 gpu 不产生动作，driver 仍产生；chosen 池为空时不产生 chosen 动作', () => {

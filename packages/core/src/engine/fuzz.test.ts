@@ -5,7 +5,8 @@
  *   - 光环投影下单位属性恒非负（attack ≥ 0、health ≥ 0、maxHealth ≥ 1）；
  *   - 状态始终满足 canonicalJson 约束（纯 JSON、无 NaN/Infinity）；
  *   - 有限动作内必然终局（疲劳兜底）。
- * 覆盖 PLAY_CARD 全部已实装原语与 accessory 光环的长期叠加场景；ENG3+ 扩展动作类型后同步扩充。
+ * 覆盖 PLAY_CARD 全部已实装原语、ATTACK 攻击交换（M1-ENG3：taunt / 攻击次数 /
+ * 召唤失调 / 潜行现身）与 accessory 光环的长期叠加场景。
  */
 
 import { describe, expect, it } from 'vitest'

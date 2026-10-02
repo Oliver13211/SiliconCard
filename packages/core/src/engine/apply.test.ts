@@ -93,22 +93,8 @@ describe('CONCEDE —— 认输（rules.md §9）', () => {
   })
 })
 
-describe('未实现动作 → UNKNOWN_ACTION（M1-ENG3/5）', () => {
-  // PLAY_CARD 自 M1-ENG2 起完整实装，覆盖见 play.test.ts
-  it('ATTACK 报 UNKNOWN_ACTION 并注明属 M1-ENG3', () => {
-    const state = initGame(makeSetup())
-    const error = catchRuleError(() =>
-      applyAction(state, {
-        type: 'ATTACK',
-        playerId: 'P1',
-        attackerId: 'u1',
-        target: { kind: 'hero', playerId: 'P2' },
-      }),
-    )
-    expect(error.code).toBe('UNKNOWN_ACTION')
-    expect(error.message).toContain('M1-ENG3')
-  })
-
+describe('未实现动作 → UNKNOWN_ACTION（M1-ENG5）', () => {
+  // PLAY_CARD 自 M1-ENG2 起完整实装（见 play.test.ts）；ATTACK 自 M1-ENG3 起完整实装（见 combat.test.ts）
   it('USE_HERO_POWER 报 UNKNOWN_ACTION 并注明属 M1-ENG5', () => {
     const state = initGame(makeSetup())
     const error = catchRuleError(() => applyAction(state, { type: 'USE_HERO_POWER', playerId: 'P1' }))
