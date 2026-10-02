@@ -73,6 +73,7 @@
 - **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；
 - **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）；
 - **光环与 buff 叠加（M1-ENG2 边界裁定，v1.0）**：单位有效属性 ≡ 基础值 + 永久 buff + 当前在场光环贡献，加法叠加、互不覆盖；光环是**派生量**（不进 GameState），单位集合每次变化后按入场顺序重算；手牌 cost 按卡牌定义绝对重算（下限 0，AuraSpec.scope 决定作用方）；随机选择与概率判定的结算顺序见上文随机语义。
+- **亡语结算语义（M1-ENG4 边界裁定，v1.0）**：deathrattle 以**阵亡时快照**结算（光环剥离前取快照），连锁深度优先、深度上限 100（超出响亮抛错）；质保完全抵挡与直接阵亡均不构成「受伤」（不触发 onDamaged）；效果触发型效果无玩家指定（chosen 恒空）；效果规格（effect.trigger）是机制事实源，关键词仅为展示标记。
 
 ## 6. 事件目录定稿（17 种，渲染契约）
 
@@ -103,12 +104,12 @@
 | id | 显示名 | 精确规则 |
 |---|---|---|
 | `taunt` | 信仰充值 | 敌方 ATTACK 的 target 必须是 taunt 单位（若存在多个任选其一）；**taunt + stealth 冲突**：stealth 现身前 taunt 无效 |
-| `divine_shield` | 三年质保 | 抵消下一次受到的任何伤害（金额不限），触发即消失并发出 `DAMAGE_DEALT{shieldConsumed:true}`；不抵挡 destroy/移除类效果 |
+| `divine_shield` | 三年质保 | 抵消下一次受到的任何伤害（金额不限），触发即消失并发出 `DAMAGE_DEALT{shieldConsumed:true}`；**重复获得不叠层（去重）**，耗尽后重新获得可再生效；不抵挡 destroy/移除类效果 |
 | `charge` | 超频 | 入场当回合即可攻击（`summonedOnTurn` 失调豁免） |
 | `windfury` | 双芯 GPU | 每回合 `attacksRemaining` 重置为 2；与 charge 叠加无冲突 |
 | `deathrattle` | 蓝屏/传家宝 | 死亡时结算 `effect.trigger='deathrattle'`；一次死亡只触发一次；被 destroy 同样触发 |
 | `stealth` | 无输出亮机 | 攻击前不可被敌方**指定**（攻击/target 选择均不可）；该单位攻击后立即现身；taunt 交互见上 |
-| `overload` | 跳闸 | 携带该效果的牌结算后 `lockedMana += N`（N 由效果定义，按新功耗刻度取值，如 100/200），下回合生效后清零（§2.2）；可叠加 |
+| `overload` | 跳闸 | 携带该效果的牌打出后 `lockedMana += N`；**N 由该牌 onPlay/battlecry 触发的 lockMana 步骤给出，无有效步骤按 `DEFAULT_OVERLOAD_LOCK = 100` 兜底**（非出牌时点的 lockMana 不构成 N 来源）；可叠加（多张/多步累加），下回合 §2.2 生效后清零 |
 
 ## 8. 派系与技能 v1（M1 实装前四系）
 

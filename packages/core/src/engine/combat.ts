@@ -10,14 +10,20 @@
  *   对局已结束在 applyAction 入口统一拒绝（GAME_ENDED）。
  *
  * 结算顺序（§6 因果线性，死亡由 damageUnit/damageHero 内联处理）：
- *   charge 预算授予（召唤回合超频豁免）→ ATTACK_DECLARED → 双向伤害交换
- *   （先攻→防守、防守→先攻；对 CPU 护甲先于体质；三年质保各自消耗）→
+ *   charge 预算授予（召唤回合超频豁免）→ ATTACK_DECLARED → 攻击者 onAttack 触发
+ *   （M1-ENG4）→ 战斗交换活性复核（宣告阶段死亡即落空）→ 双向伤害交换
+ *   （先攻→防守、防守→先攻；对 CPU 护甲先于体质；三年质保各自消耗；
+ *   受伤存活方 onDamaged 触发；阵亡方亡语内联展开）→
  *   攻击者潜行现身（移除关键词 + KEYWORD_TRIGGERED）→ attacksRemaining -1 /
  *   attackedThisTurn = true → checkGameEnd（同时归零平局，§9）。
  *
- * 边界取舍（详见 M1-ENG3 汇报）：
- *   - 双向伤害为「同时结算」语义（炉石骨架）：防守方反击力取宣告时快照，即使被
- *     先手伤害击杀仍结算反击（快照规避阵亡剥离光环后的脏值）；防守方为 CPU 不反击；
+ * 边界取舍（详见 M1-ENG3 / M1-ENG4 汇报）：
+ *   - 双向伤害为「同时结算」语义（炉石骨架）：防守方反击力取 onAttack 结算后快照，
+ *     即使被先手伤害击杀仍结算反击（快照规避阵亡剥离光环后的脏值）；防守方为 CPU
+ *     不反击；攻击者若在交换中途（onDamaged 反伤 / 防守方亡语）先倒下，反击作废
+ *     （阵亡单位不再反击，避免对已离场单位二次结算死亡）；
+ *   - onAttack 触发把防守方（或攻击者自身）打死：攻击落空（宣告阶段即分出生死，
+ *     无战斗伤害交换），攻击预算照常消耗、潜行照常现身；
  *   - charge 单位召唤回合的攻击预算在首次攻击结算时按 windfury 与否授予（2 / 1），
  *     复用 attacksRemaining 通道，不引入新状态字段；回合开始重置（turn.ts）不受影响；
  *   - 配件（accessory）一律不可发起攻击（§4「attacksRemaining 恒 0」），即使光环
@@ -32,8 +38,10 @@ import { RuleError } from '../engine'
 import type { Action } from '../types/actions'
 import type { DamageSource, GameEvent } from '../types/events'
 import type { BoardUnit, GameState, PlayerId, TargetRef } from '../types/state'
+import type { Rng } from './prng'
 import { getCardDefinition } from './registry'
 import { checkGameEnd, damageHero, opponentOf } from './turn'
+import { resolveUnitTrigger } from './triggers'
 import { damageUnit, findUnit } from './units'
 
 export type AttackAction = Extract<Action, { type: 'ATTACK' }>
@@ -96,7 +104,12 @@ export function legalAttackActions(state: Readonly<GameState>, playerId: PlayerI
   return actions
 }
 
-export function applyAttack(state: GameState, action: AttackAction, events: GameEvent[]): void {
+export function applyAttack(
+  state: GameState,
+  action: AttackAction,
+  events: GameEvent[],
+  rng: Rng,
+): void {
   // —— 合法性闸门（顺序即 §3 表格次序）——
   if (action.playerId !== state.activePlayer) {
     throw new RuleError('NOT_YOUR_TURN', `当前是 ${state.activePlayer} 的回合，不能攻击`, {
@@ -173,21 +186,34 @@ export function applyAttack(state: GameState, action: AttackAction, events: Game
 
   events.push({ type: 'ATTACK_DECLARED', attackerId: attacker.instanceId, target })
 
-  // 双向伤害交换（同时结算语义）：反击力先取快照，规避防守方阵亡剥离光环后的脏值
+  // 攻击者 onAttack 触发（M1-ENG4，§5）：宣告后、伤害交换前结算，可改攻血/打伤害；
+  // 若触发把防守方或攻击者自己打死，下面的活性复核会让本次交换落空。
+  resolveUnitTrigger(state, attacker, 'onAttack', events, rng, 0)
+
+  // 战斗交换活性复核：onAttack 触发在宣告阶段致死者不再参与交换（攻击落空，
+  // 预算照常消耗）——避免对已离场单位二次结算死亡（双 MINION_DIED / 双墓地）。
+  const attackerReady = findUnit(state, attacker.instanceId) !== undefined
+  const defenderReady =
+    defenderUnit !== null && findUnit(state, defenderUnit.instanceId) !== undefined
+
+  // 双向伤害交换（同时结算语义）：反击力先取快照（onAttack 结算后），规避防守方
+  // 阵亡剥离光环后的脏值
   const attackerSource: DamageSource = { kind: 'unit', instanceId: attacker.instanceId }
   const retaliation = defenderUnit !== null ? defenderUnit.attack : 0
-  if (defenderUnit !== null) {
-    damageUnit(state, defenderUnit, attacker.attack, attackerSource, events)
-    if (retaliation > 0) {
+  if (defenderUnit !== null && attackerReady && defenderReady) {
+    damageUnit(state, defenderUnit, attacker.attack, attackerSource, events, rng)
+    // 反击前复核攻击者存活：onDamaged 反伤 / 防守方亡语可能已将其击杀（阵亡不反击）
+    if (retaliation > 0 && findUnit(state, attacker.instanceId)) {
       damageUnit(
         state,
         attacker,
         retaliation,
         { kind: 'unit', instanceId: defenderUnit.instanceId },
         events,
+        rng,
       )
     }
-  } else if (defenderHeroId !== null) {
+  } else if (defenderHeroId !== null && attackerReady) {
     damageHero(state, defenderHeroId, attacker.attack, attackerSource, events)
   }
 

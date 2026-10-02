@@ -75,8 +75,8 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
       return { state: next, events }
     }
     case 'ATTACK': {
-      // 攻击无随机步骤，rng 原值写回（序列化状态保持逐字节一致）
-      applyAttack(next, action as AttackAction, events)
+      // rng 传给攻击结算：onAttack/onDamaged 触发与亡语的 random 步骤会消费 RNG
+      applyAttack(next, action as AttackAction, events, rng)
       next.rng = { state: rng.getState() }
       return { state: next, events }
     }

@@ -330,3 +330,130 @@ describe('黄金回放：含 ATTACK 攻击交换的对局片段（M1-ENG3）', (
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })
 })
+
+// —— M1-ENG4：亡语连锁 / 跳闸锁费 / onAttack·onDamaged 触发的黄金回放 ——
+
+const KEYWORD_GOLDEN_CARDS: CardDefinition[] = [
+  { id: 'kg-bomber', name: '蓝屏轰炸机', faction: 'neutral', type: 'gpu', cost: 100, attack: 3, health: 2, keywords: ['deathrattle'],
+    effect: { trigger: 'deathrattle', steps: [{ op: 'damage', target: { kind: 'all', pool: 'enemyUnits' }, amount: 1 }] } },
+  { id: 'kg-legacy', name: '传家宝显卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 1, keywords: ['taunt', 'deathrattle'],
+    effect: { trigger: 'deathrattle', steps: [{ op: 'summon', cardId: 'kg-token', count: 2 }] } },
+  { id: 'kg-token', name: '亮机卡', faction: 'neutral', type: 'gpu', cost: 0, attack: 1, health: 1 },
+  { id: 'kg-overload', name: '白牌电源', faction: 'neutral', type: 'driver', cost: 100, keywords: ['overload'],
+    effect: { trigger: 'onPlay', steps: [
+      { op: 'draw', player: 'sourceOwner', count: 1 },
+      { op: 'lockMana', player: 'sourceOwner', amount: 200 },
+    ] } },
+  { id: 'kg-onattack', name: '越战越勇', faction: 'neutral', type: 'gpu', cost: 100, attack: 2, health: 3,
+    effect: { trigger: 'onAttack', steps: [{ op: 'buff', target: { kind: 'random', pool: 'self' }, attack: 1 }] } },
+  { id: 'kg-ondamaged', name: '静电外壳', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 4,
+    effect: { trigger: 'onDamaged', steps: [{ op: 'damage', target: { kind: 'random', pool: 'enemyUnits' }, amount: 1 }] } },
+]
+registerCardDefinitions(KEYWORD_GOLDEN_CARDS)
+
+function keywordGoldenDeck(): DeckSpec {
+  return { cards: KEYWORD_GOLDEN_CARDS.map((c) => ({ cardId: c.id, count: 5 })) }
+}
+
+function keywordGoldenSetup(seed: number): GameSetup {
+  return {
+    seed,
+    players: [
+      { id: 'P1', faction: 'nvidia', deck: keywordGoldenDeck() },
+      { id: 'P2', faction: 'amd', deck: keywordGoldenDeck() },
+    ],
+  }
+}
+
+/**
+ * 探针式录制（M1-ENG4）：与 M1-ENG3 探针同一模式——每回合行动方先打出至多 2 张牌，
+ * 再按 getLegalActions 枚举顺序贪心发起至多 6 次攻击，最后 END_TURN；对局结束即停。
+ * 同 seed 下探针结果恒定，故可作回放输入。
+ */
+function keywordGoldenActions(seed: number, rounds: number): Action[] {
+  let state: GameState = engine.initGame(keywordGoldenSetup(seed))
+  const actions: Action[] = []
+  for (let i = 0; i < rounds; i++) {
+    if (state.phase !== 'main') break
+    const active = state.activePlayer
+    let plays = 0
+    while (plays < 2) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is PlayCardAction => a.type === 'PLAY_CARD')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      plays++
+    }
+    let attacks = 0
+    while (attacks < 6) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is AttackAction => a.type === 'ATTACK')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      attacks++
+    }
+    if (state.phase !== 'main') break
+    const end: Action = { type: 'END_TURN', playerId: active }
+    actions.push(end)
+    state = engine.applyAction(state, end).state
+  }
+  return actions
+}
+
+describe('黄金回放：亡语连锁 / 跳闸 / onAttack·onDamaged 的对局片段（M1-ENG4）', () => {
+  const actions = keywordGoldenActions(TEST_SEED, 24)
+  const recording = recordReplay(keywordGoldenSetup(TEST_SEED), actions)
+
+  it('动作序列确实包含出牌与攻击（关键词混合卡组）', () => {
+    expect(actions.filter((a) => a.type === 'PLAY_CARD').length).toBeGreaterThanOrEqual(10)
+    expect(actions.filter((a) => a.type === 'ATTACK').length).toBeGreaterThanOrEqual(10)
+  })
+
+  it('回放触发关键词事件：亡语（含跳闸/死亡管线）与 BURN_OUT 锁费结算', () => {
+    const { events, finalState } = runReplay(engine, recording)
+    expect(events.filter((e) => e.type === 'KEYWORD_TRIGGERED' && e.keyword === 'deathrattle').length).toBeGreaterThanOrEqual(2)
+    expect(events.filter((e) => e.type === 'KEYWORD_TRIGGERED' && e.keyword === 'overload').length).toBeGreaterThanOrEqual(1)
+    expect(events.filter((e) => e.type === 'BURN_OUT').length).toBeGreaterThanOrEqual(1)
+    expect(events.filter((e) => e.type === 'MINION_DIED').length).toBeGreaterThanOrEqual(3)
+    // 亡语连锁产生后续效果事件（召唤 token / 范围伤害）
+    expect(events.filter((e) => e.type === 'MINION_SUMMONED' && e.source === 'effect').length).toBeGreaterThanOrEqual(1)
+    // onDamaged（静电外壳反伤）在回放中真实发生（效果伤害可按 source.ref 追溯）
+    expect(events.filter((e) => e.type === 'DAMAGE_DEALT' && e.source.kind === 'effect' && e.source.ref === 'kg-ondamaged').length).toBeGreaterThanOrEqual(1)
+    // onAttack（越战越勇自增攻）在回放中真实发生：buff 无目录事件，以终局场上单位攻值 > 基础值 2 为证
+    expect(finalState.board.some((u) => u.cardId === 'kg-onattack' && u.attack > 2)).toBe(true)
+  })
+
+  it('确定性：同 seed + 动作两次运行，状态哈希与事件流逐字节一致', () => {
+    const a = runReplay(engine, recording)
+    const b = runReplay(engine, recording)
+    expect(a.stateHash).toBe(b.stateHash)
+    expect(a.events).toEqual(b.events)
+    expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
+  })
+
+  it('对局状态自洽（仍在进行或已终局，单位属性非负）', () => {
+    const { finalState } = runReplay(engine, recording)
+    expect(finalState.turn).toBeGreaterThanOrEqual(10)
+    expect(finalState.players.P1.lockedMana).toBeGreaterThanOrEqual(0)
+    for (const unit of finalState.board) {
+      expect(unit.attack).toBeGreaterThanOrEqual(0)
+      expect(unit.health).toBeGreaterThanOrEqual(0)
+      expect(unit.maxHealth).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('异 seed 异哈希（随机亡语/触发链差异进入状态）', () => {
+    const other = runReplay(engine, recordReplay(keywordGoldenSetup(TEST_SEED + 1), keywordGoldenActions(TEST_SEED + 1, 24)))
+    const base = runReplay(engine, recording)
+    expect(other.stateHash).not.toBe(base.stateHash)
+  })
+
+  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+    const { stateHash } = runReplay(engine, recording)
+    expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
+  })
+})

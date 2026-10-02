@@ -1,12 +1,18 @@
 /**
- * 场上单位原语 —— 召唤 / 离场 / 伤害 / 治疗 / 增益（M1-ENG2）。
+ * 场上单位原语 —— 召唤 / 离场 / 伤害 / 治疗 / 增益（M1-ENG2；死亡管线与 onDamaged
+ * 触发属 M1-ENG4）。
  *
  * 本模块函数就地修改传入的 state（applyAction 已负责深拷贝隔离），并按因果顺序
  * 向 events 追加事件。凡是改变场上单位集合的操作（召唤 / 阵亡移除）一律经
  * withBoardAuras 包裹，保证光环贡献不漂移（见 aura.ts 的纪律说明）。
  *
- * 阵亡流程（§6 / §5）：快照单位（光环剥离前）→ MINION_DIED（移出场外前）→
- * 移出场并重算光环 → 进墓地。deathrattle 结算点见 removeUnitFromBoard 的 TODO。
+ * 阵亡流程（§6 / §5 / §7）：快照单位（光环剥离前）→ MINION_DIED（移出场外前）→
+ * 移出场并重算光环 → 亡语结算（以阵亡快照；死亡后、进墓地前）→ 进墓地。
+ * 亡语再次致死深度优先展开（单层队列，见 triggers.ts 的触发链说明）。
+ *
+ * 触发链参数（triggerDepth，M1-ENG4）：嵌套触发层级，顶层调用为 0（缺省）；
+ * 伤害/增益原语将其传给死亡管线与 onDamaged 触发，供触发链深度上限守护。
+ * rng 必须显式传入（亡语 / onDamaged 的 random 步骤消耗引擎 RNG）。
  */
 
 import { BOARD_LIMIT } from '../constants'
@@ -14,6 +20,8 @@ import type { CardDefinition } from '../types/cards'
 import type { DamageSource, GameEvent } from '../types/events'
 import type { BoardUnit, GameState, PlayerId, TargetRef } from '../types/state'
 import { withBoardAuras } from './aura'
+import type { Rng } from './prng'
+import { resolveDeathrattle, resolveUnitTrigger } from './triggers'
 
 export function findUnit(state: GameState, instanceId: string): BoardUnit | undefined {
   return state.board.find((u) => u.instanceId === instanceId)
@@ -65,30 +73,36 @@ export function summonUnit(
 }
 
 /**
- * 单位离场：MINION_DIED（移出场外前，载荷为阵亡时快照）→ 移出并重算光环 → 进墓地。
- * 阵亡快照在光环剥离前取得，保留阵亡时刻的可见数值。
+ * 单位离场：MINION_DIED（移出场外前，载荷为阵亡时快照）→ 移出并重算光环 →
+ * 亡语结算（阵亡快照，死亡后、进墓地前；cause='destroy' 同样触发）→ 进墓地。
+ * 阵亡快照在光环剥离前取得，保留阵亡时刻的可见数值；一次死亡只触发一次
+ * （单位随本调用永久离场，无法二次死亡）。
  */
 export function removeUnitFromBoard(
   state: GameState,
   unit: BoardUnit,
   cause: 'damage' | 'destroy' | 'sacrifice',
   events: GameEvent[],
+  rng: Rng,
+  triggerDepth = 0,
 ): void {
   const snapshot: BoardUnit = { ...unit, keywords: [...unit.keywords] }
   withBoardAuras(state, () => {
     events.push({ type: 'MINION_DIED', unit: snapshot, cause })
     state.board = state.board.filter((u) => u.instanceId !== unit.instanceId)
   })
-  // TODO(M1-ENG4/M1-ENG6): deathrattle 在此结算（§5：死亡后、进入墓地前，一次死亡只触发
-  // 一次，被 destroy 同样触发）——需要效果上下文（actorId = unit.ownerId），届时由调用方传入。
+  // 亡语（§7 蓝屏/传家宝）：死亡后、进入墓地前，以阵亡快照结算；亡语致死在此
+  // 深度优先展开（triggers.ts 触发链）。ENG6 的 destroy 原语落地后自动全覆盖。
+  resolveDeathrattle(state, snapshot, events, rng, triggerDepth)
   const owner = state.players[unit.ownerId]
   owner.graveyard = [...owner.graveyard, { instanceId: unit.instanceId, cardId: unit.cardId }]
 }
 
 /**
- * 对场上单位结算伤害（§7 三年质保）：圣盾抵消任意金额的下一次伤害并消失，
- * 发出 DAMAGE_DEALT{shieldConsumed:true} + KEYWORD_TRIGGERED；血量下限截断为 0，
- * 血量归零即阵亡移场。注意：本函数不判定胜负，由动作层收尾统一 checkGameEnd。
+ * 对场上单位结算伤害（§7 三年质保）：圣盾抵消任意金额的下一次伤害并消失
+ * （视为未受伤：不触发 onDamaged），发出 DAMAGE_DEALT{shieldConsumed:true}；
+ * 血量下限截断为 0。受伤存活后结算 onDamaged 触发（§5）；血量归零即阵亡移场
+ * （走亡语管线）。注意：本函数不判定胜负，由动作层收尾统一 checkGameEnd。
  */
 export function damageUnit(
   state: GameState,
@@ -96,6 +110,8 @@ export function damageUnit(
   amount: number,
   source: DamageSource,
   events: GameEvent[],
+  rng: Rng,
+  triggerDepth = 0,
 ): void {
   if (amount <= 0) return
   const target: TargetRef = { kind: 'unit', instanceId: unit.instanceId }
@@ -119,7 +135,12 @@ export function damageUnit(
   }
   unit.health = Math.max(0, unit.health - amount)
   events.push({ type: 'DAMAGE_DEALT', source, target, amount, remainingHealth: unit.health })
-  if (unit.health <= 0) removeUnitFromBoard(state, unit, 'damage', events)
+  if (unit.health <= 0) {
+    removeUnitFromBoard(state, unit, 'damage', events, rng, triggerDepth)
+    return
+  }
+  // onDamaged（§5 触发时点）：受伤后且存活时结算；阵亡已走亡语，不再触发
+  resolveUnitTrigger(state, unit, 'onDamaged', events, rng, triggerDepth)
 }
 
 /** 治疗场上单位：上限 maxHealth（含光环贡献）；无实际回复时不发事件。 */
@@ -155,7 +176,8 @@ export function healHero(state: GameState, playerId: PlayerId, amount: number, e
 
 /**
  * 永久增益（可负，如「矿难」-2/-2）：attack 下限 0；health/maxHealth 同步增减，
- * maxHealth 下限 1；血量 ≤ 0 即阵亡（按伤害死亡处理）。
+ * maxHealth 下限 1；血量 ≤ 0 即阵亡（按伤害死亡处理、走亡语管线；无 DAMAGE_DEALT
+ * 事件，故不触发 onDamaged）。
  * buff 无对应事件（§6 目录未收录，改动经状态可见；如需动画由 WF-ENGINE 提案）。
  */
 export function buffUnit(
@@ -164,6 +186,8 @@ export function buffUnit(
   attackDelta: number,
   healthDelta: number,
   events: GameEvent[],
+  rng: Rng,
+  triggerDepth = 0,
 ): void {
   if (attackDelta === 0 && healthDelta === 0) return
   if (attackDelta !== 0) unit.attack = Math.max(0, unit.attack + attackDelta)
@@ -172,6 +196,6 @@ export function buffUnit(
   unit.health += healthDelta
   if (unit.health <= 0) {
     unit.health = 0
-    removeUnitFromBoard(state, unit, 'damage', events)
+    removeUnitFromBoard(state, unit, 'damage', events, rng, triggerDepth)
   }
 }

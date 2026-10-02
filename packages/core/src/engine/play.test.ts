@@ -440,10 +440,9 @@ describe('driver 效果原语（rules.md §5）', () => {
     expect(a.state.rng.state).not.toBe(TEST_SEED >>> 0)
   })
 
-  it('destroy / lockMana / handler 属 M1-ENG6：响亮抛错，状态保持不变', () => {
+  it('destroy / handler 属 M1-ENG6：响亮抛错，状态保持不变（lockMana 已于 M1-ENG4 提前实装）', () => {
     const cases: Array<[string, string]> = [
       ['h1', 't-destroy'],
-      ['h1', 't-lock'],
       ['h1', 't-handler'],
     ]
     for (const [uid, cardId] of cases) {

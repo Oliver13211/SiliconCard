@@ -8,7 +8,8 @@
  *   < BOARD_LIMIT（BOARD_FULL；driver 不占槽不受限）。
  *
  * 结算顺序：扣功耗 → 移出手牌 → CARD_PLAYED →（gpu/accessory）入场召唤
- * → battlecry/onPlay 步骤结算（effect 解释器）→ 胜负判定。
+ * → battlecry/onPlay 步骤结算（effect 解释器）→ overload 跳闸锁定（M1-ENG4）
+ * → 胜负判定。
  *
  * 边界取舍（详见 M1-ENG2 汇报）：accessory 出牌后进场上（占扩展槽、受
  * BOARD_LIMIT 限制、按 0/1 身板入场、不可攻击），在场期间光环常驻。
@@ -25,6 +26,7 @@ import { resolveEffectSteps, targetCandidates, type EffectContext } from './effe
 import type { Rng } from './prng'
 import { getCardDefinition } from './registry'
 import { checkGameEnd } from './turn'
+import { applyOverloadForPlayedCard } from './triggers'
 import { countOwnUnits, summonUnit } from './units'
 
 export type PlayCardAction = Extract<Action, { type: 'PLAY_CARD' }>
@@ -108,7 +110,10 @@ export function applyPlayCard(
   }
   // effect.aura 不在此结算：光环由 aura.ts 按在场源投影（召唤时已随 withBoardAuras 生效）
 
-  // TODO(M1-ENG4): overload（跳闸）关键词的 lockedMana 结算——数值来自卡牌效果定义（§7）
+  // overload（跳闸，M1-ENG4）：带 overload 关键词的牌打出后锁定下回合功耗——
+  // N 由 effect 的 lockMana 步骤给出（上方步骤结算时已累加 lockedMana），
+  // 无 lockMana 步骤按默认值兜底；裁定细节见 triggers.ts 与 M1-ENG4 汇报。
+  applyOverloadForPlayedCard(state, action.playerId, def, sourceUnitId, action.uid, events)
   // TODO(M1-ENG6): handler 逃生舱在 resolveEffectSteps 内接入
 
   checkGameEnd(state, events)

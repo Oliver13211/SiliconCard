@@ -11,8 +11,9 @@
  * - buff / grantKeyword / removeKeyword 无对应目录事件，改动经状态可见。
  *
  * M1-ENG2 覆盖原语：damage / heal / buff / grantKeyword / removeKeyword / draw /
- * summon / gainArmor；destroy / revive / lockMana / handler 逃生舱留 M1-ENG6
- * （命中即抛错，宁可响亮失败也不静默吞步骤）。
+ * summon / gainArmor；M1-ENG4 增补：lockMana（跳闸数值通道，overload 关键词裁定见
+ * triggers.ts）。destroy / revive / handler 逃生舱留 M1-ENG6（命中即抛错，
+ * 宁可响亮失败也不静默吞步骤）。
  */
 
 import type { EffectStep, InstanceId, TargetPool, TargetSelector } from '../types/cards'
@@ -26,14 +27,19 @@ import { buffUnit, damageUnit, findUnit, healHero, healUnit, summonUnit } from '
 export interface EffectContext {
   state: GameState
   events: GameEvent[]
-  /** 效果结算归属方（出牌者 / 技能使用者） */
+  /** 效果结算归属方（出牌者 / 技能使用者 / 触发效果的单位拥有者） */
   actorId: PlayerId
-  /** 效果源实例（gpu/accessory 战吼等）；driver 出牌无源实例为 null */
+  /** 效果源实例（gpu/accessory 战吼等）；driver 出牌或亡语快照外无源实例为 null */
   sourceUnitId: InstanceId | null
   sourceCardId: string
   rng: Rng
-  /** chosen 选择器的目标（来自 PLAY_CARD action.target） */
+  /** chosen 选择器的目标（来自 PLAY_CARD action.target；触发型效果恒 null） */
   chosenTarget: TargetRef | null
+  /**
+   * 触发链嵌套深度（M1-ENG4）：顶层动作效果为 0（缺省），每进入一层触发结算 +1；
+   * 传给伤害/增益原语，供死亡管线与 onDamaged 触发续接（上限见 triggers.ts）。
+   */
+  triggerDepth?: number
 }
 
 /** 按数组顺序结算效果步骤（§5：深度优先、单层队列，嵌套触发即同步展开） */
@@ -58,7 +64,7 @@ function resolveEffectStep(ctx: EffectContext, step: EffectStep): void {
         if (target.kind === 'unit') {
           const unit = findUnit(ctx.state, target.instanceId)
           // 结算中途已阵亡的目标自动跳过（池每步按当前状态重新解析）
-          if (unit) damageUnit(ctx.state, unit, step.amount, source, ctx.events)
+          if (unit) damageUnit(ctx.state, unit, step.amount, source, ctx.events, ctx.rng, ctx.triggerDepth ?? 0)
         } else {
           damageHero(ctx.state, target.playerId, step.amount, source, ctx.events)
         }
@@ -84,7 +90,7 @@ function resolveEffectStep(ctx: EffectContext, step: EffectStep): void {
         // buff 只作用于场上单位（CPU 无攻血属性，命中即跳过）
         if (target.kind !== 'unit') continue
         const unit = findUnit(ctx.state, target.instanceId)
-        if (unit) buffUnit(ctx.state, unit, attack, health, ctx.events)
+        if (unit) buffUnit(ctx.state, unit, attack, health, ctx.events, ctx.rng, ctx.triggerDepth ?? 0)
       }
       return
     }
@@ -129,10 +135,20 @@ function resolveEffectStep(ctx: EffectContext, step: EffectStep): void {
       ctx.events.push({ type: 'ARMOR_GAINED', playerId, amount: step.amount, totalArmor: player.armor })
       return
     }
+    case 'lockMana': {
+      // 跳闸锁定（M1-ENG4 提前实装，ENG6 范围缩减）：累加进目标方 lockedMana，
+      // 下回合 §2.2 BURN_OUT 结算后清零；可叠加（多张/多步累加）。无目录事件——
+      // overload 关键词的生效由 play.ts 经 applyOverloadForPlayedCard 发 KEYWORD_TRIGGERED。
+      if (step.amount <= 0) return
+      const playerId = effectPlayerId(ctx, step.player)
+      ctx.state.players[playerId].lockedMana += step.amount
+      return
+    }
     case 'destroy':
     case 'revive':
-    case 'lockMana':
-      // TODO(M1-ENG6): 实现剩余原语 destroy / revive / lockMana（12VHPWR 熔毁、矿卡重生、跳闸）。
+      // TODO(M1-ENG6): 实现剩余原语 destroy / revive（12VHPWR 熔毁、矿卡重生）。
+      // destroy 落地时经 removeUnitFromBoard(cause 'destroy') 结算：不抵挡质保、
+      // 照常触发亡语（M1-ENG4 死亡管线已就绪）。
       throw new Error(`效果原语 ${step.op} 属 M1-ENG6 范围，尚未实现`)
     case 'handler':
       // TODO(M1-ENG6): 命名 handler 逃生舱——core/src/effects 按 name 注册后在此分发。
