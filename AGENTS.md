@@ -62,6 +62,8 @@
 - 梗文案守则：圈内自嘲向全开（A 卡光追、烧接口等），红线是不攻击真实个人；口吻参考 design-report §2；
 - Commit 遵循 Conventional Commits（`feat/fix/docs/chore/test/refactor` + 范围）；
 - CI 绿才可合并（M0-INF3 落地后生效）。
+- ai agent务必在任务完成时修改todolist（或类似的辅助开发工具）
+- 不管对于任何类型的开发者,任何文档类内容语言务必为中文
 
 ## 当前状态与下一步
 
