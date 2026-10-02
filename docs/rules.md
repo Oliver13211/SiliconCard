@@ -11,18 +11,19 @@
 | 常量 | 值 | 含义 | core 导出 |
 |---|---|---|---|
 | `HERO_MAX_HEALTH` | 30 | CPU 体质上限 | ✓ |
-| `MAX_MANA` | 10 | 供电上限（W） | ✓ |
+| `MAX_MANA` | 1000 | 供电上限（W） | ✓ |
+| `MANA_PER_TURN` | 100 | 每个自身回合的供电增长（W） | ✓ |
 | `HAND_LIMIT` | 10 | 手牌上限，超出即烧牌 | ✓ |
 | `BOARD_LIMIT` | 7 | 扩展槽（场上单位上限，双方各自计） | ✓ |
 | `DECK_SIZE` | 30 | 标准卡组张数 | ✓ |
 | `OPENING_HAND_SIZE` | 3 | 开局起手张数 | ✓ |
-| `HERO_POWER_COST` | 2 | 派系技能功耗（W） | ✓ |
+| `HERO_POWER_COST` | 200 | 派系技能功耗（W） | ✓ |
 | `FIRST_PLAYER` | `'P1'` | 固定先手方 | ✓ |
 
 ## 2. 回合流程
 
 1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ `GAME_START` 事件 → 进入 P1 的第 1 回合；
-2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k, MAX_MANA)`；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；
+2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k × MANA_PER_TURN, MAX_MANA)`（即 +100W/回合，至 1000W）；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；
 3. **出牌阶段**：任意次 `PLAY_CARD` / `USE_HERO_POWER`（受功耗与合法性约束）；
 4. **攻击**：己方单位可宣告攻击（入场当回合不可攻击，除非 charge）；
 5. **回合结束**（`END_TURN`）：结算 `turnEnd` 触发效果 → 手牌若 > `HAND_LIMIT`，从末尾烧牌（`CARD_BURNED`，烧掉的牌不进弃牌堆）→ 切换 `activePlayer`。
@@ -51,7 +52,7 @@
 | `name` / `flavor` | string | name✓ | 展示名 / 风味梗文案 |
 | `faction` | string | ✓ | 数据驱动派系 id（§8） |
 | `type` | `gpu \| driver \| accessory` | ✓ | 显卡（随从）/ 驱动事件（法术）/ 配件 |
-| `cost` | number | ✓ | 功耗（W），0–10 |
+| `cost` | number | ✓ | 功耗（W），0–1000。**建议对齐真实 TDP 设计**（如 RTX 5090 → 575、RTX 4090 → 450、无外接供电小卡 → ≤75），费用曲线天然携带梗味 |
 | `attack` / `health` | number | gpu 必填 | 仅 gpu；其余类型出现即 schema 违例 |
 | `keywords` | Keyword[] | | §7 的稳定 id |
 | `effect` | EffectSpec | | §5 |
@@ -104,7 +105,7 @@
 | `windfury` | 双芯 GPU | 每回合 `attacksRemaining` 重置为 2；与 charge 叠加无冲突 |
 | `deathrattle` | 蓝屏/传家宝 | 死亡时结算 `effect.trigger='deathrattle'`；一次死亡只触发一次；被 destroy 同样触发 |
 | `stealth` | 无输出亮机 | 攻击前不可被敌方**指定**（攻击/target 选择均不可）；该单位攻击后立即现身；taunt 交互见上 |
-| `overload` | 跳闸 | 携带该效果的牌结算后 `lockedMana += N`（N 由效果定义），下回合生效后清零（§2.2）；可叠加 |
+| `overload` | 跳闸 | 携带该效果的牌结算后 `lockedMana += N`（N 由效果定义，按新功耗刻度取值，如 100/200），下回合生效后清零（§2.2）；可叠加 |
 
 ## 8. 派系与技能 v1（M1 实装前四系）
 

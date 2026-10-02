@@ -10,7 +10,10 @@ export const FIRST_PLAYER = 'P1' as const
 export const HERO_MAX_HEALTH = 30
 
 /** 供电上限（W） */
-export const MAX_MANA = 10
+export const MAX_MANA = 1000
+
+/** 每个自身回合增长的供电（W） */
+export const MANA_PER_TURN = 100
 
 /** 手牌上限，超出即烧牌 */
 export const HAND_LIMIT = 10
@@ -25,4 +28,4 @@ export const DECK_SIZE = 30
 export const OPENING_HAND_SIZE = 3
 
 /** 派系技能功耗 */
-export const HERO_POWER_COST = 2
+export const HERO_POWER_COST = 200
