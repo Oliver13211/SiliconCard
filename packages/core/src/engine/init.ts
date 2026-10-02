@@ -1,8 +1,9 @@
 /**
  * initGame —— 开局构建（docs/rules.md §2.1）。
  *
- * 顺序：卡组校验（总数 = DECK_SIZE，否则 DECK_INVALID）→ 按 seed 洗双方牌库（先 P1 后 P2）
- * → 交替发起手（P1 先抽，各 OPENING_HAND_SIZE 张）→ GAME_START → 进入 P1 的第 1 回合。
+ * 顺序：卡组校验（总数 = DECK_SIZE、cardId 已注册且定义合法，否则 DECK_INVALID）
+ * → 按 seed 洗双方牌库（先 P1 后 P2）→ 交替发起手（P1 先抽，各 OPENING_HAND_SIZE 张）
+ * → GAME_START → 进入 P1 的第 1 回合。
  *
  * 注：M0 引擎接口 `initGame(setup): GameState` 不携带事件流，因此 GAME_START 与首个
  * TURN_START（turn 1, drawCount 0）仅按序内部构造、不对外发出；消费方可由初始 state
@@ -22,6 +23,7 @@ import type { DeckEntry, GameSetup, GameState, PlayerSetup, PlayerState } from '
 import { beginTurn, drawCard } from './turn'
 import type { Rng } from './prng'
 import { createRng } from './prng'
+import { findCardDefinitionIssues, getCardDefinition } from './registry'
 
 export function initGame(setup: GameSetup): GameState {
   if (!setup || !setup.players || setup.players.length !== 2) {
@@ -67,7 +69,10 @@ function validateSetupPosition(player: PlayerSetup, expected: PlayerSetup['id'])
   }
 }
 
-/** 卡组校验（§2.1）：展开后总数必须等于 DECK_SIZE，且每条数量为正整数 */
+/**
+ * 卡组校验（§2.1 + M1-ENG2 registry 补强）：展开后总数必须等于 DECK_SIZE，
+ * 每条数量为正整数，且每张 cardId 已注册、定义通过 findCardDefinitionIssues 结构校验。
+ */
 function validateDeck(player: PlayerSetup): void {
   if (!player.deck || !Array.isArray(player.deck.cards)) {
     throw new RuleError('DECK_INVALID', `${player.id}: 卡组定义缺失`, { playerId: player.id })
@@ -79,6 +84,22 @@ function validateDeck(player: PlayerSetup): void {
         playerId: player.id,
         cardId: entry.cardId,
         count: entry.count,
+      })
+    }
+    const def = getCardDefinition(entry.cardId)
+    if (!def) {
+      throw new RuleError('DECK_INVALID', `${player.id}: 卡牌 ${entry.cardId} 未注册定义`, {
+        playerId: player.id,
+        cardId: entry.cardId,
+        reason: 'unregistered',
+      })
+    }
+    const issue = findCardDefinitionIssues(def)
+    if (issue) {
+      throw new RuleError('DECK_INVALID', `${player.id}: 卡牌 ${entry.cardId} 定义不合法：${issue}`, {
+        playerId: player.id,
+        cardId: entry.cardId,
+        reason: issue,
       })
     }
     total += entry.count

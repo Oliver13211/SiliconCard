@@ -2,7 +2,8 @@
  * 引擎实现装配 —— 对外唯一入口 createEngine(): Engine（架构铁律 3：
  * 一切交互经 initGame / applyAction / getLegalActions / viewFor 四函数）。
  *
- * 实现进度：M1-ENG1（回合机）；出牌/攻击/派系技能随 M1-ENG2/3/5 接入。
+ * 实现进度：M1-ENG1（回合机）+ M1-ENG2（出牌结算：PLAY_CARD / 效果解释器 /
+ * 光环投影）；攻击（M1-ENG3）/ 关键词系统（M1-ENG4）/ 派系技能（M1-ENG5）后续接入。
  */
 
 import type { Engine } from '../engine'

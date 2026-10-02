@@ -93,16 +93,8 @@ describe('CONCEDE —— 认输（rules.md §9）', () => {
   })
 })
 
-describe('未实现动作 → UNKNOWN_ACTION（M1-ENG2/3/5）', () => {
-  it('PLAY_CARD 报 UNKNOWN_ACTION 并注明属 M1-ENG2', () => {
-    const state = initGame(makeSetup())
-    const error = catchRuleError(() =>
-      applyAction(state, { type: 'PLAY_CARD', playerId: 'P1', uid: 'h1' }),
-    )
-    expect(error.code).toBe('UNKNOWN_ACTION')
-    expect(error.message).toContain('M1-ENG2')
-  })
-
+describe('未实现动作 → UNKNOWN_ACTION（M1-ENG3/5）', () => {
+  // PLAY_CARD 自 M1-ENG2 起完整实装，覆盖见 play.test.ts
   it('ATTACK 报 UNKNOWN_ACTION 并注明属 M1-ENG3', () => {
     const state = initGame(makeSetup())
     const error = catchRuleError(() =>
@@ -143,11 +135,14 @@ describe('对局结束后的动作闸门（rules.md §3）', () => {
 })
 
 describe('getLegalActions（AI / UI 可交互性共用）', () => {
-  it('未结束：当前行动玩家得到 [END_TURN, CONCEDE]，对手得到 []', () => {
+  it('未结束：当前行动玩家得到 [END_TURN, CONCEDE, PLAY_CARD…]（起手 3 张均 playable），对手得到 []', () => {
     const state = initGame(makeSetup())
     expect(getLegalActions(state, 'P1')).toEqual([
       { type: 'END_TURN', playerId: 'P1' },
       { type: 'CONCEDE', playerId: 'P1' },
+      { type: 'PLAY_CARD', playerId: 'P1', uid: 'h1' },
+      { type: 'PLAY_CARD', playerId: 'P1', uid: 'h3' },
+      { type: 'PLAY_CARD', playerId: 'P1', uid: 'h5' },
     ])
     expect(getLegalActions(state, 'P2')).toEqual([])
   })

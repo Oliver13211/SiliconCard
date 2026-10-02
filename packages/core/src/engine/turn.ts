@@ -3,11 +3,15 @@
  *
  * 本模块函数就地修改传入的 state（applyAction 已负责深拷贝隔离，initGame 构建全新状态），
  * 并按因果顺序向 events 追加事件（§6：单次动作的事件线性排列，只增不改）。
+ *
+ * M1-ENG2：抽牌/烧牌后调用 applyHandCosts 重算手牌 cost（cost 光环投影，见 aura.ts）；
+ * 回合开始重置攻击次数时，配件与 0 攻单位重置为 0（不可攻击，ENG3 侧同样会拒绝）。
  */
 
 import { FIRST_PLAYER, HAND_LIMIT, MANA_PER_TURN, MAX_MANA } from '../constants'
 import type { DamageSource, GameEvent } from '../types/events'
 import type { GameState, PlayerId, PlayerState } from '../types/state'
+import { applyHandCosts } from './aura'
 import { getCardDefinition } from './registry'
 
 /** 全局回合号 → 该玩家自身第几回合（先手固定 P1：奇数全局回合属 P1，偶数属 P2） */
@@ -47,7 +51,8 @@ export function beginTurn(state: GameState, playerId: PlayerId, events: GameEven
   player.heroPowerUsed = false
   for (const unit of state.board) {
     if (unit.ownerId !== playerId) continue
-    unit.attacksRemaining = unit.keywords.includes('windfury') ? 2 : 1
+    const isAccessory = getCardDefinition(unit.cardId)?.type === 'accessory'
+    unit.attacksRemaining = isAccessory || unit.attack <= 0 ? 0 : unit.keywords.includes('windfury') ? 2 : 1
     unit.attackedThisTurn = false
   }
 
@@ -75,9 +80,10 @@ export function drawCard(state: GameState, playerId: PlayerId, events: GameEvent
   player.deck = player.deck.slice(1)
   const uid = `h${state.nextInstanceId}`
   state.nextInstanceId += 1
-  // 未注册定义的卡按 cost 0 处理（content 注册与校验属 M1-ENG2 出牌结算的范围）
+  // 未注册定义的卡按 cost 0 处理（initGame 已校验注册；此处兜底防御）
   const cost = getCardDefinition(entry.cardId)?.cost ?? 0
   player.hand = [...player.hand, { uid, cardId: entry.cardId, cost }]
+  applyHandCosts(state) // cost 光环对新手牌同样生效（绝对重算，见 aura.ts）
   events.push({ type: 'CARD_DRAWN', playerId, cardId: entry.cardId, source: 'deck' })
 }
 
@@ -135,10 +141,13 @@ export function applyTurnEndEffects(state: GameState, playerId: PlayerId, events
 /** 手牌超限：从末尾烧牌（§2.5）。烧掉的牌不进弃牌堆（与弃牌不同） */
 export function burnExcessHand(state: GameState, playerId: PlayerId, events: GameEvent[]): void {
   const player = state.players[playerId]
+  let burned = false
   while (player.hand.length > HAND_LIMIT) {
-    const burned = player.hand.at(-1)
-    if (!burned) break
+    const last = player.hand.at(-1)
+    if (!last) break
     player.hand = player.hand.slice(0, -1)
-    events.push({ type: 'CARD_BURNED', playerId, cardId: burned.cardId, reason: 'hand_full' })
+    burned = true
+    events.push({ type: 'CARD_BURNED', playerId, cardId: last.cardId, reason: 'hand_full' })
   }
+  if (burned) applyHandCosts(state) // cost 光环重算（剩余手牌的 cost 仍按定义绝对校正）
 }

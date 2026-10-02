@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { DECK_SIZE } from '../constants'
+import type { CardDefinition } from '../types/cards'
 import { catchRuleError, makeDeckSpec, makeDistinctDeckSpec, makeSetup, TEST_SEED } from '../testing/state'
 import { stableHash } from '../testing/hash'
 import { createEngine } from './index'
 import { initGame } from './init'
+import { registerCardDefinitions } from './registry'
 
 const engine = createEngine()
+
+/** M1-ENG2 registry 补强：非法 schema 的卡牌定义应被 initGame 拒绝（DECK_INVALID） */
+const BAD_DEFS: CardDefinition[] = [
+  { id: 'bad-gpu-no-attack', name: '残缺显卡', faction: 'neutral', type: 'gpu', cost: 100, health: 3 },
+  { id: 'bad-driver-with-attack', name: '多手驱动', faction: 'neutral', type: 'driver', cost: 100, attack: 1, health: 1 },
+  { id: 'bad-cost', name: '负功耗', faction: 'neutral', type: 'driver', cost: -50 },
+  { id: 'bad-keyword', name: '未知关键词', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 1, keywords: ['quantum_tunneling' as never] },
+  { id: 'bad-aura', name: '坏光环', faction: 'neutral', type: 'accessory', cost: 100,
+    effect: { trigger: 'battlecry', aura: { stat: 'luck' as never, delta: 1, scope: 'ownUnits' } } },
+]
+registerCardDefinitions(BAD_DEFS)
 
 describe('initGame —— 开局构建（rules.md §2.1）', () => {
   it('进入 P1 的第 1 回合：turn 1 / 先手 P1 / P1 供电 100W，P2 尚未开始回合', () => {
@@ -70,12 +83,29 @@ describe('initGame —— 开局构建（rules.md §2.1）', () => {
     )
   })
 
-  it('DECK_INVALID：总数不足/超出', () => {
-    const short = catchRuleError(() => initGame(makeSetup(TEST_SEED, makeDeckSpec('x', 29))))
+  it('DECK_INVALID：总数不足/超出（M1-ENG2 起需用已注册卡牌驱动本用例）', () => {
+    const short = catchRuleError(() =>
+      initGame(makeSetup(TEST_SEED, makeDeckSpec('smoke-gpu', 29))),
+    )
     expect(short.code).toBe('DECK_INVALID')
     expect(short.message).toContain('30')
-    const over = catchRuleError(() => initGame(makeSetup(TEST_SEED, makeDeckSpec('x', 31))))
+    const over = catchRuleError(() => initGame(makeSetup(TEST_SEED, makeDeckSpec('smoke-gpu', 31))))
     expect(over.code).toBe('DECK_INVALID')
+  })
+
+  it('DECK_INVALID：卡组内含未注册 cardId（M1-ENG2 registry 补强）', () => {
+    const error = catchRuleError(() => initGame(makeSetup(TEST_SEED, makeDeckSpec('ghost-card', 30))))
+    expect(error.code).toBe('DECK_INVALID')
+    expect(error.message).toContain('未注册')
+    expect(error.detail).toMatchObject({ cardId: 'ghost-card', reason: 'unregistered' })
+  })
+
+  it('DECK_INVALID：卡牌定义违反 §4 schema（gpu 缺攻血 / 非 gpu 带攻血 / cost 越界 / 未知关键词 / 坏光环）', () => {
+    for (const def of BAD_DEFS) {
+      const error = catchRuleError(() => initGame(makeSetup(TEST_SEED, makeDeckSpec(def.id, 30))))
+      expect(error.code).toBe('DECK_INVALID')
+      expect(error.message).toContain(def.id)
+    }
   })
 
   it('DECK_INVALID：数量非正整数 / 非法对局配置', () => {

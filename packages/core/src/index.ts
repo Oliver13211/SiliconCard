@@ -7,7 +7,7 @@
  * - 一切交互经 Engine 四函数：initGame / applyAction / getLegalActions / viewFor；
  * - 一切产出经 GameEvent 事件流。
  */
-export const CORE_VERSION = '0.0.1'
+export const CORE_VERSION = '0.0.2'
 
 export * from './constants'
 export * from './types/cards'

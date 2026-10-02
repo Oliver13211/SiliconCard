@@ -62,6 +62,8 @@
 
 **派系技能不是卡牌**——由 `factions/*.json` 定义 `{ factionId, skillName, skillId, cost: 2, effect: EffectSpec }`，引擎按 USE_HERO_POWER 结算。
 
+**accessory 在场形态（M1-ENG2 边界裁定，v1.0）**：打出后**进场上**成为 BoardUnit——占扩展槽并计入 `BOARD_LIMIT`、以 0/1 身板入场（定义无攻血字段）、不可攻击（attacksRemaining 恒 0）、可被效果指定、可死亡（光环随之回收）；driver 不占槽。
+
 ## 5. 效果系统
 
 - **声明式优先**：`EffectSpec.steps` 按**数组顺序**逐步结算；每步产生对应事件（伤害→`DAMAGE_DEALT` 等）；
@@ -69,7 +71,8 @@
 - **命名 handler 逃生舱**：steps 表达不了的逻辑（如「12VHPWR 熔毁」的特殊条件）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；
 - **随机语义**：一切 `random` 选择与概率判定走引擎种子 RNG（§11），**顺序固定**：按步骤数组顺序、目标池的 board 顺序进行；
 - **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；
-- **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）。
+- **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）；
+- **光环与 buff 叠加（M1-ENG2 边界裁定，v1.0）**：单位有效属性 ≡ 基础值 + 永久 buff + 当前在场光环贡献，加法叠加、互不覆盖；光环是**派生量**（不进 GameState），单位集合每次变化后按入场顺序重算；手牌 cost 按卡牌定义绝对重算（下限 0，AuraSpec.scope 决定作用方）；随机选择与概率判定的结算顺序见上文随机语义。
 
 ## 6. 事件目录定稿（17 种，渲染契约）
 

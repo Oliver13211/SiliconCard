@@ -1,14 +1,44 @@
 /**
  * 测试支撑：构造最小合法 GameState / PlayerState / BoardUnit 与对局配置的工具。
  * 仅供 core 内部测试使用，不属于对外导出 API。
+ *
+ * 模块加载即注册默认测试卡（M1-ENG2 起 initGame 校验卡组内 cardId 必须已注册且
+ * 定义合法）：smoke-gpu（makeDeckSpec 缺省卡）与 card-0..29（makeDistinctDeckSpec）。
+ * 测试专属卡牌在各测试文件内另行 registerCardDefinitions（vitest 文件间隔离）。
  */
 
 import { DECK_SIZE, HERO_MAX_HEALTH } from '../constants'
+import type { CardDefinition } from '../types/cards'
 import type { BoardUnit } from '../types/state'
 import type { DeckSpec, GameSetup, GameState, PlayerId, PlayerState } from '../types/state'
 import { RuleError } from '../engine'
+import { registerCardDefinitions } from '../engine/registry'
 
 export const TEST_SEED = 20261001
+
+/** makeDeckSpec 的缺省测试卡（手牌测试惯用 cost 100 与其保持一致） */
+export const SMOKE_GPU: CardDefinition = {
+  id: 'smoke-gpu',
+  name: '烟雾测试卡',
+  faction: 'neutral',
+  type: 'gpu',
+  cost: 100,
+  attack: 1,
+  health: 1,
+  rarity: 'starter',
+}
+
+const DISTINCT_TEST_CARDS: CardDefinition[] = Array.from({ length: DECK_SIZE }, (_, i) => ({
+  id: `card-${i}`,
+  name: `洗牌测试卡 ${i}`,
+  faction: 'neutral',
+  type: 'gpu',
+  cost: 1,
+  attack: 1,
+  health: 1,
+}))
+
+registerCardDefinitions([SMOKE_GPU, ...DISTINCT_TEST_CARDS])
 
 export function makePlayer(id: PlayerId, over: Partial<PlayerState> = {}): PlayerState {
   return {
