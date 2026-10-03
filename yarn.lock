@@ -814,7 +814,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@siliconcard/ai@workspace:packages/ai":
+"@siliconcard/ai@workspace:^, @siliconcard/ai@workspace:packages/ai":
   version: 0.0.0-use.local
   resolution: "@siliconcard/ai@workspace:packages/ai"
   dependencies:
@@ -834,6 +834,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@siliconcard/client@workspace:packages/client"
   dependencies:
+    "@siliconcard/ai": "workspace:^"
     "@siliconcard/content": "workspace:^"
     "@siliconcard/core": "workspace:^"
     "@types/react": "npm:^19.0.0"
