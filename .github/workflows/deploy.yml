@@ -1,0 +1,61 @@
+name: Deploy Pages
+
+# M1-INF4：GitHub Pages 部署流水线（WF-RELEASE 第 2 步）。
+# push main 即构建上线；CI 已在 ci.yml 单独把关 lint/typecheck/test/coverage/build。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages 的 Actions 部署源需要这两个权限：
+#   pages: write —— 创建/更新 Pages 部署
+#   id-token: write —— deploy-pages 以 OIDC 短期令牌认证（不使用 PAT）
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 一次只跑一个部署，后来的排队等待（不取消进行中的部署，避免线上半成品）
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+
+jobs:
+  deploy:
+    name: build & deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 与 ci.yml 一致：读取 packageManager 字段，锁定仓库约定的 yarn 4.18.1
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install
+        run: yarn install
+
+      - name: Build
+        run: yarn build
+
+      # 产物仅 client 的 dist（Vite 构建输出，base 相对路径见 vite.config.ts）
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: packages/client/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
