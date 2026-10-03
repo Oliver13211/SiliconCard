@@ -1,6 +1,6 @@
 {
   "name": "@siliconcard/ai",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "main": "src/index.ts",
@@ -9,7 +9,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
+    "test": "node ../../node_modules/vitest/vitest.mjs run"
   },
   "dependencies": {
     "@siliconcard/core": "workspace:^"
