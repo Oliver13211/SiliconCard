@@ -140,8 +140,17 @@ function findEffectStepIssues(step: EffectStep): string | null {
       return null
     case 'destroy':
       return targetSelectorIssue(step.target)
-    case 'revive':
+    case 'revive': {
+      // 结构校验（TS 类型在编译期把关，content JSON 需运行期闸门，M1-ENG6）
+      if (step.pick !== 'lastOwnedGpu' && step.pick !== 'random') {
+        return `未知 revive pick ${String(step.pick)}`
+      }
+      if (step.to !== 'sourceOwnerBoard') return `未知 revive 目标 ${String(step.to)}`
+      if (step.count !== undefined && (!Number.isInteger(step.count) || step.count < 1)) {
+        return 'revive count 必须为正整数'
+      }
       return null
+    }
     case 'gainArmor':
     case 'lockMana':
       if (!Number.isInteger(step.amount) || step.amount < 0) return `${step.op} amount 必须为非负整数`
@@ -157,5 +166,9 @@ function targetSelectorIssue(selector: TargetSelector): string | null {
     return `未知目标选择器 ${String((selector as { kind?: unknown }).kind)}`
   }
   if (!KNOWN_POOLS.includes(selector.pool)) return `未知目标池 ${String(selector.pool)}`
+  // M1-ENG6 additive tag 过滤：出现时必须为非空字符串（卡牌定义 tags 的子类标记）
+  if (selector.tag !== undefined && (typeof selector.tag !== 'string' || !selector.tag)) {
+    return '目标选择器 tag 必须为非空字符串'
+  }
   return null
 }

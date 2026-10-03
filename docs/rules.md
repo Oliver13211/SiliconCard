@@ -23,10 +23,10 @@
 ## 2. 回合流程
 
 1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ `GAME_START` 事件 → 进入 P1 的第 1 回合；
-2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k × MANA_PER_TURN, MAX_MANA)`（即 +100W/回合，至 1000W）；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；
+2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k × MANA_PER_TURN, MAX_MANA)`（即 +100W/回合，至 1000W）；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；上述序列完成后结算 `turnStart` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死于序列尾部再判胜负）；
 3. **出牌阶段**：任意次 `PLAY_CARD` / `USE_HERO_POWER`（受功耗与合法性约束）；
 4. **攻击**：己方单位可宣告攻击（入场当回合不可攻击，除非 charge）；
-5. **回合结束**（`END_TURN`）：结算 `turnEnd` 触发效果 → 手牌若 > `HAND_LIMIT`，从末尾烧牌（`CARD_BURNED`，烧掉的牌不进弃牌堆）→ 切换 `activePlayer`。
+5. **回合结束**（`END_TURN`）：结算 `turnEnd` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死即在此收局，`GAME_END` 后不再烧牌/切换/进入对方回合）→ 手牌若 > `HAND_LIMIT`，从末尾烧牌（`CARD_BURNED`，烧掉的牌不进弃牌堆）→ 切换 `activePlayer`。
 
 ## 3. 动作与合法性（Action ⇄ RuleError）
 
@@ -67,10 +67,10 @@
 ## 5. 效果系统
 
 - **声明式优先**：`EffectSpec.steps` 按**数组顺序**逐步结算；每步产生对应事件（伤害→`DAMAGE_DEALT` 等）；
-- **12 种原语**（`EffectStep`）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`；
+- **12 种原语**（`EffectStep`）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`，并可携带**可选 `tag` 子类过滤**（M1-ENG6 additive：非空字符串时仅命中卡牌定义 `tags` 含该标记的场上单位，如 `'miner'` 供「矿难」筛选；英雄无 tags，tag 过滤下天然排除；chosen 的 tag 合法性随出牌闸门校验）；`destroy` 不被三年质保抵挡、经既有死亡管线结算（§7）；`revive` 从 `sourceOwner` 墓地捞回显卡（`pick: lastOwnedGpu | random`，复活为新实例：新 instanceId、召唤失调重置、keywords/身板按定义恢复；复活即离墓；场满与池空同为静默 no-op 且不消耗 RNG）；
 - **命名 handler 逃生舱**：steps 表达不了的逻辑（如「开光追试试」的 30% 失败判定）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；**光追失败事件暂定形态（M1-ENG5，待契约评审）**：经 `KEYWORD_TRIGGERED` 发出，keyword 字段暂借 `'overload'`、`detail:'光追失败'`、`instanceId` 用 skillId；评审通过后改专属事件类型并通报 client-ui / client-3d；
 - **随机语义**：一切 `random` 选择与概率判定走引擎种子 RNG（§11），**顺序固定**：按步骤数组顺序、目标池的 board 顺序进行；
-- **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；
+- **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；`turnStart / turnEnd` 的作用范围为**全场双方单位**（M1-ENG6 裁定：规则书未按拥有者限定；按入场顺序单层队列结算，以结算开始时的在场名单为准——中途离场不触发、中途召唤不入队）；
 - **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）；
 - **光环与 buff 叠加（M1-ENG2 边界裁定，v1.0）**：单位有效属性 ≡ 基础值 + 永久 buff + 当前在场光环贡献，加法叠加、互不覆盖；光环是**派生量**（不进 GameState），单位集合每次变化后按入场顺序重算；手牌 cost 按卡牌定义绝对重算（下限 0，AuraSpec.scope 决定作用方）；随机选择与概率判定的结算顺序见上文随机语义。
 - **亡语结算语义（M1-ENG4 边界裁定，v1.0）**：deathrattle 以**阵亡时快照**结算（光环剥离前取快照），连锁深度优先、深度上限 100（超出响亮抛错）；质保完全抵挡与直接阵亡均不构成「受伤」（不触发 onDamaged）；效果触发型效果无玩家指定（chosen 恒空）；效果规格（effect.trigger）是机制事实源，关键词仅为展示标记。

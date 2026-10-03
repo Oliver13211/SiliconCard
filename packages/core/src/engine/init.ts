@@ -59,8 +59,9 @@ export function initGame(setup: GameSetup): GameState {
 
   dealOpeningHands(state, events)
   events.push({ type: 'GAME_START', seed: setup.seed, firstPlayer: FIRST_PLAYER })
-  // 进入 P1 的第 1 回合：复用回合开始序列（turn 0 → 1，P1 首回合不抽牌）
-  beginTurn(state, FIRST_PLAYER, events)
+  // 进入 P1 的第 1 回合：复用回合开始序列（turn 0 → 1，P1 首回合不抽牌；
+  // 场上无单位，turnStart 触发自然为空）
+  beginTurn(state, FIRST_PLAYER, events, rng)
   return state
 }
 

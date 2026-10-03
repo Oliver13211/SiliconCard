@@ -8,8 +8,8 @@
  *   < BOARD_LIMIT（BOARD_FULL；driver 不占槽不受限）。
  *
  * 结算顺序：扣功耗 → 移出手牌 → CARD_PLAYED →（gpu/accessory）入场召唤
- * → battlecry/onPlay 步骤结算（effect 解释器）→ overload 跳闸锁定（M1-ENG4）
- * → 胜负判定。
+ * → battlecry/onPlay 步骤结算（effect 解释器，§5 全部 12 种原语，M1-ENG6 补全
+ *   destroy / revive）→ overload 跳闸锁定（M1-ENG4）→ 胜负判定。
  *
  * 边界取舍（详见 M1-ENG2 汇报）：accessory 出牌后进场上（占扩展槽、受
  * BOARD_LIMIT 限制、按 0/1 身板入场、不可攻击），在场期间光环常驻。
@@ -18,7 +18,7 @@
 import { BOARD_LIMIT } from '../constants'
 import { RuleError } from '../engine'
 import type { Action } from '../types/actions'
-import type { CardDefinition, EffectStep, InstanceId, TargetPool } from '../types/cards'
+import type { EffectStep, InstanceId, TargetPool, TargetSelector } from '../types/cards'
 import type { GameEvent } from '../types/events'
 import type { GameState, HandCard, PlayerId, TargetRef } from '../types/state'
 import { applyHandCosts } from './aura'
@@ -114,22 +114,23 @@ export function applyPlayCard(
   // N 由 effect 的 lockMana 步骤给出（上方步骤结算时已累加 lockedMana），
   // 无 lockMana 步骤按默认值兜底；裁定细节见 triggers.ts 与 M1-ENG4 汇报。
   applyOverloadForPlayedCard(state, action.playerId, def, sourceUnitId, action.uid, events)
-  // TODO(M1-ENG6): handler 逃生舱在 resolveEffectSteps 内接入
+  // handler 逃生舱 / destroy / revive 等剩余原语经 resolveEffectSteps 结算（M1-ENG6 全量接通）
 
   checkGameEnd(state, events)
 }
 
-/** 收集效果步骤中全部 chosen 选择器的目标池（多池取交集，v1 出牌仅携带单目标） */
-export function chosenPoolsOfSteps(steps: readonly EffectStep[] | undefined): TargetPool[] {
-  const pools: TargetPool[] = []
+/** 收集效果步骤中全部 chosen 选择器（M1-ENG6：携带 tag 子类过滤，v1 出牌仅携带单目标） */
+export function chosenSelectorsOfSteps(steps: readonly EffectStep[] | undefined): TargetSelector[] {
+  const selectors: TargetSelector[] = []
   for (const step of steps ?? []) {
-    if ('target' in step && step.target.kind === 'chosen') pools.push(step.target.pool)
+    if ('target' in step && step.target.kind === 'chosen') selectors.push(step.target)
   }
-  return pools
+  return selectors
 }
 
-function chosenPools(def: CardDefinition): TargetPool[] {
-  return chosenPoolsOfSteps(def.effect?.steps)
+/** 收集效果步骤中全部 chosen 选择器的目标池（多池取交集，v1 出牌仅携带单目标） */
+export function chosenPoolsOfSteps(steps: readonly EffectStep[] | undefined): TargetPool[] {
+  return chosenSelectorsOfSteps(steps).map((selector) => selector.pool)
 }
 
 export function sameTarget(a: TargetRef, b: TargetRef): boolean {
@@ -139,10 +140,45 @@ export function sameTarget(a: TargetRef, b: TargetRef): boolean {
 }
 
 /**
- * chosen 目标校验（对目标池集合；PLAY_CARD 与 USE_HERO_POWER 共用，M1-ENG5 抽出）：
- * 必须命中全部池的候选交集；detail 携带原因（§3 总则）。
- * subject 为错误消息主语（出牌『该牌』/ 技能『技能「清灰」』）。
+ * chosen 目标校验（对选择器集合；M1-ENG6 起为基准实现）：
+ * 必须命中全部选择器候选的交集（池 + 可选 tag 子类过滤 + 敌方潜行过滤）；
+ * detail 携带原因（§3 总则）。subject 为错误消息主语（出牌『该牌』/ 技能『技能「清灰」』）。
  */
+export function validateChosenTargetInSelectors(
+  state: GameState,
+  actorId: PlayerId,
+  selectors: readonly TargetSelector[],
+  target: TargetRef | undefined,
+  subject: string,
+): void {
+  if (selectors.length === 0) return // 无 chosen 步骤：多余的 target 宽容忽略
+  if (!target) {
+    throw new RuleError('INVALID_TARGET', `${subject}需要指定一个目标`, {
+      reason: 'target_required',
+      pools: selectors.map((selector) => selector.pool),
+    })
+  }
+  for (const selector of selectors) {
+    const candidates = targetCandidates(state, actorId, selector.pool, null, {
+      respectStealth: true,
+      tag: selector.tag,
+    })
+    if (!candidates.some((candidate) => sameTarget(candidate, target))) {
+      throw new RuleError(
+        'INVALID_TARGET',
+        `目标对${subject}不可选（pool=${selector.pool}${selector.tag ? `；tag=${selector.tag}` : ''}；敌方潜行单位现身前不可被指定）`,
+        {
+          reason: 'not_in_pool',
+          pool: selector.pool,
+          ...(selector.tag ? { tag: selector.tag } : {}),
+          target,
+        },
+      )
+    }
+  }
+}
+
+/** chosen 目标校验（对目标池集合；heroPower 等无 tag 场景的池粒度入口） */
 export function validateChosenTargetInPools(
   state: GameState,
   actorId: PlayerId,
@@ -150,26 +186,16 @@ export function validateChosenTargetInPools(
   target: TargetRef | undefined,
   subject: string,
 ): void {
-  if (pools.length === 0) return // 无 chosen 步骤：多余的 target 宽容忽略
-  if (!target) {
-    throw new RuleError('INVALID_TARGET', `${subject}需要指定一个目标`, {
-      reason: 'target_required',
-      pools,
-    })
-  }
-  for (const pool of pools) {
-    const candidates = targetCandidates(state, actorId, pool, null, { respectStealth: true })
-    if (!candidates.some((candidate) => sameTarget(candidate, target))) {
-      throw new RuleError('INVALID_TARGET', `目标对${subject}不可选（pool=${pool}；敌方潜行单位现身前不可被指定）`, {
-        reason: 'not_in_pool',
-        pool,
-        target,
-      })
-    }
-  }
+  validateChosenTargetInSelectors(
+    state,
+    actorId,
+    pools.map((pool) => ({ kind: 'chosen', pool })),
+    target,
+    subject,
+  )
 }
 
-/** chosen 目标校验（对效果步骤集合）：池取步骤内全部 chosen 选择器 */
+/** chosen 目标校验（对效果步骤集合）：选择器取步骤内全部 chosen（含 tag） */
 export function validateChosenTargetAgainstSteps(
   state: GameState,
   actorId: PlayerId,
@@ -177,24 +203,42 @@ export function validateChosenTargetAgainstSteps(
   target: TargetRef | undefined,
   subject: string,
 ): void {
-  validateChosenTargetInPools(state, actorId, chosenPoolsOfSteps(steps), target, subject)
+  validateChosenTargetInSelectors(state, actorId, chosenSelectorsOfSteps(steps), target, subject)
 }
 
-/** chosen 池交集的目标枚举（getLegalActions 出牌 / 派系技能分支共用）：逐候选展开，潜行过滤开启 */
+/** chosen 选择器交集的目标枚举（M1-ENG6 起为基准实现）：逐候选展开，潜行与 tag 过滤开启 */
+export function expandChosenTargetsOfSelectors(
+  state: Readonly<GameState>,
+  actorId: PlayerId,
+  selectors: readonly TargetSelector[],
+): TargetRef[] {
+  if (selectors.length === 0) return []
+  // 三种选择器变体共享 pool/tag 字段：统一按候选枚举后取交集
+  const candidatesOf = (selector: TargetSelector): TargetRef[] =>
+    targetCandidates(state, actorId, selector.pool, null, {
+      respectStealth: true,
+      tag: selector.tag,
+    })
+  const [first, ...rest] = selectors
+  let candidates = first ? candidatesOf(first) : []
+  for (const selector of rest) {
+    const next = candidatesOf(selector)
+    candidates = candidates.filter((candidate) => next.some((n) => sameTarget(n, candidate)))
+  }
+  return candidates
+}
+
+/** chosen 池交集的目标枚举（getLegalActions 出牌 / 派系技能分支共用）：潜行过滤开启 */
 export function expandChosenTargets(
   state: Readonly<GameState>,
   actorId: PlayerId,
   pools: readonly TargetPool[],
 ): TargetRef[] {
-  if (pools.length === 0) return []
-  let candidates = targetCandidates(state, actorId, pools[0] as TargetPool, null, {
-    respectStealth: true,
-  })
-  for (const pool of pools.slice(1)) {
-    const next = targetCandidates(state, actorId, pool, null, { respectStealth: true })
-    candidates = candidates.filter((candidate) => next.some((n) => sameTarget(n, candidate)))
-  }
-  return candidates
+  return expandChosenTargetsOfSelectors(
+    state,
+    actorId,
+    pools.map((pool) => ({ kind: 'chosen', pool })),
+  )
 }
 
 /**
@@ -211,12 +255,12 @@ export function legalPlayCardActions(state: Readonly<GameState>, playerId: Playe
     if (card.cost > player.mana) continue
     if (def.type !== 'driver' && countOwnUnits(state, playerId) >= BOARD_LIMIT) continue
 
-    const pools = chosenPools(def)
-    if (pools.length === 0) {
+    const selectors = chosenSelectorsOfSteps(def.effect?.steps)
+    if (selectors.length === 0) {
       actions.push({ type: 'PLAY_CARD', playerId, uid: card.uid })
       continue
     }
-    for (const target of expandChosenTargets(state, playerId, pools)) {
+    for (const target of expandChosenTargetsOfSelectors(state, playerId, selectors)) {
       actions.push({ type: 'PLAY_CARD', playerId, uid: card.uid, target })
     }
   }

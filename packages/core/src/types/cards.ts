@@ -56,10 +56,15 @@ export type TargetPool =
   | 'sourceOwner' // 效果源拥有者（CPU 本体）
   | 'opposingPlayer'
 
+/**
+ * 目标选择器（M1-ENG6 additive 扩展）：可选 tag 子类过滤——非空字符串时仅命中
+ * 卡牌定义 tags 含该标记的场上单位（如 'miner' 供「矿难」筛选，§4 tags 字段）。
+ * 只增不改：既有无 tag 定义语义不变；英雄无卡牌定义，tag 过滤下天然排除。
+ */
 export type TargetSelector =
-  | { kind: 'chosen'; pool: TargetPool } // 出牌时玩家指定（合法性校验见 rules.md §3）
-  | { kind: 'random'; pool: TargetPool } // 引擎种子 RNG 随机选一
-  | { kind: 'all'; pool: TargetPool } // 全选
+  | { kind: 'chosen'; pool: TargetPool; tag?: string } // 出牌时玩家指定（合法性校验见 rules.md §3）
+  | { kind: 'random'; pool: TargetPool; tag?: string } // 引擎种子 RNG 随机选一
+  | { kind: 'all'; pool: TargetPool; tag?: string } // 全选
 
 export type EffectPlayer = 'sourceOwner' | 'opposingPlayer'
 

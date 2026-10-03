@@ -440,17 +440,19 @@ describe('driver 效果原语（rules.md §5）', () => {
     expect(a.state.rng.state).not.toBe(TEST_SEED >>> 0)
   })
 
-  it('destroy 属 M1-ENG6、未注册 handler：均响亮抛错，状态保持不变（lockMana 已于 M1-ENG4 提前实装；handler 逃生舱已于 M1-ENG5 接线，未注册 name 仍响亮失败）', () => {
-    const cases: Array<[string, string, RegExp]> = [
-      ['h1', 't-destroy', /M1-ENG6/],
-      ['h1', 't-handler', /未注册/],
-    ]
-    for (const [uid, cardId, pattern] of cases) {
-      const state = playState({ hand: [handCard(uid, cardId)], board: [makeUnit({ ownerId: 'P2', instanceId: 'u-e1' })] })
-      const before = stableHash(state)
-      expect(() => applyAction(state, playP1(uid, cardId === 't-destroy' ? unitRef('u-e1') : undefined))).toThrow(pattern)
-      expect(stableHash(state)).toBe(before)
-    }
+  it('destroy 原语（M1-ENG6 实装）：打出即摧毁目标单位（MINION_DIED cause=destroy，移场入墓）；未注册 handler 仍响亮抛错', () => {
+    // t-destroy（12VHPWR 熔毁）：destroy chosen allUnits
+    const state = playState({ hand: [handCard('h1', 't-destroy')], board: [], enemyBoard: [makeUnit({ ownerId: 'P2', instanceId: 'u-e1', cardId: 't-vanilla' })] })
+    const result = applyAction(state, playP1('h1', unitRef('u-e1')))
+    expect(result.state.board).toHaveLength(0) // 目标已移出场
+    expect(result.state.players.P2.graveyard).toMatchObject([{ instanceId: 'u-e1', cardId: 't-vanilla' }])
+    expect(eventsOf(result.events)).toContain('MINION_DIED')
+    expect(result.events.find((e) => e.type === 'MINION_DIED')).toMatchObject({ cause: 'destroy' })
+    // 未注册 handler 仍响亮抛错（§5 逃生舱：未实装的 name 是 content 数据缺陷信号）
+    const handlerState = playState({ hand: [handCard('h1', 't-handler')] })
+    const before = stableHash(handlerState)
+    expect(() => applyAction(handlerState, playP1('h1'))).toThrow(/未注册/)
+    expect(stableHash(handlerState)).toBe(before)
   })
 })
 

@@ -460,6 +460,122 @@ describe('黄金回放：亡语连锁 / 跳闸 / onAttack·onDamaged 的对局�
   })
 })
 
+// —— M1-ENG6：destroy / revive / turnStart·turnEnd 触发 / tag 过滤的黄金回放 ——
+
+const ENG6_GOLDEN_CARDS: CardDefinition[] = [
+  { id: 'eg-melt', name: '随机熔毁', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'destroy', target: { kind: 'random', pool: 'enemyUnits' } }] } },
+  { id: 'eg-revive', name: '矿卡重生', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'revive', pick: 'random', to: 'sourceOwnerBoard' }] } },
+  { id: 'eg-quake', name: '矿难', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'buff', target: { kind: 'all', pool: 'allUnits', tag: 'miner' }, attack: -1, health: -1 }] } },
+  { id: 'eg-turnend', name: '下班摸鱼', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 2,
+    effect: { trigger: 'turnEnd', steps: [{ op: 'draw', player: 'sourceOwner', count: 1 }] } },
+  { id: 'eg-turnstart', name: '晨间超频', faction: 'neutral', type: 'gpu', cost: 100, attack: 2, health: 2,
+    effect: { trigger: 'turnStart', steps: [{ op: 'buff', target: { kind: 'random', pool: 'self' }, attack: 1 }] } },
+  { id: 'eg-miner', name: '矿卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 3, health: 3, tags: ['miner'] },
+]
+registerCardDefinitions(ENG6_GOLDEN_CARDS)
+
+function eng6GoldenDeck(): DeckSpec {
+  return { cards: ENG6_GOLDEN_CARDS.map((c) => ({ cardId: c.id, count: 5 })) }
+}
+
+function eng6GoldenSetup(seed: number): GameSetup {
+  return {
+    seed,
+    players: [
+      { id: 'P1', faction: 'nvidia', deck: eng6GoldenDeck() },
+      { id: 'P2', faction: 'amd', deck: eng6GoldenDeck() },
+    ],
+  }
+}
+
+/**
+ * 探针式录制（M1-ENG6）：与 M1-ENG2..5 探针同一模式——每回合行动方先打出至多 2 张牌，
+ * 再 END_TURN；对局结束即停。destroy / revive / 矿难 / turnStart·turnEnd 触发卡组，
+ * 同 seed 下探针结果恒定，故可作回放输入。
+ */
+function eng6GoldenActions(seed: number, rounds: number): Action[] {
+  let state: GameState = engine.initGame(eng6GoldenSetup(seed))
+  const actions: Action[] = []
+  for (let i = 0; i < rounds; i++) {
+    if (state.phase !== 'main') break
+    const active = state.activePlayer
+    let plays = 0
+    while (plays < 2) {
+      const next = engine
+        .getLegalActions(state, active)
+        .find((a): a is PlayCardAction => a.type === 'PLAY_CARD')
+      if (!next) break
+      actions.push(next)
+      state = engine.applyAction(state, next).state
+      plays++
+    }
+    if (state.phase !== 'main') break
+    const end: Action = { type: 'END_TURN', playerId: active }
+    actions.push(end)
+    state = engine.applyAction(state, end).state
+  }
+  return actions
+}
+
+describe('黄金回放：destroy / revive / 回合时点触发 / tag 过滤的对局片段（M1-ENG6）', () => {
+  const actions = eng6GoldenActions(TEST_SEED, 16)
+  const recording = recordReplay(eng6GoldenSetup(TEST_SEED), actions)
+
+  it('动作序列确实包含出牌（destroy / revive / 矿难 / 触发单位混合卡组）', () => {
+    expect(actions.filter((a) => a.type === 'PLAY_CARD').length).toBeGreaterThanOrEqual(10)
+  })
+
+  it('回放产生 ENG6 类事件：destroy 死亡 / 效果复活 / 矿难减益致死 / 回合时点抽牌', () => {
+    const { events, finalState } = runReplay(engine, recording)
+    // destroy 原语：MINION_DIED cause=destroy 在回放中真实发生
+    expect(events.filter((e) => e.type === 'MINION_DIED' && e.cause === 'destroy').length).toBeGreaterThanOrEqual(1)
+    // revive 原语：效果召唤（复活）真实发生；复活把显卡带回场上
+    expect(events.filter((e) => e.type === 'MINION_SUMMONED' && e.source === 'effect').length).toBeGreaterThanOrEqual(1)
+    // 矿难（tag 过滤 buff）：矿卡被 -1/-1 减益致死（3/3 减三次）
+    expect(events.filter((e) => e.type === 'MINION_DIED' && e.cause === 'damage' && e.unit.cardId === 'eg-miner').length).toBeGreaterThanOrEqual(1)
+    // turnEnd 触发（下班摸鱼抽牌）：效果抽牌真实发生（含超限烧牌）
+    expect(events.filter((e) => e.type === 'CARD_BURNED').length).toBeGreaterThanOrEqual(1)
+    // turnStart 触发（晨间超频自增攻）：终局场上存在攻击 > 定义值 2 的该卡单位
+    expect(finalState.board.some((u) => u.cardId === 'eg-turnstart' && u.attack > 2)).toBe(true)
+  })
+
+  it('确定性：同 seed + 动作两次运行，状态哈希与事件流逐字节一致', () => {
+    const a = runReplay(engine, recording)
+    const b = runReplay(engine, recording)
+    expect(a.stateHash).toBe(b.stateHash)
+    expect(a.events).toEqual(b.events)
+    expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
+  })
+
+  it('异 seed 异哈希（随机 destroy / revive 差异进入状态）', () => {
+    const other = runReplay(engine, recordReplay(eng6GoldenSetup(TEST_SEED + 1), eng6GoldenActions(TEST_SEED + 1, 16)))
+    const base = runReplay(engine, recording)
+    expect(other.stateHash).not.toBe(base.stateHash)
+  })
+
+  it('对局状态自洽（单位属性非负、墓地条目均曾离场）', () => {
+    const { finalState } = runReplay(engine, recording)
+    for (const unit of finalState.board) {
+      expect(unit.attack).toBeGreaterThanOrEqual(0)
+      expect(unit.health).toBeGreaterThanOrEqual(0)
+      expect(unit.maxHealth).toBeGreaterThanOrEqual(1)
+    }
+    // 复活即离墓：墓地不含任何当前在场实例的 instanceId
+    const boardIds = new Set(finalState.board.map((u) => u.instanceId))
+    for (const entry of finalState.players.P1.graveyard) {
+      expect(boardIds.has(entry.instanceId)).toBe(false)
+    }
+  })
+
+  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+    const { stateHash } = runReplay(engine, recording)
+    expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
+  })
+})
+
 // —— M1-ENG5：派系技能（USE_HERO_POWER）的黄金回放 ——
 
 const POWER_TOKEN: CardDefinition = {

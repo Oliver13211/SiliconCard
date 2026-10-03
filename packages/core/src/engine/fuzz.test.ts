@@ -7,9 +7,12 @@
  *   - 有限动作内必然终局（疲劳兜底）。
  * 覆盖 PLAY_CARD 全部已实装原语、ATTACK 攻击交换（M1-ENG3：taunt / 攻击次数 /
  * 召唤失调 / 潜行现身）与 accessory 光环的长期叠加场景。
+ * M1-ENG6 扩展：destroy / revive 原语、tag 过滤减益（矿难）与 turnStart/turnEnd
+ * 触发单位进入卡组，长期随机对局冒烟新原语与回合时点触发链路。
  */
 
 import { describe, expect, it } from 'vitest'
+import { DECK_SIZE } from '../constants'
 import type { CardDefinition } from '../types/cards'
 import type { Action } from '../types/actions'
 import type { DeckSpec } from '../types/state'
@@ -32,11 +35,22 @@ const FUZZ_CARDS: CardDefinition[] = [
     effect: { trigger: 'onPlay', steps: [{ op: 'gainArmor', player: 'sourceOwner', amount: 2 }] } },
   { id: 'fz-heal', name: '治疗', faction: 'neutral', type: 'driver', cost: 100,
     effect: { trigger: 'onPlay', steps: [{ op: 'heal', target: { kind: 'random', pool: 'anyCharacter' }, amount: 3 }] } },
+  { id: 'fz-destroy', name: '熔毁', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'destroy', target: { kind: 'random', pool: 'enemyUnits' } }] } },
+  { id: 'fz-revive', name: '矿卡重生', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'revive', pick: 'random', to: 'sourceOwnerBoard' }] } },
+  { id: 'fz-quake', name: '矿难', faction: 'neutral', type: 'driver', cost: 100,
+    effect: { trigger: 'onPlay', steps: [{ op: 'buff', target: { kind: 'all', pool: 'allUnits', tag: 'miner' }, attack: -1, health: -1 }] } },
   { id: 'fz-token', name: '衍生物', faction: 'neutral', type: 'gpu', cost: 0, attack: 1, health: 1 },
   { id: 'fz-gpu', name: '白板显卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 2, health: 2 },
   { id: 'fz-big', name: '大显卡', faction: 'neutral', type: 'gpu', cost: 300, attack: 6, health: 6 },
   { id: 'fz-stealth', name: '潜行显卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 1, keywords: ['stealth'] },
   { id: 'fz-shield', name: '质保显卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 2, keywords: ['divine_shield'] },
+  { id: 'fz-miner', name: '矿卡', faction: 'neutral', type: 'gpu', cost: 100, attack: 2, health: 2, tags: ['miner'] },
+  { id: 'fz-turnend', name: '下班摸鱼', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 1,
+    effect: { trigger: 'turnEnd', steps: [{ op: 'draw', player: 'sourceOwner', count: 1 }] } },
+  { id: 'fz-turnstart', name: '晨间超频', faction: 'neutral', type: 'gpu', cost: 100, attack: 1, health: 1,
+    effect: { trigger: 'turnStart', steps: [{ op: 'buff', target: { kind: 'random', pool: 'self' }, attack: 1, health: 1 }] } },
   { id: 'fz-aura', name: '攻击光环', faction: 'neutral', type: 'accessory', cost: 100,
     effect: { trigger: 'battlecry', aura: { stat: 'attack', delta: 1, scope: 'ownUnits' } } },
   { id: 'fz-aura-cost', name: '费用光环', faction: 'neutral', type: 'accessory', cost: 100,
@@ -45,8 +59,9 @@ const FUZZ_CARDS: CardDefinition[] = [
 registerCardDefinitions(FUZZ_CARDS)
 
 function fuzzDeck(): DeckSpec {
-  const nonToken = FUZZ_CARDS.filter((c) => c.id !== 'fz-token').map((c) => ({ cardId: c.id, count: 2 }))
-  return { cards: [...nonToken, { cardId: 'fz-token', count: 4 }] }
+  // 非衍生卡各 1 张，余量用 0 费衍生物补齐 DECK_SIZE
+  const nonToken = FUZZ_CARDS.filter((c) => c.id !== 'fz-token').map((c) => ({ cardId: c.id, count: 1 }))
+  return { cards: [...nonToken, { cardId: 'fz-token', count: DECK_SIZE - nonToken.length }] }
 }
 
 const MAX_ACTIONS_PER_GAME = 160

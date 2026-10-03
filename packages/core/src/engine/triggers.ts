@@ -1,6 +1,7 @@
 /**
- * 触发型效果接线（M1-ENG4）—— deathrattle（蓝屏/传家宝亡语）、onAttack / onDamaged
- * 触发时点与 overload（跳闸）关键词的落地点（docs/rules.md §5 / §7）。
+ * 触发型效果接线（M1-ENG4 / M1-ENG6）—— deathrattle（蓝屏/传家宝亡语）、onAttack /
+ * onDamaged 触发时点、turnStart / turnEnd 回合时点触发（M1-ENG6，见
+ * resolveTurnPhaseTriggers）与 overload（跳闸）关键词的落地点（docs/rules.md §5 / §7）。
  *
  * - 亡语：removeUnitFromBoard 以阵亡快照调用 resolveDeathrattle（§5：死亡后、进入墓地前；
  *   §7：一次死亡只触发一次，被 destroy 同样触发）。效果上下文 actorId = 阵亡单位拥有者、
@@ -105,13 +106,13 @@ export function resolveDeathrattle(
 }
 
 /**
- * 单位触发型效果（onAttack / onDamaged）：解析该单位卡牌定义对应触发时点的步骤。
- * 触发型效果没有出牌者输入：chosen 解析为空、chosenTarget 恒 null。
+ * 单位触发型效果（onAttack / onDamaged / turnStart / turnEnd）：解析该单位卡牌定义
+ * 对应触发时点的步骤。触发型效果没有出牌者输入：chosen 解析为空、chosenTarget 恒 null。
  */
 export function resolveUnitTrigger(
   state: GameState,
   unit: BoardUnit,
-  trigger: Extract<EffectTrigger, 'onAttack' | 'onDamaged'>,
+  trigger: Extract<EffectTrigger, 'onAttack' | 'onDamaged' | 'turnStart' | 'turnEnd'>,
   events: GameEvent[],
   rng: Rng,
   triggerDepth: number,
@@ -123,6 +124,35 @@ export function resolveUnitTrigger(
     triggerContext(state, events, rng, unit.ownerId, unit.instanceId, unit.cardId, triggerDepth + 1),
     effect.steps,
   )
+}
+
+/**
+ * 回合时点触发（M1-ENG6）：turnStart / turnEnd 的场上单位遍历结算。
+ *
+ * - **作用范围（边界裁定，详见 M1-ENG6 汇报）**：全场双方单位——rules.md §5 将
+ *   turnStart/turnEnd 定义为卡牌触发时点，未按拥有者限定；结算按 board 顺序
+ *   （入场顺序，确定性固定序）逐一触发，actorId = 单位拥有者。
+ * - **单层队列（§5）**：以触发结算开始时的在场名单为准——结算中途离场（被其他
+ *   turnEnd 效果摧毁等）的单位跳过；结算中途召唤入场的单位不触发。
+ * - **无专属目录事件**：与 onAttack/onDamaged 同一取舍（M1-ENG4）——非 §7 关键词，
+ *   步骤自产事件（伤害/召唤等），触发本身静默。
+ * - **调用时机**：turnEnd 在 §2.5 END_TURN 序列（turnEnd 效果 → 手牌烧牌）；
+ *   turnStart 在 §2.2 回合开始序列（供电/跳闸/重置/抽牌）之后（turn.ts）。
+ */
+export function resolveTurnPhaseTriggers(
+  state: GameState,
+  trigger: Extract<EffectTrigger, 'turnStart' | 'turnEnd'>,
+  events: GameEvent[],
+  rng: Rng,
+  triggerDepth = 0,
+): void {
+  assertChainDepth(triggerDepth)
+  if (state.phase !== 'main') return // 对局已结束（如抽牌疲劳致死）：不再触发
+  const queued = [...state.board]
+  for (const unit of queued) {
+    if (!state.board.some((u) => u.instanceId === unit.instanceId)) continue // 已离场
+    resolveUnitTrigger(state, unit, trigger, events, rng, triggerDepth)
+  }
 }
 
 /**

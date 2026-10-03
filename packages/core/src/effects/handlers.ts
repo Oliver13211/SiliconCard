@@ -1,9 +1,6 @@
 /**
- * 命名 handler 逃生舱（docs/rules.md §5）—— EffectStep 原语组合表达不了的逻辑，
- * 在 core/src/effects/ 按 name 注册，经 { op: 'handler', name } 引用；注册处必须配单测。
- *
  * M1-ENG5 接线首个 handler：ray_tracing_try（开光追试试的 30% 失败判定）。
- * M1-ENG6 将继续接入 content 侧 handler（如「12VHPWR 熔毁」特殊条件）。
+ * M1-ENG6 增补 double_attack（攻击翻倍，§2.5 示例牌「DLSS 4」/帧生成）。
  *
  * 模块加载即注册内置 handler（与卡牌/派系技能注册表同模式）；宿主可用
  * registerEffectHandler 追加。注册表是环境配置而非对局状态，不随状态序列化。
@@ -12,7 +9,7 @@
 import type { DamageSource } from '../types/events'
 import type { EffectContext } from '../engine/effects'
 import { damageHero } from '../engine/turn'
-import { damageUnit, findUnit } from '../engine/units'
+import { buffUnit, damageUnit, findUnit } from '../engine/units'
 
 export type EffectHandler = (ctx: EffectContext) => void
 
@@ -87,6 +84,26 @@ function rayTracingTry(ctx: EffectContext): void {
 
 function registerBuiltinEffectHandlers(): void {
   registerEffectHandler('ray_tracing_try', rayTracingTry)
+  registerEffectHandler('double_attack', doubleAttack)
+}
+
+/**
+ * double_attack（M1-ENG6）：目标单位攻击翻倍（§2.5 示例牌「DLSS 4」，帧生成）。
+ *
+ * - **翻倍式 buff**：delta = 当前有效攻击（含光环贡献），经 buffUnit 走既有永久
+ *   增益通道（attack 下限 0、无目录事件）——0 攻单位翻倍无事发生；
+ * - **目标**：chosen 目标（出牌闸门已校验池/tag/潜行）；触发型效果 chosen 恒空 →
+ *   无事发生（与 ray_tracing_try 的触发误用同取舍）；
+ * - **边界裁定（详见 M1-ENG6 汇报）**：设计文案「本回合攻击翻倍」的时效性在 v1
+ *   不可表达——GameState 无临时增益字段（契约外），buff 为永久增量。本 handler
+ *   按永久翻倍实装，"到回合末衰减"需要契约提案（临时 buff 机制），见遗留问题。
+ */
+function doubleAttack(ctx: EffectContext): void {
+  const target = ctx.chosenTarget
+  if (!target || target.kind !== 'unit') return
+  const unit = findUnit(ctx.state, target.instanceId)
+  if (!unit) return // 结算中途已阵亡
+  buffUnit(ctx.state, unit, unit.attack, 0, ctx.events, ctx.rng, ctx.triggerDepth ?? 0)
 }
 
 registerBuiltinEffectHandlers()

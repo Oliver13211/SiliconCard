@@ -12,7 +12,9 @@ import { FIRST_PLAYER, HAND_LIMIT, MANA_PER_TURN, MAX_MANA } from '../constants'
 import type { DamageSource, GameEvent } from '../types/events'
 import type { GameState, PlayerId, PlayerState } from '../types/state'
 import { applyHandCosts } from './aura'
+import type { Rng } from './prng'
 import { getCardDefinition } from './registry'
+import { resolveTurnPhaseTriggers } from './triggers'
 
 /** 全局回合号 → 该玩家自身第几回合（先手固定 P1：奇数全局回合属 P1，偶数属 P2） */
 export function ownTurnNumber(turn: number, playerId: PlayerId): number {
@@ -28,9 +30,11 @@ export function opponentOf(playerId: PlayerId): PlayerId {
  * turn +1 → 供电曲线 maxMana = min(k×MANA_PER_TURN, MAX_MANA)，mana = maxMana - lockedMana
  * → 跳闸结算（lockedMana > 0 发 BURN_OUT 后清零）→ heroPowerUsed = false
  * → 己方单位 attacksRemaining 重置（windfury=2，其余 1）、attackedThisTurn = false
- * → 抽 1 张（先手 P1 的第 1 回合不抽，TURN_START.drawCount = 0）。
+ * → 抽 1 张（先手 P1 的第 1 回合不抽，TURN_START.drawCount = 0）
+ * → turnStart 触发效果（M1-ENG6：§2.2 序列之后，全场双方单位按 board 顺序结算，
+ *   作用范围裁定见 triggers.ts resolveTurnPhaseTriggers 与 M1-ENG6 汇报）。
  */
-export function beginTurn(state: GameState, playerId: PlayerId, events: GameEvent[]): void {
+export function beginTurn(state: GameState, playerId: PlayerId, events: GameEvent[], rng: Rng): void {
   state.turn += 1
   const player = state.players[playerId]
   const ownTurn = ownTurnNumber(state.turn, playerId)
@@ -58,6 +62,10 @@ export function beginTurn(state: GameState, playerId: PlayerId, events: GameEven
 
   if (drawCount > 0) drawCard(state, playerId, events)
   // 抽牌/疲劳伤害结算完毕后再判定胜负：保证 GAME_END 是本段事件的收尾
+  checkGameEnd(state, events)
+  // turnStart 触发（§2.2 序列之后）：对局已结束（如疲劳致死）则不再触发；
+  // 触发效果可能致死，收尾再判一次胜负（幂等，phase=ended 时直接返回）
+  resolveTurnPhaseTriggers(state, 'turnStart', events, rng)
   checkGameEnd(state, events)
 }
 
@@ -129,13 +137,19 @@ export function checkGameEnd(state: GameState, events: GameEvent[]): void {
 }
 
 /**
- * 回合结束的 turnEnd 触发效果结算 hook —— 效果系统属 M1-ENG6，当前为 no-op 占位。
+ * 回合结束的 turnEnd 触发效果结算（§2.5：TURN_END → turnEnd 效果 → 手牌烧牌，
+ * M1-ENG6 接通）：全场双方单位按 board 顺序结算（范围与时序裁定见
+ * triggers.ts resolveTurnPhaseTriggers 与 M1-ENG6 汇报）。胜负判定由动作层
+ * （apply.ts END_TURN 分支）在本调用后收尾，保证 GAME_END 收尾于事件流。
  */
-export function applyTurnEndEffects(state: GameState, playerId: PlayerId, events: GameEvent[]): void {
-  void state
-  void playerId
-  void events
-  // TODO(M1-ENG6): 遍历场上单位/配件中 EffectTrigger === 'turnEnd' 的效果，按声明顺序结算。
+export function applyTurnEndEffects(
+  state: GameState,
+  playerId: PlayerId,
+  events: GameEvent[],
+  rng: Rng,
+): void {
+  void playerId // turnEnd 触发全场结算（范围裁定见 resolveTurnPhaseTriggers），非行动方单位同样触发
+  resolveTurnPhaseTriggers(state, 'turnEnd', events, rng)
 }
 
 /** 手牌超限：从末尾烧牌（§2.5）。烧掉的牌不进弃牌堆（与弃牌不同） */

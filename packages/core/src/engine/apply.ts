@@ -22,7 +22,7 @@ import { applyAttack, legalAttackActions, type AttackAction } from './combat'
 import { applyUseHeroPower, legalHeroPowerActions, type UseHeroPowerAction } from './heroPower'
 import { createRng } from './prng'
 import { applyPlayCard, legalPlayCardActions, type PlayCardAction } from './play'
-import { applyTurnEndEffects, beginTurn, burnExcessHand, opponentOf } from './turn'
+import { applyTurnEndEffects, beginTurn, burnExcessHand, checkGameEnd, opponentOf } from './turn'
 
 export function cloneState(state: Readonly<GameState>): GameState {
   return JSON.parse(JSON.stringify(state)) as GameState
@@ -49,11 +49,19 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
         })
       }
       events.push({ type: 'TURN_END', turn: next.turn, playerId: action.playerId })
-      applyTurnEndEffects(next, action.playerId, events)
+      // turnEnd 触发效果（§2.5 序列先于烧牌；M1-ENG6 接通，全场单位按 board 顺序）
+      applyTurnEndEffects(next, action.playerId, events, rng)
+      // turnEnd 触发可能致死（如回合末伤害）：结算后即判胜负；终局则 GAME_END
+      // 收尾于事件流并停止推进（不再烧牌/切换/进入对方回合，§3 对局结束语义）
+      checkGameEnd(next, events)
+      if (next.phase === 'ended') {
+        next.rng = { state: rng.getState() }
+        return { state: next, events }
+      }
       burnExcessHand(next, action.playerId, events)
       const nextPlayer = opponentOf(action.playerId)
       next.activePlayer = nextPlayer
-      beginTurn(next, nextPlayer, events)
+      beginTurn(next, nextPlayer, events, rng)
       next.rng = { state: rng.getState() }
       return { state: next, events }
     }
