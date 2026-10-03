@@ -35,5 +35,12 @@ jobs:
       - name: Test
         run: yarn test
 
+      # M1-QA1 覆盖率门禁：core 的 85% 阈值（statements/branches/functions/lines）
+      # 声明在 packages/core/vitest.config.ts，低于阈值即非零退出使 CI 失败。
+      # 单独跑 core 覆盖（vitest --coverage 只对本包配置生效）；core 测试体量小，
+      # 重复执行一次的时长可接受，换取其余包的测试仍由 yarn test 全量覆盖。
+      - name: Core coverage gate (>=85%)
+        run: yarn workspace @siliconcard/core test:coverage
+
       - name: Build
         run: yarn build
