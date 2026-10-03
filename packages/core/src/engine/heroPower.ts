@@ -3,11 +3,11 @@
  * （docs/rules.md §3 / §4 / §6 / §8，M1-ENG5）。
  *
  * 合法性闸门（依序即 §3 表格次序，全部通过前不改任何状态）：
- *   轮到你（NOT_YOUR_TURN）→ 本回合未用过 !heroPowerUsed（INVALID_TARGET
- *   {reason:'hero_power_used'}，错误码裁定见 M1-ENG5 汇报）→ 技能 cost ≤ mana
- *   （INSUFFICIENT_MANA；cost 取技能定义，内置四技能均为 HERO_POWER_COST=200）
- *   → chosen 目标合法（INVALID_TARGET，与 PLAY_CARD 共用 chosen 校验：
- *   池交集 + 敌方潜行过滤，detail.reason 携带原因）。
+ *   轮到你（NOT_YOUR_TURN）→ 本回合未用过 !heroPowerUsed（HERO_POWER_USED，
+ *   M1-ENG7 additive 专属错误码，detail.reason='hero_power_used' 机读兼容）→
+ *   技能 cost ≤ mana（INSUFFICIENT_MANA；cost 取技能定义，内置四技能均为
+ *   HERO_POWER_COST=200）→ chosen 目标合法（INVALID_TARGET，与 PLAY_CARD 共用
+ *   chosen 校验：池交集 + 敌方潜行过滤，detail.reason 携带原因）。
  *   对局已结束在 applyAction 入口统一拒绝（GAME_ENDED）。
  *
  * 结算顺序（§3 / §6 因果线性）：扣功耗 → heroPowerUsed = true →
@@ -75,10 +75,10 @@ export function applyUseHeroPower(
     )
   }
   if (player.heroPowerUsed) {
-    // 错误码裁定（M1-ENG5）：RuleErrorCode 本次不扩值，复用 INVALID_TARGET 并以
-    // detail.reason='hero_power_used' 机读区分——语义是「该动作此刻不可用」；
-    // 专属错误码（如 HERO_POWER_USED）留待契约变更提案（见汇报）。
-    throw new RuleError('INVALID_TARGET', `本回合派系技能已使用（${skill.skillName}），每回合限一次`, {
+    // 错误码（M1-ENG7 additive 扩容，契约评审授权项）：专属 HERO_POWER_USED——
+    // 「该动作此刻不可用」的语义不再借位 INVALID_TARGET；detail.reason='hero_power_used'
+    // 保留为机读字段（ENG5 消费方兼容），语义同错误码。
+    throw new RuleError('HERO_POWER_USED', `本回合派系技能已使用（${skill.skillName}），每回合限一次`, {
       reason: 'hero_power_used',
       skillId: skill.skillId,
       playerId: action.playerId,

@@ -1,0 +1,53 @@
+{
+  "name": "draw.health-zero.neutral",
+  "description": "单动作炸机对局：全场 30 点 → 双方同时归零 → winner null 平局（§9）",
+  "probe": "fixtures.goldenDrawProbe()",
+  "recording": {
+    "actions": [
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h1"
+      }
+    ],
+    "players": [
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-doom",
+              "count": 30
+            }
+          ]
+        },
+        "faction": "neutral",
+        "id": "P1"
+      },
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-doom",
+              "count": 30
+            }
+          ]
+        },
+        "faction": "neutral",
+        "id": "P2"
+      }
+    ],
+    "schemaVersion": 1,
+    "seed": 20261001
+  },
+  "expected": {
+    "stateHash": "f5b529b0",
+    "winner": null,
+    "endReason": "health_zero",
+    "finalTurn": 1,
+    "eventCounts": {
+      "CARD_PLAYED": 1,
+      "DAMAGE_DEALT": 2,
+      "GAME_END": 1
+    }
+  }
+}

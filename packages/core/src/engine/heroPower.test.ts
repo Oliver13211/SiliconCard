@@ -149,11 +149,11 @@ describe('派系技能注册框架（M1-ENG5）', () => {
 // ———————— initGame 派系技能校验 ————————
 
 describe('initGame 派系技能校验（M1-ENG5）', () => {
-  it('任一方 faction 未注册技能 → DECK_INVALID{reason: faction_skill_unregistered}', () => {
+  it('任一方 faction 未注册技能 → FACTION_UNREGISTERED{reason: faction_skill_unregistered}（M1-ENG7 专属错误码）', () => {
     try {
       clearFactionSkills()
       const error = catchRuleError(() => initGame(makeSetup()))
-      expect(error.code).toBe('DECK_INVALID')
+      expect(error.code).toBe('FACTION_UNREGISTERED')
       expect(error.detail).toMatchObject({ reason: 'faction_skill_unregistered', factionId: 'nvidia' })
     } finally {
       resetFactionSkills()
@@ -170,6 +170,7 @@ describe('initGame 派系技能校验（M1-ENG5）', () => {
         players: [{ ...base.players[0], faction: 'sega' }, base.players[1]],
       }
       const error = catchRuleError(() => initGame(segaSetup))
+      expect(error.code).toBe('FACTION_UNREGISTERED')
       expect(error.detail).toMatchObject({ reason: 'faction_skill_unregistered', factionId: 'sega' })
       registerFactionSkills([{
         factionId: 'sega', skillName: '土星机', skillId: 'sega_skill', cost: 200,
@@ -392,12 +393,12 @@ describe('USE_HERO_POWER 合法性闸门（rules.md §3）', () => {
     expect(error.code).toBe('NOT_YOUR_TURN')
   })
 
-  it('本回合已使用 → INVALID_TARGET{reason: hero_power_used}（错误码裁定见汇报）', () => {
+  it('本回合已使用 → HERO_POWER_USED{reason: hero_power_used}（M1-ENG7 专属错误码）', () => {
     const state = skillState({ p1Faction: 'neutral' })
     const first = applyAction(state, heroPower('P1', heroRef('P2')))
     expect(first.state.players.P1.heroPowerUsed).toBe(true)
     const second = catchRuleError(() => applyAction(first.state, heroPower('P1', heroRef('P2'))))
-    expect(second.code).toBe('INVALID_TARGET')
+    expect(second.code).toBe('HERO_POWER_USED')
     expect(second.detail).toMatchObject({ reason: 'hero_power_used', skillId: 'dust_off' })
   })
 

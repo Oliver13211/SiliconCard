@@ -20,6 +20,11 @@ export type RuleErrorCode =
   | 'TAUNT_BLOCKING'
   | 'BOARD_FULL'
   | 'DECK_INVALID'
+  // —— M1-ENG7 additive 扩容（契约评审授权项，见 M1-ENG5/ENG7 汇报与 rules.md §3/§4）——
+  /** 本回合派系技能已使用（每回合限一次）；替换 ENG5 对 INVALID_TARGET 的语义借位 */
+  | 'HERO_POWER_USED'
+  /** 开局校验：玩家 faction 未注册派系技能（宿主需先 registerFactionSkills）；替换 DECK_INVALID 借位 */
+  | 'FACTION_UNREGISTERED'
 
 /** 非法动作/规则冲突——错误信息必须可指导调用方（UI 提示、Agent 重试）自行纠正 */
 export class RuleError extends Error {

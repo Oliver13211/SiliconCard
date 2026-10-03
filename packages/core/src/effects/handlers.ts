@@ -55,10 +55,13 @@ export const RAY_TRACING_SUCCESS_RATE = 0.7
  * - 命中（roll < 0.7）：对 chosen 目标结算 1 点伤害，DamageSource = heroPower
  *   （§6 事件目录的技能伤害归因）；
  * - 失败：发 KEYWORD_TRIGGERED{detail:'光追失败'} 且**无事发生**（不改任何状态）。
- *   keyword 取值属边界裁定：事件目录 Keyword 为封闭七值、types/ 契约本次不动，
- *   取 'overload'（跳闸）——「开光追把机器整跳闸」的梗最贴合失败演出，且不携带
- *   deathrattle 的死亡语义；真实语义由 detail 携带供 UI 分流。instanceId 以
- *   skillId 标识（技能无场上实例）。若 UI 需要独立演出，走 WF-ENGINE 提案扩目录。
+ *   **光追失败事件定稿（M1-ENG7 契约评审裁决：维持借位）**：keyword 取 'overload'
+ *   （跳闸）——「开光追把机器整跳闸」与失败演出梗义完全贴合；instanceId 以 skillId
+ *   标识（技能无场上实例）；消费端以 detail:'光追失败' 分流（KEYWORD_TRIGGERED 本就是
+ *   「关键词特效 + detail 战报」双通道）。评审结论：不为单一技能的失败演出扩目录
+ *   （17→18 会诱发 content 逐技能要专属事件，目录应保持封闭原语集）；借位的唯一代价
+ *   是 keyword 字段语义外溢（统计 overload 次数需按 detail 过滤），v1 无此分析需求。
+ *   定稿记录见 rules.md §5，下游（client-ui / client-3d）已随 M1-ENG7 汇报通报。
  */
 function rayTracingTry(ctx: EffectContext): void {
   const roll = ctx.rng.nextFloat()

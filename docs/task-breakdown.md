@@ -3,7 +3,7 @@
 > 配套文档：[design-report.md](./design-report.md) · [agent 预设](./agents/presets.md) · [workflow](./agents/workflows.md)
 > 任务 ID 规则：`<里程碑>-<类型><序号>`。类型前缀：INF 基建 / ENG 引擎 / CNT 内容 / R3D 3D渲染 / UI 界面 / AI 人机 / NET 联机 / AGT Agent接口 / QA 质量 / DOC 文档
 > 每个任务标注**执行 agent 预设**，详见 [presets.md](./agents/presets.md)
-> **进度注记（2026-10-01）**：✅ **M0 全部完成**（INF1/2/3 + DOC1 + ENG1）。M1 进行中：✅ M1-ENG1（回合机）、ENG2（出牌结算）、ENG3（攻击结算）、ENG4（关键词系统）、ENG5（派系技能框架）、ENG6（效果原语补全，12 原语全量 + §2.5 表达力验收）已合入；**引擎链最后一棒 M1-ENG7（胜负收口 + 黄金基线锁定）**。
+> **进度注记（2026-10-02）**：✅ **M0 全部完成**。✅ **M1 引擎链 M1-ENG1..7 全部闭环**（core 0.1.0：回合机/出牌/攻击/关键词/派系技能/12 原语/胜负收口 + 回放序列化 + 4 局黄金基线锁定）。下一阶段并行线：M1-QA1（qa-balance，覆盖率 ≥85%）、M1-CNT1..4（card-content 四批 ~60 卡，依赖已满足）、M1-R3D1..4 与 M1-UI1..3（客户端双线，可与内容并行）。
 
 ---
 

@@ -7,7 +7,7 @@
  * - 一切交互经 Engine 四函数：initGame / applyAction / getLegalActions / viewFor；
  * - 一切产出经 GameEvent 事件流。
  */
-export const CORE_VERSION = '0.0.3'
+export const CORE_VERSION = '0.1.0' // M1-ENG7：引擎链（ENG1..7）闭环
 
 export * from './constants'
 export * from './types/cards'
@@ -31,3 +31,5 @@ export { registerEffectHandler } from './effects/handlers'
 export type { EffectHandler } from './effects/handlers'
 export * from './testing/hash'
 export * from './testing/replay'
+// —— 回放序列化（M1-ENG7）：ReplayRecording ⇄ JSON（seed+actions 存档/分享/回放地基）——
+export * from './testing/replaySerialize'

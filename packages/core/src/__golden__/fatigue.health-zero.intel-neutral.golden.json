@@ -1,0 +1,560 @@
+{
+  "name": "fatigue.health-zero.intel-neutral",
+  "description": "纯 END_TURN 探针：牌库枯竭疲劳分胜负（P2 先抽先疲劳，P1 胜）",
+  "probe": "fixtures.goldenFatigueProbe(seed=20261001)",
+  "recording": {
+    "actions": [
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      }
+    ],
+    "players": [
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-f-card-0",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-1",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-2",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-3",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-4",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-5",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-6",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-7",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-8",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-9",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-10",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-11",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-12",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-13",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-14",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-15",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-16",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-17",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-18",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-19",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-20",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-21",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-22",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-23",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-24",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-25",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-26",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-27",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-28",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-29",
+              "count": 1
+            }
+          ]
+        },
+        "faction": "intel",
+        "id": "P1"
+      },
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-f-card-0",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-1",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-2",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-3",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-4",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-5",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-6",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-7",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-8",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-9",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-10",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-11",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-12",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-13",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-14",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-15",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-16",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-17",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-18",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-19",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-20",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-21",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-22",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-23",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-24",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-25",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-26",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-27",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-28",
+              "count": 1
+            },
+            {
+              "cardId": "gd-f-card-29",
+              "count": 1
+            }
+          ]
+        },
+        "faction": "neutral",
+        "id": "P2"
+      }
+    ],
+    "schemaVersion": 1,
+    "seed": 20261001
+  },
+  "expected": {
+    "stateHash": "7c05fe01",
+    "winner": "P1",
+    "endReason": "health_zero",
+    "finalTurn": 70,
+    "eventCounts": {
+      "TURN_END": 69,
+      "TURN_START": 69,
+      "CARD_DRAWN": 69,
+      "CARD_BURNED": 40,
+      "DAMAGE_DEALT": 15,
+      "FATIGUE": 15,
+      "GAME_END": 1
+    }
+  }
+}

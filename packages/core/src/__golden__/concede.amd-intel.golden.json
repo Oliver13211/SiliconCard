@@ -1,0 +1,196 @@
+{
+  "name": "concede.amd-intel",
+  "description": "出牌+技能互拼 8 回合后 P2 认输（concede 结局，双方派系技能事件在案）",
+  "probe": "fixtures.goldenConcedeProbe(seed=20261001, rounds=8)",
+  "recording": {
+    "actions": [
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h1"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h3"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h2"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h4"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h5"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h12"
+      },
+      {
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u7",
+          "kind": "unit"
+        },
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h6"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h9"
+      },
+      {
+        "playerId": "P2",
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h19"
+      },
+      {
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u8",
+          "kind": "unit"
+        },
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h15"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h18"
+      },
+      {
+        "playerId": "P2",
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h25"
+      },
+      {
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u10",
+          "kind": "unit"
+        },
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h21"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h24"
+      },
+      {
+        "playerId": "P2",
+        "type": "USE_HERO_POWER"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "CONCEDE"
+      }
+    ],
+    "players": [
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-p-token",
+              "count": 30
+            }
+          ]
+        },
+        "faction": "amd",
+        "id": "P1"
+      },
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-p-token",
+              "count": 30
+            }
+          ]
+        },
+        "faction": "intel",
+        "id": "P2"
+      }
+    ],
+    "schemaVersion": 1,
+    "seed": 20261001
+  },
+  "expected": {
+    "stateHash": "7a2ddc1f",
+    "winner": "P1",
+    "endReason": "concede",
+    "finalTurn": 9,
+    "eventCounts": {
+      "CARD_PLAYED": 14,
+      "MINION_SUMMONED": 14,
+      "TURN_END": 8,
+      "TURN_START": 8,
+      "CARD_DRAWN": 11,
+      "HERO_POWER_USED": 6,
+      "DAMAGE_DEALT": 3,
+      "MINION_DIED": 3,
+      "GAME_END": 1
+    }
+  }
+}

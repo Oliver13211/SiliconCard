@@ -1,0 +1,800 @@
+{
+  "name": "combat.health-zero.nvidia-amd",
+  "description": "出牌+贪心攻击探针：战斗交换分出胜负（health_zero，攻击 CPU 致死）",
+  "probe": "fixtures.goldenCombatProbe(seed=20261001)",
+  "recording": {
+    "actions": [
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h1"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h2"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h3"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h5"
+      },
+      {
+        "attackerId": "u7",
+        "playerId": "P1",
+        "target": {
+          "kind": "hero",
+          "playerId": "P2"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u7",
+        "playerId": "P1",
+        "target": {
+          "kind": "hero",
+          "playerId": "P2"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h4"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h6"
+      },
+      {
+        "attackerId": "u9",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u12",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h10"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h16"
+      },
+      {
+        "attackerId": "u7",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u9",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u7",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u14",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u11",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u14",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u12",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u15",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h8"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h13"
+      },
+      {
+        "attackerId": "u15",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u12",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h22"
+      },
+      {
+        "attackerId": "u11",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u15",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u12",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u20",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u17",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u20",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u18",
+        "playerId": "P1",
+        "target": {
+          "kind": "hero",
+          "playerId": "P2"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h19"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h24"
+      },
+      {
+        "attackerId": "u21",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u18",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h27"
+      },
+      {
+        "attackerId": "u18",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u21",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u23",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u25",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u23",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u25",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h29"
+      },
+      {
+        "attackerId": "u25",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u28",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u26",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u28",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u26",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u28",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u30",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h31"
+      },
+      {
+        "attackerId": "u32",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u30",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h33"
+      },
+      {
+        "attackerId": "u34",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h35"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h37"
+      },
+      {
+        "attackerId": "u34",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u36",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u38",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h39"
+      },
+      {
+        "attackerId": "u40",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u38",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h41"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h43"
+      },
+      {
+        "attackerId": "u44",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u42",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h45"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h47"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h49"
+      },
+      {
+        "attackerId": "u46",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u46",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h51"
+      },
+      {
+        "attackerId": "u48",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u46",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h53"
+      },
+      {
+        "attackerId": "u46",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u52",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u50",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h55"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h57"
+      },
+      {
+        "attackerId": "u50",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u54",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h59"
+      },
+      {
+        "attackerId": "u56",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u54",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h61"
+      },
+      {
+        "attackerId": "u50",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u56",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u54",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u58",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h63"
+      },
+      {
+        "attackerId": "u60",
+        "playerId": "P1",
+        "target": {
+          "instanceId": "u54",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h65"
+      },
+      {
+        "attackerId": "u50",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u60",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u54",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u64",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u58",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u64",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u62",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "playerId": "P2",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P1",
+        "type": "PLAY_CARD",
+        "uid": "h67"
+      },
+      {
+        "playerId": "P1",
+        "type": "END_TURN"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "h69"
+      },
+      {
+        "attackerId": "u54",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u68",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u58",
+        "playerId": "P2",
+        "target": {
+          "instanceId": "u68",
+          "kind": "unit"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u62",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      },
+      {
+        "attackerId": "u66",
+        "playerId": "P2",
+        "target": {
+          "kind": "hero",
+          "playerId": "P1"
+        },
+        "type": "ATTACK"
+      }
+    ],
+    "players": [
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-c-rusher",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-taunt",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-twin",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-overclock",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-warranty",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-ghost",
+              "count": 5
+            }
+          ]
+        },
+        "faction": "nvidia",
+        "id": "P1"
+      },
+      {
+        "deck": {
+          "cards": [
+            {
+              "cardId": "gd-c-rusher",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-taunt",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-twin",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-overclock",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-warranty",
+              "count": 5
+            },
+            {
+              "cardId": "gd-c-ghost",
+              "count": 5
+            }
+          ]
+        },
+        "faction": "amd",
+        "id": "P2"
+      }
+    ],
+    "schemaVersion": 1,
+    "seed": 20261001
+  },
+  "expected": {
+    "stateHash": "055a7fd2",
+    "winner": "P2",
+    "endReason": "health_zero",
+    "finalTurn": 30,
+    "eventCounts": {
+      "CARD_PLAYED": 35,
+      "MINION_SUMMONED": 35,
+      "TURN_END": 29,
+      "TURN_START": 29,
+      "CARD_DRAWN": 29,
+      "ATTACK_DECLARED": 46,
+      "DAMAGE_DEALT": 76,
+      "KEYWORD_TRIGGERED": 11,
+      "MINION_DIED": 31,
+      "GAME_END": 1
+    }
+  }
+}

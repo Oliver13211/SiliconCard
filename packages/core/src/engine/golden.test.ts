@@ -94,7 +94,7 @@ describe('黄金回放：纯 END_TURN 疲劳对局（真实引擎）', () => {
     expect(prefix.stateHash).not.toBe(full.stateHash)
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     // 用本局自身哈希走一次断言，验证框架与真实引擎接通
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
@@ -327,7 +327,7 @@ describe('黄金回放：含 ATTACK 攻击交换的对局片段（M1-ENG3）', (
     expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })
@@ -454,7 +454,7 @@ describe('黄金回放：亡语连锁 / 跳闸 / onAttack·onDamaged 的对局�
     expect(other.stateHash).not.toBe(base.stateHash)
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })
@@ -570,7 +570,7 @@ describe('黄金回放：destroy / revive / 回合时点触发 / tag 过滤的�
     }
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })
@@ -689,7 +689,7 @@ describe('黄金回放：派系技能 DLSS / 驱动更新的对局片段（M1-EN
     expect(JSON.stringify(a.finalState)).toBe(JSON.stringify(b.finalState))
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })
@@ -747,7 +747,7 @@ describe('黄金回放：派系技能 开光追试试 / 清灰 的对局片段�
     expect(finalState.players.P1.heroPowerUsed).toBe(false) // 结算停在 P2 回合，P1 已随回合开始重置
   })
 
-  it('assertGoldenReplay 命中路径（M1-ENG7 将以此锁基线）', () => {
+  it('assertGoldenReplay 命中路径（基线已锁定：__golden__/）', () => {
     const { stateHash } = runReplay(engine, recording)
     expect(() => assertGoldenReplay(engine, recording, stateHash)).not.toThrow()
   })

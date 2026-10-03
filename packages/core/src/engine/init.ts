@@ -6,10 +6,14 @@
  * → 按 seed 洗双方牌库（先 P1 后 P2）→ 交替发起手（P1 先抽，各 OPENING_HAND_SIZE 张）
  * → GAME_START → 进入 P1 的第 1 回合。
  *
- * 注：M0 引擎接口 `initGame(setup): GameState` 不携带事件流，因此 GAME_START 与首个
- * TURN_START（turn 1, drawCount 0）仅按序内部构造、不对外发出；消费方可由初始 state
- * 合成（seed / turn / activePlayer / maxMana 等字段齐备）。接口是否改为返回事件流
- * 属契约级决策，留待 M1-ENG7（回放序列化）一并裁决。
+ * 注（initGame 签名裁决，M1-ENG7 契约评审定稿）：**维持 `initGame(setup): GameState`
+ * 只返回 state、不携带事件流**——GAME_START 与首个 TURN_START（turn 1, drawCount 0）
+ * 仅按序内部构造、不对外发出。裁决理由（详见 M1-ENG7 汇报与 rules.md §2.1/§6）：
+ * ① 四函数接口是架构铁律级稳定契约，server/cli/ai 均按现签名消费，破坏性变更收益不成比例；
+ * ② GAME_START 所需字段（seed / firstPlayer / activePlayer / turn）与首个 TURN_START 的
+ *    maxMana/drawCount 在初始 state 齐备，消费方可按 §2.2 恒等式合成，无信息增量；
+ * ③ 回放序列化（M1-ENG7 交付）以 seed+actions 为唯一存档事实，开局事件可由回放器确定性重建。
+ * rules.md §6 GAME_START「发出时机」按此裁定解读为语义时点（initGame 完成），非 API 承诺。
  */
 
 import {
@@ -120,14 +124,15 @@ function validateDeck(player: PlayerSetup): void {
 /**
  * 派系技能校验（§4「派系技能不是卡牌」+ §3 USE_HERO_POWER，M1-ENG5）：
  * 双方 faction 必须已注册技能且定义通过 findFactionSkillIssues 结构校验，否则开局拒绝。
- * 错误码沿用开局期既有通道 DECK_INVALID（RuleErrorCode 本次不扩值，裁定见 M1-ENG5
- * 汇报）；detail.reason='faction_skill_unregistered' / 'faction_skill_invalid' 机读区分。
+ * 错误码（M1-ENG7 additive 扩容，契约评审授权项）：未注册 → 专属 FACTION_UNREGISTERED
+ * （替换 ENG5 对 DECK_INVALID 的语义借位，detail.reason='faction_skill_unregistered' 机读兼容）；
+ * 已注册但定义不合法仍为 DECK_INVALID{reason:'faction_skill_invalid'}（结构校验属卡组数据问题）。
  */
 function validateFactionSkill(player: PlayerSetup): void {
   const skill = getFactionSkill(player.faction)
   if (!skill) {
     throw new RuleError(
-      'DECK_INVALID',
+      'FACTION_UNREGISTERED',
       `${player.id}: 派系 ${player.faction} 未注册派系技能（宿主需先 registerFactionSkills）`,
       { playerId: player.id, factionId: player.faction, reason: 'faction_skill_unregistered' },
     )

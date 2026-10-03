@@ -1,6 +1,6 @@
-# 硅牌 SiliconCard · 规则书 v1.0（M0 定稿）
+# 硅牌 SiliconCard · 规则书 v1.0.1（M0 定稿 + M1-ENG7 收口）
 
-> 版本 v1.0 · 2026-10-01 · **本文件是跨包契约**
+> 版本 v1.0.1 · 2026-10-02（M1-ENG7：错误码 additive 扩容 + 三项契约评审裁决入册）· **本文件是跨包契约**
 > 状态机、schema、事件目录、关键词、派系技能以本文为准；修改走 [WF-ENGINE](agents/workflows.md)（含下游通报 client-3d / client-ui / card-content / qa-balance）。
 > 类型实现的唯一事实源：`packages/core/src/types/`，本文与类型一一对应。
 
@@ -22,7 +22,8 @@
 
 ## 2. 回合流程
 
-1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ `GAME_START` 事件 → 进入 P1 的第 1 回合；
+1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 校验双方派系技能已注册（未注册抛 `FACTION_UNREGISTERED`，见 §4）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ `GAME_START` 事件 → 进入 P1 的第 1 回合。
+   **initGame 签名裁决（M1-ENG7 定稿）**：`initGame(setup): GameState` **维持只返回 state、不携带事件流**——`GAME_START` 与首个 `TURN_START` 由消费方按初始 state 合成（seed / turn / activePlayer / maxMana / drawCount=0 等字段齐备，无信息增量；开局演出不依赖引擎外发）。理由：四函数接口是架构铁律级稳定契约；回放序列化（§12）以 seed+actions 为唯一存档事实，开局事件可由回放器确定性重建。§6 的 `GAME_START`「发出时机」按语义时点（initGame 完成）解读，非 API 承诺。
 2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k × MANA_PER_TURN, MAX_MANA)`（即 +100W/回合，至 1000W）；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；上述序列完成后结算 `turnStart` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死于序列尾部再判胜负）；
 3. **出牌阶段**：任意次 `PLAY_CARD` / `USE_HERO_POWER`（受功耗与合法性约束）；
 4. **攻击**：己方单位可宣告攻击（入场当回合不可攻击，除非 charge）；
@@ -34,11 +35,13 @@
 |---|---|---|
 | `PLAY_CARD {uid, target?}` | 轮到你；手牌中有该 `uid`；`cost ≤ mana`；需要的 target 合法且可选（stealth 未现身的敌方单位、divine_shield 保护的…见 §7）；gpu 入场时己方场上 < `BOARD_LIMIT` | `NOT_YOUR_TURN` `CARD_NOT_IN_HAND` `INSUFFICIENT_MANA` `INVALID_TARGET` `BOARD_FULL` |
 | `ATTACK {attackerId, target}` | 轮到你；attacker 在你场上且 `attacksRemaining > 0`；非入场当回合（charge 例外）；无 taunt 敌方在场时不可绕过 taunt；target 非潜行单位 | `NOT_YOUR_TURN` `UNIT_NOT_ON_BOARD` `UNIT_CANNOT_ATTACK` `TAUNT_BLOCKING` `INVALID_TARGET` |
-| `USE_HERO_POWER {target?}` | 轮到你；`!heroPowerUsed`；`HERO_POWER_COST ≤ mana`；target 合法 | `NOT_YOUR_TURN` `INSUFFICIENT_MANA` `INVALID_TARGET` |
+| `USE_HERO_POWER {target?}` | 轮到你；`!heroPowerUsed`；`HERO_POWER_COST ≤ mana`；target 合法 | `NOT_YOUR_TURN` `HERO_POWER_USED` `INSUFFICIENT_MANA` `INVALID_TARGET` |
 | `END_TURN` | 轮到你 | `NOT_YOUR_TURN` |
 | `CONCEDE` | 对局未结束 | `GAME_ENDED` |
 
 对局结束后一切动作抛 `GAME_ENDED`。未知动作结构抛 `UNKNOWN_ACTION`。
+
+**错误码 additive 扩容（M1-ENG7 定稿）**：`HERO_POWER_USED`（本回合派系技能已使用，每回合限一次；替换 M1-ENG5 对 `INVALID_TARGET` 的语义借位，`detail.reason='hero_power_used'` 保留为机读兼容字段）与 `FACTION_UNREGISTERED`（开局派系未注册技能，见 §4）。错误码集合为 additive 演进：只增不改义，消费方 switch 须保留兜底分支。
 
 **目标合法性总则**：`chosen` 选择器的 pool 决定可选集合；敌方**无输出亮机**（未攻击过）的单位不可被指定；`INVALID_TARGET` 的 detail 中必须携带原因（供 UI 提示 / Agent 重试）。
 
@@ -60,7 +63,7 @@
 | `art` | `{shape, palette, glow?}` | | 程序化卡面参数（client-3d 消费） |
 | `tags` | string[] | | 子类标记，如 `'miner'`（矿卡，供「矿难」筛选） |
 
-**派系技能不是卡牌**——由 `factions/*.json` 定义 `{ factionId, skillName, skillId, cost: 200, effect: EffectSpec }`，引擎按 USE_HERO_POWER 结算；定义由宿主经 core 注册 API 注入（core 不读 content 包），**initGame 校验双方 faction 均已注册技能**（未注册 → `DECK_INVALID{reason:'faction_skill_unregistered'}`）。
+**派系技能不是卡牌**——由 `factions/*.json` 定义 `{ factionId, skillName, skillId, cost: 200, effect: EffectSpec }`，引擎按 USE_HERO_POWER 结算；定义由宿主经 core 注册 API 注入（core 不读 content 包），**initGame 校验双方 faction 均已注册技能**（未注册 → `FACTION_UNREGISTERED`，M1-ENG7 专属错误码；已注册但定义结构不合法仍为 `DECK_INVALID{reason:'faction_skill_invalid'}`）。
 
 **accessory 在场形态（M1-ENG2 边界裁定，v1.0）**：打出后**进场上**成为 BoardUnit——占扩展槽并计入 `BOARD_LIMIT`、以 0/1 身板入场（定义无攻血字段）、不可攻击（attacksRemaining 恒 0）、可被效果指定、可死亡（光环随之回收）；driver 不占槽。
 
@@ -68,18 +71,19 @@
 
 - **声明式优先**：`EffectSpec.steps` 按**数组顺序**逐步结算；每步产生对应事件（伤害→`DAMAGE_DEALT` 等）；
 - **12 种原语**（`EffectStep`）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`，并可携带**可选 `tag` 子类过滤**（M1-ENG6 additive：非空字符串时仅命中卡牌定义 `tags` 含该标记的场上单位，如 `'miner'` 供「矿难」筛选；英雄无 tags，tag 过滤下天然排除；chosen 的 tag 合法性随出牌闸门校验）；`destroy` 不被三年质保抵挡、经既有死亡管线结算（§7）；`revive` 从 `sourceOwner` 墓地捞回显卡（`pick: lastOwnedGpu | random`，复活为新实例：新 instanceId、召唤失调重置、keywords/身板按定义恢复；复活即离墓；场满与池空同为静默 no-op 且不消耗 RNG）；
-- **命名 handler 逃生舱**：steps 表达不了的逻辑（如「开光追试试」的 30% 失败判定）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；**光追失败事件暂定形态（M1-ENG5，待契约评审）**：经 `KEYWORD_TRIGGERED` 发出，keyword 字段暂借 `'overload'`、`detail:'光追失败'`、`instanceId` 用 skillId；评审通过后改专属事件类型并通报 client-ui / client-3d；
+- **命名 handler 逃生舱**：steps 表达不了的逻辑（如「开光追试试」的 30% 失败判定）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；**光追失败事件定稿（M1-ENG7 契约评审：维持借位）**：经 `KEYWORD_TRIGGERED` 发出，keyword 字段定稿借用 `'overload'`（"开光追把机器整跳闸"梗义贴合失败演出）、`detail:'光追失败'` 供消费端分流、`instanceId` 用 skillId。评审理由：事件目录应为封闭原语集，不为单一技能的失败演出扩目录（17→18 会诱发 content 逐技能索取专属事件）；借位唯一代价是 keyword 字段语义外溢（overload 触发统计需按 detail 过滤），v1 无此分析需求。client-ui / client-3d 已随 M1-ENG7 汇报通报；后续如需独立演出再走 WF-ENGINE 提案；
 - **随机语义**：一切 `random` 选择与概率判定走引擎种子 RNG（§11），**顺序固定**：按步骤数组顺序、目标池的 board 顺序进行；
 - **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；`turnStart / turnEnd` 的作用范围为**全场双方单位**（M1-ENG6 裁定：规则书未按拥有者限定；按入场顺序单层队列结算，以结算开始时的在场名单为准——中途离场不触发、中途召唤不入队）；
 - **结算嵌套**：效果触发效果时深度优先、单层队列，v1 不做无限连锁保护以外的复杂栈（规则书刻意简化）；
 - **光环与 buff 叠加（M1-ENG2 边界裁定，v1.0）**：单位有效属性 ≡ 基础值 + 永久 buff + 当前在场光环贡献，加法叠加、互不覆盖；光环是**派生量**（不进 GameState），单位集合每次变化后按入场顺序重算；手牌 cost 按卡牌定义绝对重算（下限 0，AuraSpec.scope 决定作用方）；随机选择与概率判定的结算顺序见上文随机语义。
 - **亡语结算语义（M1-ENG4 边界裁定，v1.0）**：deathrattle 以**阵亡时快照**结算（光环剥离前取快照），连锁深度优先、深度上限 100（超出响亮抛错）；质保完全抵挡与直接阵亡均不构成「受伤」（不触发 onDamaged）；效果触发型效果无玩家指定（chosen 恒空）；效果规格（effect.trigger）是机制事实源，关键词仅为展示标记。
+- **暂缓项（M1-ENG7 评审记录，维持现状）**：①「DLSS 4」等 handler 的"仅本回合翻倍"时效性——GameState 无临时增益通道，当前按**永久翻倍**实装，临时 buff 机制需 M4+ 契约提案后回归修正；②触发型效果的 scope 字段——YAGNI，触发范围由触发时点语义（上文触发时点条目）决定，不引入字段。
 
 ## 6. 事件目录定稿（17 种，渲染契约）
 
 | 事件 | payload 要点 | 发出时机 | 主要消费 |
 |---|---|---|---|
-| `GAME_START` | seed, firstPlayer | initGame 完成 | 3D 开局演出 |
+| `GAME_START` | seed, firstPlayer | initGame 完成（签名裁决见 §2.1：initGame 只返回 state，本事件由消费方按初始 state 合成） | 3D 开局演出 |
 | `TURN_START` | turn, playerId, maxMana, drawCount | §2.2 | 功耗条刷新 |
 | `TURN_END` | turn, playerId | §2.5 | 回合切换演出 |
 | `CARD_DRAWN` | playerId, cardId\|null, source(`deck`/`fatigue`) | 每次抽牌 | 抽牌动画（source=fatigue 时播疲劳） |
@@ -90,7 +94,7 @@
 | `ATTACK_DECLARED` | attackerId, target | 攻击判定前 | 冲撞动画 |
 | `DAMAGE_DEALT` | source, target, amount, remainingHealth, armorAbsorbed?, shieldConsumed? | 每次伤害结算后 | 飘字/质保碎裂 |
 | `HEALING` | target, amount, resultingHealth | 治疗后 | 绿色飘字 |
-| `KEYWORD_TRIGGERED` | keyword, instanceId, detail | 关键词生效 | 关键词特效 |
+| `KEYWORD_TRIGGERED` | keyword, instanceId, detail | 关键词生效（amd「开光追试试」失败定稿复用本事件：keyword='overload' + detail='光追失败'，见 §5） | 关键词特效 |
 | `HERO_POWER_USED` | playerId, skillId, target | 技能结算前 | 派系技能演出 |
 | `FATIGUE` | playerId, fatigueCount, damage | 疲劳扣血后 | 疲劳演出 |
 | `BURN_OUT` | playerId, lockedMana | 跳闸锁定结算时 | 闪屏+锁定提示 |
@@ -129,7 +133,9 @@
 
 - 任一玩家 `health + armor 受击后 ≤ 0` → 对方胜（`GAME_END{reason:'health_zero'}`）；**同时归零 → winner: null（平局）**；
 - `CONCEDE` → 对方胜（`reason:'concede'`）；
-- **疲劳**：deck 为空时抽牌 → `fatigue +1`，受到等同 fatigue 点的疲劳伤害（1,2,3,…），发出 `CARD_DRAWN{source:'fatigue'}` + `FATIGUE`。
+- **疲劳**：deck 为空时抽牌 → `fatigue +1`，受到等同 fatigue 点的疲劳伤害（1,2,3,…），发出 `CARD_DRAWN{source:'fatigue'}` + `FATIGUE`；
+- **收口保证（M1-ENG7 终审定稿）**：任一致命路径（战斗 / 出牌·战吼效果 / 技能 / onDamaged / 亡语 / turnStart / turnEnd / 疲劳 / 认输）终局时，`GAME_END` 必为该次 applyAction 事件流的**最后一个事件且恰好一次**；终局后一切动作抛 `GAME_ENDED`；
+- **结算信息完整性（M1-ENG7 定稿）**：结算画面所需数据 = `GAME_END` 事件（winner、reason）+ 终局 state（`turn` 总回合数、双方 heroName/faction/health/fatigue 等展示字段）+ `viewFor(...)`（winner/phase 同源透出）——不再扩事件载荷，客户端据此前三项即可渲染结算画面（"R.I.P 烧了"）。
 
 ## 10. 视角裁剪（viewFor）
 
@@ -145,14 +151,15 @@
 - 状态哈希：`canonicalJson(state)` → FNV-1a 32 位（`stableHash`），禁止引入浮点运算污染；
 - 引擎状态中禁止 Map/Set/函数/NaN/Infinity（canonicalJson 遇到即抛错）。
 
-## 12. 黄金回放
+## 12. 黄金回放与序列化
 
 - 录制格式：`ReplayRecording { seed, players: [PlayerSetup, PlayerSetup], actions[] }`；
+- **存档序列化（M1-ENG7 交付）**：`serializeReplay(recording) => string` / `deserializeReplay(json) => ReplayRecording`——存档 = **canonicalJson 确定性输出**（键递归排序、剔除 undefined，含 `schemaVersion` 字段，当前 `REPLAY_SCHEMA_VERSION = 1`）；同一录制永远产出逐字节相同的 JSON 文本（seed+actions 存档 / 分享 / 回放的地基）；反序列化做**结构总闸门**（严格未知字段拒绝、目标形状校验、版本门禁），错误消息可读带路径；规则语义合法性（卡组张数、派系注册等）仍由 initGame 把关，两层校验职责分离；
 - 校验：`assertGoldenReplay(engine, recording, expectedHash)`——哈希不匹配即"黄金回放漂移"；
-- **快照基线**：`packages/core/src/__golden__/`（M1-ENG7 落地，至少 3 局完整对局）；
-- 规则变更后：漂移逐条归因为「预期变更（更新快照）/ 意外回归（修复）」，流程见 WF-ENGINE。
+- **快照基线（已锁定，M1-ENG7）**：`packages/core/src/__golden__/`——4 局完整对局（`*.golden.json`：recording 存档形态 + 期望终局哈希 + 终局事实 + 事件计数），风格各异：战斗分胜负 / 疲劳分胜负 / 认输 / 双方同时归零平局；测试逐一加载 `assertGoldenReplay`，CI（yarn test）即门禁；
+- 规则变更后：漂移逐条归因为「预期变更（用 fixtures 确定性探针重生成基线）/ 意外回归（修复）」，流程见 WF-ENGINE。
 
 ## 13. 版本化
 
-- 本规则书 v1.0 对应 core 包 `0.0.x`；规则语义变更必须同时更新本文、类型与快照，并在 PR 描述中列出下游影响；
-- `EventCatalog` / `CardDefinition` schema 的破坏性变更需要升 core minor 版本并通报全部下游预设。
+- 本规则书 v1.0 契约自 **core `0.1.0`**（M1-ENG7 引擎链闭环）起对应；规则语义变更必须同时更新本文、类型与快照，并在 PR 描述中列出下游影响；
+- `EventCatalog` / `CardDefinition` schema 的破坏性变更需要升 core minor 版本并通报全部下游预设；错误码等 additive 扩容升 patch 号并在本文标注「additive 定稿」。

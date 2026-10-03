@@ -2,11 +2,11 @@
  * 引擎实现装配 —— 对外唯一入口 createEngine(): Engine（架构铁律 3：
  * 一切交互经 initGame / applyAction / getLegalActions / viewFor 四函数）。
  *
- * 实现进度：M1-ENG1（回合机）+ M1-ENG2（出牌结算：PLAY_CARD / 效果解释器 /
- * 光环投影）+ M1-ENG3（攻击结算：ATTACK / taunt / 攻击次数 / 召唤失调）+
- * M1-ENG4（关键词系统：亡语死亡管线 / onAttack·onDamaged 触发 / overload 跳闸 /
- * lockMana 原语，见 triggers.ts）+ M1-ENG5（派系技能：USE_HERO_POWER /
- * 注册框架 / 内置四系技能，见 heroPower.ts / factions.ts / effects/handlers.ts）。
+ * 实现进度（引擎链 M1-ENG1..7 已闭环，见 docs/task-breakdown.md 与各任务汇报）：
+ * ENG1 回合机 / ENG2 出牌结算 / ENG3 攻击结算 / ENG4 关键词与死亡管线 /
+ * ENG5 派系技能 / ENG6 效果原语全量（12 种）与回合时点触发 /
+ * ENG7 胜负收口终审（endgame.test.ts）+ 回放序列化（testing/replaySerialize）+
+ * 黄金基线锁定（__golden__/，四局风格各异，CI 即门禁）。
  */
 
 import type { Engine } from '../engine'
