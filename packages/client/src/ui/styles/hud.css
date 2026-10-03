@@ -1,0 +1,710 @@
+/*
+ * 硅牌界面线样式（M1-UI1..3）—— sc- 前缀命名空间，不触碰 index.css（旧落地页样式）。
+ * 桌面分辨率优先（≥1024px 无破版）；3D 挂载点只占位，不进 React 渲染树。
+ */
+
+.sc-app {
+  --sc-bg: #0b0e14;
+  --sc-panel: #12161f;
+  --sc-panel-2: #171c28;
+  --sc-line: #262d3d;
+  --sc-text: #dbe2f0;
+  --sc-dim: #8b95ab;
+  --sc-accent: #58e6a8;
+  --sc-danger: #ff6b5e;
+  --sc-mana: #4da3ff;
+  --sc-gold: #ffc857;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 500px at 70% -10%, rgba(88, 230, 168, 0.08), transparent 60%),
+    radial-gradient(900px 420px at 10% 110%, rgba(77, 163, 255, 0.07), transparent 60%),
+    var(--sc-bg);
+  color: var(--sc-text);
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+}
+
+.sc-app button {
+  font: inherit;
+  color: inherit;
+}
+
+/* —— 通用按钮 —— */
+.sc-btn {
+  border: 1px solid var(--sc-line);
+  background: var(--sc-panel-2);
+  border-radius: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+}
+.sc-btn:hover:not(:disabled) {
+  border-color: var(--sc-accent);
+  transform: translateY(-1px);
+}
+.sc-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sc-btn--primary {
+  background: linear-gradient(180deg, rgba(88, 230, 168, 0.18), rgba(88, 230, 168, 0.08));
+  border-color: var(--sc-accent);
+  font-weight: 700;
+}
+.sc-btn--danger {
+  border-color: rgba(255, 107, 94, 0.5);
+  color: #ffb0a8;
+}
+.sc-btn--small {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* —— 主菜单 / 结算 / 规则（居中屏） —— */
+.sc-menu,
+.sc-result,
+.sc-rules {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 64px 32px 48px;
+}
+.sc-eyebrow {
+  letter-spacing: 0.35em;
+  font-size: 12px;
+  color: var(--sc-dim);
+  text-transform: uppercase;
+}
+.sc-menu-title {
+  font-size: 72px;
+  margin: 12px 0 8px;
+  background: linear-gradient(90deg, #58e6a8, #4da3ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sc-menu-sub {
+  color: var(--sc-dim);
+  margin-bottom: 32px;
+}
+.sc-menu-actions {
+  display: flex;
+  gap: 16px;
+}
+.sc-menu-foot {
+  margin-top: 48px;
+  font-size: 12px;
+  color: var(--sc-dim);
+}
+
+/* —— 开局配置 —— */
+.sc-screen-title {
+  font-size: 32px;
+  margin: 0 0 24px;
+}
+.sc-setup {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+.sc-setup-section {
+  margin-bottom: 28px;
+}
+.sc-setup-section h2 {
+  font-size: 16px;
+  color: var(--sc-dim);
+  margin: 0 0 12px;
+}
+.sc-faction-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.sc-faction-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--sc-line);
+  border-radius: 12px;
+  background: var(--sc-panel);
+  cursor: pointer;
+}
+.sc-faction-card.is-active {
+  border-color: var(--accent, var(--sc-accent));
+  box-shadow: 0 0 0 1px var(--accent, var(--sc-accent)), 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+.sc-faction-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sc-faction-name {
+  font-weight: 800;
+  font-size: 17px;
+}
+.sc-faction-skill {
+  color: var(--accent, var(--sc-accent));
+  font-size: 13px;
+}
+.sc-faction-blurb {
+  color: var(--sc-dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.sc-deck-picker select {
+  background: var(--sc-panel-2);
+  color: var(--sc-text);
+  border: 1px solid var(--sc-line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 320px;
+}
+.sc-setup-note {
+  color: var(--sc-dim);
+  font-size: 13px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+.sc-setup-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+/* —— 对战界面骨架 —— */
+.sc-battle {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+.sc-arena {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sc-zone {
+  padding: 10px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+  border-bottom: 1px solid var(--sc-line);
+}
+.sc-zone--self {
+  border-bottom: none;
+  border-top: 1px solid var(--sc-line);
+}
+.sc-zone--opponent {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sc-turn-pill {
+  align-self: center;
+  border: 1px solid var(--sc-line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--sc-dim);
+  white-space: nowrap;
+}
+.sc-turn-pill.is-mine {
+  color: var(--sc-accent);
+  border-color: var(--sc-accent);
+}
+
+/* —— 玩家面板 —— */
+.sc-hero-hitbox {
+  border-radius: 12px;
+  transition: box-shadow 0.15s ease;
+}
+.sc-hero-hitbox.is-targetable {
+  cursor: crosshair;
+  box-shadow: 0 0 0 2px var(--sc-danger), 0 0 18px rgba(255, 107, 94, 0.5);
+  border-radius: 12px;
+}
+.sc-player {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.sc-player-portrait {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  background: linear-gradient(145deg, #1d2432, #10141d);
+  border: 1px solid var(--sc-line);
+}
+.sc-player-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sc-player-faction {
+  font-size: 12px;
+  color: var(--sc-dim);
+}
+.sc-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.sc-health-track {
+  width: 220px;
+  height: 8px;
+  background: #0d1017;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--sc-line);
+}
+.sc-health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #58e6a8, #2fbf7f);
+  transition: width 0.25s ease;
+}
+.sc-health-text {
+  font-size: 14px;
+  font-weight: 700;
+}
+.sc-armor {
+  font-style: normal;
+  color: var(--sc-gold);
+}
+.sc-counters {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--sc-dim);
+}
+.sc-fatigue {
+  color: var(--sc-danger);
+}
+
+/* —— 功耗条 —— */
+.sc-mana {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sc-mana-track {
+  position: relative;
+  width: 220px;
+  height: 10px;
+  background: #0d1017;
+  border: 1px solid var(--sc-line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.sc-mana-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4da3ff, #6f8cff);
+  transition: width 0.25s ease;
+}
+.sc-mana-ticks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.sc-mana-tick {
+  flex: 1;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+.sc-mana-tick:last-child {
+  border-right: none;
+}
+.sc-mana-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sc-mana);
+  min-width: 86px;
+}
+.sc-mana-locked {
+  font-size: 12px;
+  color: var(--sc-danger);
+}
+
+/* —— 牌桌区与 3D 挂载点 —— */
+.sc-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.sc-table3d {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 260px at 50% 50%, rgba(77, 163, 255, 0.06), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0 2px, transparent 2px 56px);
+  border-bottom: 1px solid var(--sc-line);
+}
+.sc-board {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 24px;
+  pointer-events: none; /* 让 3D 拾取可以穿透空隙；单位/棋子单独开回 */
+}
+.sc-board-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  min-height: 96px;
+  align-items: center;
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+.sc-board-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sc-line), transparent);
+}
+.sc-board-empty {
+  color: var(--sc-dim);
+  font-size: 13px;
+}
+.sc-notice {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 12px;
+  color: var(--sc-dim);
+  background: rgba(18, 22, 31, 0.9);
+  border: 1px solid var(--sc-line);
+  border-radius: 999px;
+  padding: 4px 14px;
+}
+
+/* —— 场上单位 —— */
+.sc-unit {
+  position: relative;
+  width: 128px;
+  min-height: 92px;
+  border-radius: 12px;
+  border: 1px solid var(--sc-line);
+  background: linear-gradient(160deg, #1a2130, #10141d);
+  text-align: left;
+  padding: 8px 10px 22px;
+  cursor: default;
+}
+.sc-unit.is-selectable {
+  cursor: pointer;
+  border-color: var(--sc-accent);
+}
+.sc-unit.is-selectable:hover {
+  transform: translateY(-2px);
+}
+.sc-unit.is-targetable {
+  cursor: crosshair;
+  border-color: var(--sc-danger);
+  box-shadow: 0 0 0 2px rgba(255, 107, 94, 0.75), 0 0 16px rgba(255, 107, 94, 0.4);
+}
+.sc-unit-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.sc-unit-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.sc-unit-keywords em,
+.sc-hand-keywords {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--sc-gold);
+}
+.sc-unit-attack,
+.sc-unit-health {
+  position: absolute;
+  bottom: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #0d1017;
+  border: 1px solid var(--sc-line);
+}
+.sc-unit-attack {
+  left: 6px;
+  color: #ffb26b;
+}
+.sc-unit-health {
+  right: 6px;
+  color: #7ef2b6;
+}
+.sc-unit-health.is-hurt {
+  color: var(--sc-danger);
+}
+
+/* —— 目标选择提示条 —— */
+.sc-target-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(18, 22, 31, 0.95);
+  border: 1px solid var(--sc-danger);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* —— 己方操作区 —— */
+.sc-self-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sc-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sc-btn--power {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 16px;
+}
+.sc-btn--power.is-ready {
+  border-color: var(--sc-gold);
+  color: var(--sc-gold);
+}
+.sc-btn--turn {
+  min-width: 132px;
+}
+
+/* —— 手牌 —— */
+.sc-hand {
+  display: flex;
+  gap: 10px;
+  padding: 12px 4px 6px;
+  overflow-x: auto;
+  min-height: 118px;
+  align-items: stretch;
+}
+.sc-hand-card {
+  position: relative;
+  flex: none;
+  width: 132px;
+  border-radius: 12px;
+  border: 1px solid var(--sc-line);
+  background: linear-gradient(165deg, #1c2333, #11151f);
+  padding: 10px 12px 10px 26px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.sc-hand-card:hover:not(:disabled) {
+  transform: translateY(-6px);
+  border-color: var(--sc-accent);
+}
+.sc-hand-card.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.sc-hand-card.is-selected {
+  border-color: var(--sc-gold);
+  box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.5);
+}
+.sc-hand-cost {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 34px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--sc-mana);
+  background: rgba(77, 163, 255, 0.12);
+  border: 1px solid rgba(77, 163, 255, 0.4);
+}
+.sc-hand-name {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.25;
+}
+.sc-hand-type {
+  display: block;
+  font-size: 11px;
+  color: var(--sc-dim);
+  margin-top: 2px;
+}
+.sc-hand-stats {
+  display: block;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.sc-hand-reason {
+  display: block;
+  font-size: 10px;
+  color: var(--sc-danger);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* —— 战报日志 —— */
+.sc-log {
+  width: 280px;
+  flex: none;
+  border-left: 1px solid var(--sc-line);
+  background: rgba(13, 16, 23, 0.6);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sc-log-title {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--sc-dim);
+  border-bottom: 1px solid var(--sc-line);
+  letter-spacing: 0.2em;
+}
+.sc-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 10px 14px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sc-log-item {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sc-text);
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+}
+.sc-log-item.is-system {
+  color: var(--sc-dim);
+}
+.sc-log-item.is-combat {
+  color: #ffb0a8;
+}
+.sc-log-item.is-end {
+  color: var(--sc-gold);
+  font-weight: 700;
+}
+
+/* —— 错误提示 —— */
+.sc-toast {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 16, 16, 0.95);
+  border: 1px solid var(--sc-danger);
+  color: #ffd6d1;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 13px;
+  z-index: 50;
+  max-width: 70vw;
+}
+
+/* —— 结算画面 —— */
+.sc-result-headline {
+  font-size: 64px;
+  margin: 8px 0;
+}
+.sc-result.is-you .sc-result-headline {
+  color: var(--sc-accent);
+}
+.sc-result.is-opponent .sc-result-headline {
+  color: var(--sc-danger);
+}
+.sc-result.is-draw .sc-result-headline {
+  color: var(--sc-dim);
+}
+.sc-result-subline {
+  font-size: 18px;
+  color: var(--sc-text);
+}
+.sc-result-meta {
+  color: var(--sc-dim);
+  font-size: 13px;
+}
+.sc-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 28px;
+  max-width: 720px;
+}
+.sc-result-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--sc-line);
+  border-radius: 14px;
+  background: var(--sc-panel);
+  padding: 18px 20px;
+}
+.sc-result-side.is-winner {
+  border-color: var(--sc-accent);
+}
+.sc-result-side-label {
+  font-size: 12px;
+  color: var(--sc-dim);
+}
+.sc-result-side-name {
+  font-size: 20px;
+}
+.sc-result-verdict {
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+.sc-result-side.is-winner .sc-result-verdict {
+  color: var(--sc-accent);
+}
+
+/* —— 规则页 —— */
+.sc-rules-section {
+  border: 1px solid var(--sc-line);
+  background: var(--sc-panel);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+}
+.sc-rules-section h2 {
+  font-size: 16px;
+  margin: 0 0 10px;
+  color: var(--sc-accent);
+}
+.sc-rules-section ul {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.9;
+  font-size: 14px;
+}
+.sc-rules-foot {
+  color: var(--sc-dim);
+  font-size: 12px;
+}
