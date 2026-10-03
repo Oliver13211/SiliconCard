@@ -8,6 +8,13 @@ on:
 env:
   COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
 
+# statuses: write —— 终态时向 legacy commit status API 写 ci/verify 上下文：
+# Actions 结果只进 check-runs 体系，若无任何 status 上下文，
+# commits/{sha}/status（combined status）恒返回 pending，依赖该口径的门禁会永远判不过。
+permissions:
+  contents: read
+  statuses: write
+
 jobs:
   verify:
     name: lint / typecheck / test / build
@@ -44,3 +51,20 @@ jobs:
 
       - name: Build
         run: yarn build
+
+      - name: Publish commit status (legacy status API)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAW: ${{ job.status }}
+        run: |
+          case "${RAW}" in
+            success) STATE=success ;;
+            failure|cancelled) STATE=failure ;;
+            *) STATE=error ;;
+          esac
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="${STATE}" \
+            -f context="ci/verify" \
+            -f description="lint / typecheck / test / build: ${STATE}" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

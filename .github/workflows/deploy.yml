@@ -10,10 +10,14 @@ on:
 # Pages 的 Actions 部署源需要这两个权限：
 #   pages: write —— 创建/更新 Pages 部署
 #   id-token: write —— deploy-pages 以 OIDC 短期令牌认证（不使用 PAT）
+# statuses: write —— 终态时向 legacy commit status API 写 ci/deploy-pages 上下文
+#   （Actions 结果只进 check-runs；无 status 上下文时 commits/{sha}/status 恒 pending，
+#   依赖该口径的门禁会永远判不过）
 permissions:
   contents: read
   pages: write
   id-token: write
+  statuses: write
 
 # 一次只跑一个部署，后来的排队等待（不取消进行中的部署，避免线上半成品）
 concurrency:
@@ -59,3 +63,20 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Publish commit status (legacy status API)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAW: ${{ job.status }}
+        run: |
+          case "${RAW}" in
+            success) STATE=success ;;
+            failure|cancelled) STATE=failure ;;
+            *) STATE=error ;;
+          esac
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="${STATE}" \
+            -f context="ci/deploy-pages" \
+            -f description="GitHub Pages deploy: ${STATE}" \
+            -f target_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
