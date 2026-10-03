@@ -1,0 +1,18 @@
+{
+  "id": "intel-i9-14900k",
+  "name": "i9-14900K",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 125,
+  "attack": 6,
+  "health": 6,
+  "keywords": ["divine_shield", "overload"],
+  "tags": ["14nm"],
+  "rarity": "epic",
+  "flavor": "官方功耗 125W（信我，别看瞬时 251W）。默认电压进桌面就崩，五年盒装质保不是福利是自首——微码 0x129 已推送。",
+  "art": { "shape": "cpu_dieshot", "palette": "intel", "glow": "violet" },
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "lockMana", "player": "sourceOwner", "amount": 300 }]
+  }
+}

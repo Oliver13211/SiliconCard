@@ -1,0 +1,18 @@
+{
+  "id": "intel-beta-driver",
+  "name": "BETA 通道驱动",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "keywords": ["overload"],
+  "rarity": "rare",
+  "flavor": "BETA 通道抢先体验：多抽两张牌的快乐，用下回合跳闸 100W 来还。稳定版用户请绕行。",
+  "art": { "shape": "driver_installer", "palette": "intel", "glow": "violet" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "draw", "player": "sourceOwner", "count": 2 },
+      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
+    ]
+  }
+}

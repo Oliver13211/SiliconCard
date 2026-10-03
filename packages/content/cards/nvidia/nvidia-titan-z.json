@@ -1,0 +1,14 @@
+{
+  "id": "nvidia-titan-z",
+  "name": "GTX Titan Z",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 375,
+  "attack": 6,
+  "health": 6,
+  "keywords": ["windfury"],
+  "tags": ["flagship"],
+  "rarity": "epic",
+  "flavor": "两颗核心挤在一块板上：功耗翻倍，性能没翻倍，信仰翻了三倍。",
+  "art": { "shape": "gpu_dual_fan", "palette": "nvidia_gold", "glow": "gold" }
+}

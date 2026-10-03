@@ -1,0 +1,16 @@
+{
+  "id": "intel-xtu-undervolt",
+  "name": "XTU 降压超频",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "rare",
+  "flavor": "降压 0.05V 白嫖 300MHz：体质好的起飞，体质差的当场去世。硅彩票，开！",
+  "art": { "shape": "voltage_curve", "palette": "intel", "glow": "red" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "buff", "target": { "kind": "chosen", "pool": "ownUnits" }, "attack": 3, "health": -1 }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "intel-microcode-0x129",
+  "name": "0x129 微码补丁",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "common",
+  "flavor": "官方修复方案：不是治好缩缸，是让它在崩溃前先眨个眼。打完补丁，接着用。",
+  "art": { "shape": "patch_note", "palette": "intel", "glow": "blue" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "heal", "target": { "kind": "chosen", "pool": "anyCharacter" }, "amount": 3 }]
+  }
+}

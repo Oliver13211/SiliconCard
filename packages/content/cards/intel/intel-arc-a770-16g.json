@@ -1,0 +1,18 @@
+{
+  "id": "intel-arc-a770-16g",
+  "name": "Arc A770 16GB",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 225,
+  "attack": 2,
+  "health": 3,
+  "rarity": "legendary",
+  "flavor": "16GB 大显存，每月一版驱动。从驱动地狱到卡皇宝座，Arc 的逆袭是回合制刷出来的。",
+  "art": { "shape": "gpu_triple_fan", "palette": "intel", "glow": "aqua" },
+  "effect": {
+    "trigger": "turnStart",
+    "steps": [
+      { "op": "buff", "target": { "kind": "all", "pool": "self" }, "attack": 1, "health": 1 }
+    ]
+  }
+}

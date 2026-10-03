@@ -1,0 +1,13 @@
+{
+  "id": "neutral-dxracer-king",
+  "name": "迪锐克斯 KING 电竞椅",
+  "faction": "neutral",
+  "type": "gpu",
+  "cost": 400,
+  "attack": 2,
+  "health": 6,
+  "keywords": ["taunt"],
+  "rarity": "rare",
+  "flavor": "信仰充值实体化：坐上去的第一天腰就不酸了——广告是这么说的。别拆，腰托才是本体。",
+  "art": { "shape": "gaming_chair", "palette": "dxracer_red" }
+}

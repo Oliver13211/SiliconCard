@@ -1,0 +1,14 @@
+{
+  "id": "intel-igpu-rescue",
+  "name": "核显顶上",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "common",
+  "flavor": "独显阵亡的日子里，是核显把机器点亮。不用装驱动也能亮——这是 Intel 的底线。",
+  "art": { "shape": "display_out", "palette": "intel", "glow": "blue" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "summon", "cardId": "intel-uhd-770", "count": 1 }]
+  }
+}

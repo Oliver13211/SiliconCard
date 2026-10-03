@@ -1,0 +1,18 @@
+{
+  "id": "amd-rx-580",
+  "name": "Radeon RX 580",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 185,
+  "attack": 2,
+  "health": 2,
+  "keywords": ["deathrattle"],
+  "tags": ["miner"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "deathrattle",
+    "steps": [{ "op": "summon", "cardId": "amd-rx-550", "count": 2 }]
+  },
+  "flavor": "名字写着 580，流处理器只有 2048——矿老板不在乎，能挖就是好卡。",
+  "art": { "shape": "gpu_double_fan", "palette": "amd_red", "glow": "red" }
+}

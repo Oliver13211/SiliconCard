@@ -1,0 +1,14 @@
+{
+  "id": "nvidia-rgb-glow",
+  "name": "RGB 信仰灯效",
+  "faction": "nvidia",
+  "type": "accessory",
+  "cost": 100,
+  "rarity": "common",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "attack", "delta": 1, "scope": "ownUnits" }
+  },
+  "flavor": "灯效一开，帧数 +10。不信？你摸摸机箱——烫了就说明性能到位了。",
+  "art": { "shape": "rgb_strip", "palette": "rainbow", "glow": "rainbow" }
+}

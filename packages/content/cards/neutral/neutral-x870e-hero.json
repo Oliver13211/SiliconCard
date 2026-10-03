@@ -1,0 +1,14 @@
+{
+  "id": "neutral-x870e-hero",
+  "name": "X870E HERO",
+  "faction": "neutral",
+  "type": "accessory",
+  "cost": 500,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "cost", "delta": -50, "scope": "ownUnits" }
+  },
+  "flavor": "二十相供电全家桶：插上它，你的手牌全体打九五折——BIOS 更新除外。",
+  "art": { "shape": "motherboard_atx", "palette": "rog_red", "glow": "red" }
+}

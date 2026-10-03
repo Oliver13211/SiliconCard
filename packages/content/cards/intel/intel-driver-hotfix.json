@@ -1,0 +1,14 @@
+{
+  "id": "intel-driver-hotfix",
+  "name": "Hotfix 热修复",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "common",
+  "flavor": "凌晨三点推送：修好了游戏崩溃，顺带修坏了休眠唤醒。传统艺能，下个版本再修回来。",
+  "art": { "shape": "driver_installer", "palette": "intel", "glow": "blue" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  }
+}

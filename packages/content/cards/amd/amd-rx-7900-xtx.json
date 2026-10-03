@@ -1,0 +1,16 @@
+{
+  "id": "amd-rx-7900-xtx",
+  "name": "Radeon RX 7900 XTX",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 355,
+  "attack": 5,
+  "health": 6,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "damage", "target": { "kind": "chosen", "pool": "enemyHero" }, "amount": 3 }]
+  },
+  "flavor": "24G 显存 355W，光追开一档帧数对半——没关系，我们有 FSR。",
+  "art": { "shape": "gpu_triple_fan", "palette": "amd_red", "glow": "red" }
+}

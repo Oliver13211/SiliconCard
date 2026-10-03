@@ -1,0 +1,14 @@
+{
+  "id": "intel-av1-encode",
+  "name": "AV1 硬编码",
+  "faction": "intel",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "rare",
+  "flavor": "地表最强 AV1 编码器：4K120 压进 10Mbps。顺便把对面显卡的血量也压一压。",
+  "art": { "shape": "codec_block", "palette": "intel", "glow": "blue" },
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "damage", "target": { "kind": "chosen", "pool": "enemyUnits" }, "amount": 2 }]
+  }
+}

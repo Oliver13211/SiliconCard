@@ -1,0 +1,13 @@
+{
+  "id": "amd-rx-6400",
+  "name": "Radeon RX 6400",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 53,
+  "attack": 1,
+  "health": 2,
+  "keywords": ["stealth"],
+  "rarity": "starter",
+  "flavor": "半高单风扇刀卡，塞进办公主机三周，同事一直以为那是装饰罩。",
+  "art": { "shape": "gpu_single_fan", "palette": "amd_red", "glow": "red" }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "amd-dual-bios",
+  "name": "双 BIOS 静音开关",
+  "faction": "amd",
+  "type": "accessory",
+  "cost": 300,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "cost", "delta": -100, "scope": "ownUnits" }
+  },
+  "flavor": "拨到静音档：风扇全停、功耗直降，矿场老板连夜来抄作业。",
+  "art": { "shape": "switch_pcb", "palette": "amd_red", "glow": "amber" }
+}

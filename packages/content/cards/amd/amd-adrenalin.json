@@ -1,0 +1,17 @@
+{
+  "id": "amd-adrenalin",
+  "name": "Adrenalin 战未来",
+  "faction": "amd",
+  "type": "driver",
+  "cost": 250,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "buff", "target": { "kind": "chosen", "pool": "ownUnits" }, "attack": 0, "health": 0 },
+      { "op": "handler", "name": "double_attack" }
+    ]
+  },
+  "flavor": "别家驱动修 bug，红家驱动送性能——五年老卡更新完，帧数不降反升。",
+  "art": { "shape": "driver_disc", "palette": "amd_red", "glow": "red" }
+}

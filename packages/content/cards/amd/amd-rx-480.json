@@ -1,0 +1,14 @@
+{
+  "id": "amd-rx-480",
+  "name": "Radeon RX 480",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 2,
+  "health": 4,
+  "keywords": ["taunt"],
+  "tags": ["miner"],
+  "rarity": "common",
+  "flavor": "官方 TDP 150W，首发当天烧穿了主板的 8pin 供电座，此后官方建议：双 8pin 保平安。",
+  "art": { "shape": "gpu_blower", "palette": "amd_red", "glow": "amber" }
+}

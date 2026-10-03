@@ -1,0 +1,15 @@
+{
+  "id": "intel-nuc-13-extreme",
+  "name": "NUC 13 Extreme",
+  "faction": "intel",
+  "type": "accessory",
+  "cost": 150,
+  "rarity": "epic",
+  "flavor": "巴掌大的小钢炮塞进 i9 和双槽显卡。Intel 连 NUC 业务都卖了，它的气场还留在桌面上。",
+  "art": { "shape": "mini_pc", "palette": "intel", "glow": "silver" },
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "gainArmor", "player": "sourceOwner", "amount": 3 }],
+    "aura": { "stat": "health", "delta": 1, "scope": "ownUnits" }
+  }
+}

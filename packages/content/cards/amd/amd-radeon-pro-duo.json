@@ -1,0 +1,13 @@
+{
+  "id": "amd-radeon-pro-duo",
+  "name": "Radeon Pro Duo",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 350,
+  "attack": 5,
+  "health": 5,
+  "keywords": ["windfury"],
+  "rarity": "legendary",
+  "flavor": "一张卡两颗芯，风怒双倍快乐；电表转出火星时请记得：这是生产力工具。",
+  "art": { "shape": "gpu_dual_core", "palette": "amd_red", "glow": "crimson" }
+}

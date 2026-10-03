@@ -1,0 +1,14 @@
+{
+  "id": "neutral-trident-z5-ddr5",
+  "name": "芝奇幻锋戟 DDR5-8000",
+  "faction": "neutral",
+  "type": "accessory",
+  "cost": 400,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 2 }]
+  },
+  "flavor": "XMP 一开直接起飞：实测灯条加成 30%，内存本体加成 0%——RGB 就是战斗力。",
+  "art": { "shape": "ram_stick", "palette": "rgb_rainbow", "glow": "rgb" }
+}

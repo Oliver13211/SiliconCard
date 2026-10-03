@@ -1,0 +1,14 @@
+{
+  "id": "neutral-b650m-plus",
+  "name": "B650M 重炮手",
+  "faction": "neutral",
+  "type": "accessory",
+  "cost": 200,
+  "rarity": "common",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "attack", "delta": 1, "scope": "ownUnits" }
+  },
+  "flavor": "板子虽小火力管饱：M-ATX 的身板，藏着一颗 ATX 的野心。",
+  "art": { "shape": "motherboard_matx", "palette": "tuf_military", "glow": "amber" }
+}

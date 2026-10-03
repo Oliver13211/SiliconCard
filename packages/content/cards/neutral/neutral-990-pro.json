@@ -1,0 +1,14 @@
+{
+  "id": "neutral-990-pro",
+  "name": "990 PRO",
+  "faction": "neutral",
+  "type": "driver",
+  "cost": 300,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 2 }]
+  },
+  "flavor": "顺序读取 7450MB/s：牌库还没洗完，我已经把结局看完了。缓存掉了？那是下一局的事。",
+  "art": { "shape": "spell_drive", "palette": "samsung_black", "glow": "blue" }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "nvidia-rtx-5070",
+  "name": "RTX 5070",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 250,
+  "attack": 5,
+  "health": 4,
+  "rarity": "common",
+  "flavor": "性能对标上代旗舰——把帧生成算上的话。",
+  "art": { "shape": "gpu_dual_fan", "palette": "nvidia", "glow": "green" }
+}

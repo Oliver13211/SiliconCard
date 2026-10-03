@@ -1,0 +1,32 @@
+{
+  "id": "amd-war-future",
+  "name": "AMD · 战未来全家桶",
+  "faction": "amd",
+  "cards": [
+    { "cardId": "amd-rx-550", "count": 2 },
+    { "cardId": "amd-rx-6400", "count": 2 },
+    { "cardId": "amd-rx-470", "count": 2 },
+    { "cardId": "amd-rx-480", "count": 2 },
+    { "cardId": "amd-chill", "count": 1 },
+    { "cardId": "amd-rx-580", "count": 1 },
+    { "cardId": "amd-xianyu", "count": 1 },
+    { "cardId": "amd-r9-290", "count": 1 },
+    { "cardId": "amd-adrenalin", "count": 1 },
+    { "cardId": "amd-the-merge", "count": 1 },
+    { "cardId": "amd-afmf", "count": 1 },
+    { "cardId": "amd-radeon-pro-duo", "count": 1 },
+    { "cardId": "amd-rx-7900-xtx", "count": 1 },
+    { "cardId": "amd-riser", "count": 1 },
+    { "cardId": "neutral-p106-100", "count": 2 },
+    { "cardId": "neutral-g502-hero", "count": 1 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 1 },
+    { "cardId": "neutral-dxracer-king", "count": 1 },
+    { "cardId": "neutral-gt-1030", "count": 1 },
+    { "cardId": "neutral-furmark", "count": 1 },
+    { "cardId": "neutral-barracuda-2tb", "count": 1 },
+    { "cardId": "neutral-990-pro", "count": 1 },
+    { "cardId": "neutral-b650m-plus", "count": 1 },
+    { "cardId": "neutral-nh-d15", "count": 1 },
+    { "cardId": "neutral-h150i-lcd", "count": 1 }
+  ]
+}

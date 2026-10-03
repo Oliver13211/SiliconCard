@@ -1,0 +1,18 @@
+{
+  "id": "amd-rx-470",
+  "name": "Radeon RX 470",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 120,
+  "attack": 2,
+  "health": 2,
+  "keywords": ["deathrattle"],
+  "tags": ["miner"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "deathrattle",
+    "steps": [{ "op": "summon", "cardId": "amd-rx-550", "count": 1 }]
+  },
+  "flavor": "矿池连续 1095 天无休，过保三年仍在服役，传家宝实至名归。",
+  "art": { "shape": "gpu_double_fan", "palette": "amd_red", "glow": "red" }
+}

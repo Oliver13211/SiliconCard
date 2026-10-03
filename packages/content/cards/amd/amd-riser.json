@@ -1,0 +1,14 @@
+{
+  "id": "amd-riser",
+  "name": "PCIe Riser 延长线",
+  "faction": "amd",
+  "type": "accessory",
+  "cost": 100,
+  "rarity": "common",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "attack", "delta": 1, "scope": "ownUnits" }
+  },
+  "flavor": "矿架的灵魂配件：4x 延长线一插，横着竖着，哪里有空插哪里。",
+  "art": { "shape": "riser_pcb", "palette": "amd_red", "glow": "red" }
+}

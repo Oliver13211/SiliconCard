@@ -1,0 +1,17 @@
+{
+  "id": "nvidia-game-ready-driver",
+  "name": "Game Ready 驱动",
+  "faction": "nvidia",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "common",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "draw", "player": "sourceOwner", "count": 1 },
+      { "op": "damage", "target": { "kind": "random", "pool": "allUnits" }, "amount": 1 }
+    ]
+  },
+  "flavor": "新驱动 Game Ready：游戏没准备好，你的显卡先准备好翻车了。",
+  "art": { "shape": "driver_disc", "palette": "nvidia_green", "glow": "green" }
+}

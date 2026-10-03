@@ -1,0 +1,13 @@
+{
+  "id": "nvidia-gtx-480",
+  "name": "GTX 480",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 294,
+  "attack": 5,
+  "health": 6,
+  "keywords": ["taunt"],
+  "rarity": "rare",
+  "flavor": "买显卡送暖风机；公版涡轮一转，整层楼都安静了。",
+  "art": { "shape": "gpu_blower", "palette": "nvidia_classic", "glow": "red" }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "intel-arc-a750",
+  "name": "Arc A750",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 225,
+  "attack": 3,
+  "health": 4,
+  "rarity": "common",
+  "flavor": "性价比是真实惠，驱动是真心跳。装好的那一刻它是 3060，装崩的那一刻它是 PCI 声卡。",
+  "art": { "shape": "gpu_dual_fan", "palette": "intel", "glow": "cyan" },
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  }
+}

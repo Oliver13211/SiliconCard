@@ -1,0 +1,12 @@
+{
+  "id": "nvidia-rtx-5080",
+  "name": "RTX 5080",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 360,
+  "attack": 7,
+  "health": 5,
+  "rarity": "rare",
+  "flavor": "999 美元，16GB 显存；省下的预算刚好够充值信仰。",
+  "art": { "shape": "gpu_dual_fan", "palette": "nvidia", "glow": "green" }
+}

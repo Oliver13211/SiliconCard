@@ -1,0 +1,33 @@
+{
+  "id": "intel-driver-magic",
+  "name": "Intel · 驱动玄学包",
+  "faction": "intel",
+  "cards": [
+    { "cardId": "intel-arc-a380", "count": 2 },
+    { "cardId": "intel-uhd-770", "count": 2 },
+    { "cardId": "intel-i9-9900k", "count": 2 },
+    { "cardId": "intel-driver-hotfix", "count": 1 },
+    { "cardId": "intel-av1-encode", "count": 1 },
+    { "cardId": "intel-igpu-rescue", "count": 1 },
+    { "cardId": "intel-microcode-0x129", "count": 1 },
+    { "cardId": "intel-xtu-undervolt", "count": 1 },
+    { "cardId": "intel-beta-driver", "count": 1 },
+    { "cardId": "intel-i9-14900k", "count": 1 },
+    { "cardId": "intel-arc-b580", "count": 1 },
+    { "cardId": "intel-arc-a750", "count": 1 },
+    { "cardId": "intel-arc-a770-16g", "count": 1 },
+    { "cardId": "intel-laminar-cooler", "count": 1 },
+    { "cardId": "intel-nuc-13-extreme", "count": 1 },
+    { "cardId": "neutral-p106-100", "count": 2 },
+    { "cardId": "neutral-g502-hero", "count": 1 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 1 },
+    { "cardId": "neutral-dxracer-king", "count": 1 },
+    { "cardId": "neutral-gt-1030", "count": 1 },
+    { "cardId": "neutral-furmark", "count": 1 },
+    { "cardId": "neutral-barracuda-2tb", "count": 1 },
+    { "cardId": "neutral-990-pro", "count": 1 },
+    { "cardId": "neutral-b650m-plus", "count": 1 },
+    { "cardId": "neutral-nh-d15", "count": 1 },
+    { "cardId": "neutral-h150i-lcd", "count": 1 }
+  ]
+}

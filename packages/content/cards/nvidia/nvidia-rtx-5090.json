@@ -1,0 +1,20 @@
+{
+  "id": "nvidia-rtx-5090",
+  "name": "RTX 5090",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 575,
+  "attack": 9,
+  "health": 7,
+  "keywords": ["charge"],
+  "tags": ["flagship"],
+  "rarity": "legendary",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "damage", "target": { "kind": "chosen", "pool": "anyCharacter" }, "amount": 3 }
+    ]
+  },
+  "flavor": "标称 575W，瞬时峰值属于「不可抗力」，详见保修条款第 12 条附则。",
+  "art": { "shape": "gpu_triple_fan", "palette": "nvidia", "glow": "green" }
+}

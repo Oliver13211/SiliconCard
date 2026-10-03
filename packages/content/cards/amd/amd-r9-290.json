@@ -1,0 +1,20 @@
+{
+  "id": "amd-r9-290",
+  "name": "Radeon R9 290",
+  "faction": "amd",
+  "type": "gpu",
+  "cost": 250,
+  "attack": 4,
+  "health": 3,
+  "keywords": ["overload"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "damage", "target": { "kind": "chosen", "pool": "anyCharacter" }, "amount": 2 },
+      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
+    ]
+  },
+  "flavor": "夏威夷核心自带地热，冬天当暖气，夏天当灾难，开一局游戏邻居以为你开了网吧。",
+  "art": { "shape": "gpu_blower", "palette": "amd_red", "glow": "amber" }
+}

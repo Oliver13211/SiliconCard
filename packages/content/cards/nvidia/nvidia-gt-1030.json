@@ -1,0 +1,13 @@
+{
+  "id": "nvidia-gt-1030",
+  "name": "GT 1030",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 1,
+  "health": 3,
+  "keywords": ["stealth"],
+  "rarity": "starter",
+  "flavor": "机箱里最卑微的存在：不接显示器没人知道它在干活，包括它自己。",
+  "art": { "shape": "gpu_single_fan", "palette": "nvidia_gray", "glow": "pale" }
+}

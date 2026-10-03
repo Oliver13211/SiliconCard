@@ -1,0 +1,19 @@
+{
+  "id": "neutral-system-builder",
+  "name": "中立 · 装机佬标配包",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "neutral-gt-1030", "count": 3 },
+    { "cardId": "neutral-p106-100", "count": 3 },
+    { "cardId": "neutral-g502-hero", "count": 3 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 3 },
+    { "cardId": "neutral-dxracer-king", "count": 3 },
+    { "cardId": "neutral-furmark", "count": 3 },
+    { "cardId": "neutral-barracuda-2tb", "count": 3 },
+    { "cardId": "neutral-990-pro", "count": 3 },
+    { "cardId": "neutral-focus-gx-850", "count": 1 },
+    { "cardId": "neutral-b650m-plus", "count": 2 },
+    { "cardId": "neutral-nh-d15", "count": 2 },
+    { "cardId": "neutral-rog-thor-1600t", "count": 1 }
+  ]
+}

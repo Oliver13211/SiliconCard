@@ -1,0 +1,19 @@
+{
+  "id": "intel-arc-b580",
+  "name": "Arc B580",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 190,
+  "attack": 4,
+  "health": 5,
+  "rarity": "rare",
+  "flavor": "2499 元 12GB 显存，Battlemage 的第一战。评测解禁那天，驱动组熬的两年夜终于值了。",
+  "art": { "shape": "gpu_dual_fan", "palette": "intel", "glow": "aqua" },
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "draw", "player": "sourceOwner", "count": 1 },
+      { "op": "buff", "target": { "kind": "all", "pool": "self" }, "attack": 1 }
+    ]
+  }
+}

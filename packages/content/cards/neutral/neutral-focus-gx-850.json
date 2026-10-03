@@ -1,0 +1,18 @@
+{
+  "id": "neutral-focus-gx-850",
+  "name": "FOCUS GX-850",
+  "faction": "neutral",
+  "type": "driver",
+  "cost": 850,
+  "keywords": ["overload"],
+  "rarity": "epic",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "damage", "target": { "kind": "all", "pool": "allUnits" }, "amount": 3 },
+      { "op": "lockMana", "player": "sourceOwner", "amount": 300 }
+    ]
+  },
+  "flavor": "峰值 1600W 的那一瞬间，整栋楼的灯都为你眨了眨眼——跳闸，是电业局对你的最高致敬。",
+  "art": { "shape": "spell_bolt", "palette": "electric_blue", "glow": "blue" }
+}

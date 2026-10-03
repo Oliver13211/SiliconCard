@@ -26,6 +26,14 @@ export {
   findFactionSkillIssues,
 } from './engine/factions'
 export type { FactionSkillDefinition } from './engine/factions'
+// —— 卡牌定义注册表（M1-ENG2 宿主注入点）：与派系技能注入同模式 additive 导出
+// （经编排方授权补导出面，M1-UI1..3；WF-ENGINE additive，由编排方向下游通报）——
+export {
+  registerCardDefinitions,
+  getCardDefinition,
+  clearCardDefinitions,
+  findCardDefinitionIssues,
+} from './engine/registry'
 // —— 命名 handler 逃生舱（§5）：content 侧特殊逻辑按 name 注册后经 { op:'handler' } 引用 ——
 export { registerEffectHandler } from './effects/handlers'
 export type { EffectHandler } from './effects/handlers'

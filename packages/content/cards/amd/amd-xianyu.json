@@ -1,0 +1,14 @@
+{
+  "id": "amd-xianyu",
+  "name": "闲鱼捡漏",
+  "faction": "amd",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "revive", "pick": "lastOwnedGpu", "to": "sourceOwnerBoard" }]
+  },
+  "flavor": "1800 收的 588 成色 99 新，卖家说只用来科学计算，我信了。",
+  "art": { "shape": "driver_disc", "palette": "amd_red", "glow": "amber" }
+}

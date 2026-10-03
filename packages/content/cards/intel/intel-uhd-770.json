@@ -1,0 +1,14 @@
+{
+  "id": "intel-uhd-770",
+  "name": "UHD Graphics 770",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 1,
+  "health": 1,
+  "keywords": ["stealth"],
+  "tags": ["igpu"],
+  "rarity": "starter",
+  "flavor": "买 CPU 送的显卡：35W 功耗扛下一切。无输出亮机界的天花板——点亮那一刻，它就是全部的光。",
+  "art": { "shape": "igpu_chip", "palette": "intel", "glow": "blue" }
+}

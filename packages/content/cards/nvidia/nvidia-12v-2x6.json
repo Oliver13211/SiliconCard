@@ -1,0 +1,17 @@
+{
+  "id": "nvidia-12v-2x6",
+  "name": "12V-2×6 烧蚀",
+  "faction": "nvidia",
+  "type": "driver",
+  "cost": 150,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "destroy", "target": { "kind": "chosen", "pool": "allUnits" } },
+      { "op": "damage", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 3 }
+    ]
+  },
+  "flavor": "插紧了也烧，没插紧也烧——烧，是转接头的宿命。",
+  "art": { "shape": "power_connector", "palette": "nvidia_dark", "glow": "orange_fire" }
+}

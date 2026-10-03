@@ -1,0 +1,16 @@
+{
+  "id": "nvidia-dlss-upscale",
+  "name": "DLSS 超分辨率",
+  "faction": "nvidia",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "common",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "buff", "target": { "kind": "chosen", "pool": "ownUnits" }, "attack": 1, "health": 1 }
+    ]
+  },
+  "flavor": "1080p 渲染拉到 4K，画质补偿按帧数计费——看不出来就是赚到了。",
+  "art": { "shape": "driver_disc", "palette": "nvidia", "glow": "cyan" }
+}

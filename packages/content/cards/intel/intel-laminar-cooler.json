@@ -1,0 +1,14 @@
+{
+  "id": "intel-laminar-cooler",
+  "name": "Laminar 公版涡轮",
+  "faction": "intel",
+  "type": "accessory",
+  "cost": 100,
+  "rarity": "rare",
+  "flavor": "信仰灯条十连闪，涡轮噪音赛吸尘器：温度压住了，耳膜牺牲了。",
+  "art": { "shape": "cooler_shroud", "palette": "intel", "glow": "blue" },
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "attack", "delta": 1, "scope": "ownUnits" }
+  }
+}

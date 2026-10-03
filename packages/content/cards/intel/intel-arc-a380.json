@@ -1,0 +1,12 @@
+{
+  "id": "intel-arc-a380",
+  "name": "Arc A380",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 2,
+  "health": 3,
+  "rarity": "starter",
+  "flavor": "真实 TDP 只有 75W：省电是真的，性能也是真的。首发 1030 元被群嘲两年，驱动更了四十多版，它真的快追上 1660 了——Arc 的成长按版本来算。",
+  "art": { "shape": "gpu_dual_fan", "palette": "intel", "glow": "cyan" }
+}

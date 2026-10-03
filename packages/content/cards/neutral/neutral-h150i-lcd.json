@@ -1,0 +1,14 @@
+{
+  "id": "neutral-h150i-lcd",
+  "name": "H150i LCD 水冷",
+  "faction": "neutral",
+  "type": "accessory",
+  "cost": 300,
+  "rarity": "common",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "health", "delta": 1, "scope": "ownUnits" }
+  },
+  "flavor": "iCUE 全家桶后台占 2 个 G：温度没降多少，眼睛先被冷头上的屏幕凉快到了。",
+  "art": { "shape": "aio_radiator", "palette": "corsair_black", "glow": "rgb" }
+}

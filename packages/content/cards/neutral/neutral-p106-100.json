@@ -1,0 +1,18 @@
+{
+  "id": "neutral-p106-100",
+  "name": "P106-100",
+  "faction": "neutral",
+  "type": "gpu",
+  "cost": 120,
+  "attack": 3,
+  "health": 2,
+  "keywords": ["deathrattle"],
+  "tags": ["miner"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "deathrattle",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  },
+  "flavor": "矿难幸存者三无宣言：无输出、无质保、无怨言——退坑时兜里还揣着下一个矿主的微信。",
+  "art": { "shape": "gpu_blower", "palette": "mining_green", "glow": "green" }
+}

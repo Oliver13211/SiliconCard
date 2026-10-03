@@ -1,0 +1,14 @@
+{
+  "id": "intel-i9-9900k",
+  "name": "i9-9900K",
+  "faction": "intel",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 2,
+  "health": 8,
+  "keywords": ["taunt"],
+  "tags": ["14nm"],
+  "rarity": "common",
+  "flavor": "14nm+++：一颗工艺挤三代牙膏。8 核 16 线程纹丝不动，真实 PL1 只有 95W，体质一步没退——信仰充值，请。",
+  "art": { "shape": "cpu_dieshot", "palette": "intel", "glow": "silver" }
+}

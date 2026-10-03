@@ -1,0 +1,32 @@
+{
+  "id": "nvidia-flagship-faith",
+  "name": "NVIDIA · 旗舰信仰包",
+  "faction": "nvidia",
+  "cards": [
+    { "cardId": "nvidia-rtx-5060", "count": 2 },
+    { "cardId": "nvidia-gt-1030", "count": 2 },
+    { "cardId": "nvidia-dlss-upscale", "count": 2 },
+    { "cardId": "nvidia-game-ready-driver", "count": 1 },
+    { "cardId": "nvidia-12v-2x6", "count": 1 },
+    { "cardId": "nvidia-multi-frame-gen", "count": 1 },
+    { "cardId": "nvidia-cmp-170hx", "count": 2 },
+    { "cardId": "nvidia-rtx-5070", "count": 1 },
+    { "cardId": "nvidia-gtx-480", "count": 1 },
+    { "cardId": "nvidia-rtx-5080", "count": 1 },
+    { "cardId": "nvidia-titan-z", "count": 1 },
+    { "cardId": "nvidia-rtx-4090", "count": 1 },
+    { "cardId": "nvidia-rtx-5090", "count": 1 },
+    { "cardId": "nvidia-rtx-5090d", "count": 1 },
+    { "cardId": "neutral-p106-100", "count": 2 },
+    { "cardId": "neutral-g502-hero", "count": 1 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 1 },
+    { "cardId": "neutral-dxracer-king", "count": 1 },
+    { "cardId": "neutral-gt-1030", "count": 1 },
+    { "cardId": "neutral-furmark", "count": 1 },
+    { "cardId": "neutral-barracuda-2tb", "count": 1 },
+    { "cardId": "neutral-990-pro", "count": 1 },
+    { "cardId": "neutral-b650m-plus", "count": 1 },
+    { "cardId": "neutral-nh-d15", "count": 1 },
+    { "cardId": "neutral-h150i-lcd", "count": 1 }
+  ]
+}

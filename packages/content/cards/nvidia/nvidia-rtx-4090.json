@@ -1,0 +1,21 @@
+{
+  "id": "nvidia-rtx-4090",
+  "name": "RTX 4090",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 450,
+  "attack": 8,
+  "health": 6,
+  "keywords": ["charge", "overload"],
+  "tags": ["flagship"],
+  "rarity": "epic",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "damage", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 2 },
+      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
+    ]
+  },
+  "flavor": "瞬时功耗 600W 起跳；12V-2×6 烧了先怪转接头，这是圈内默认流程。",
+  "art": { "shape": "gpu_triple_fan", "palette": "nvidia", "glow": "orange" }
+}

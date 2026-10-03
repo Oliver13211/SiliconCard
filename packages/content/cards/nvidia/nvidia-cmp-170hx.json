@@ -1,0 +1,20 @@
+{
+  "id": "nvidia-cmp-170hx",
+  "name": "CMP 170HX",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 250,
+  "attack": 4,
+  "health": 6,
+  "keywords": ["deathrattle"],
+  "tags": ["miner"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "deathrattle",
+    "steps": [
+      { "op": "buff", "target": { "kind": "all", "pool": "ownUnits" }, "attack": 1 }
+    ]
+  },
+  "flavor": "矿难后封存三年，开箱即是传家宝：没有视频输出接口，是它最后的倔强。",
+  "art": { "shape": "gpu_bare_board", "palette": "nvidia_dark", "glow": "amber" }
+}

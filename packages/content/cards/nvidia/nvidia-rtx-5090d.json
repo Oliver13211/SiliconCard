@@ -1,0 +1,17 @@
+{
+  "id": "nvidia-rtx-5090d",
+  "name": "RTX 5090D",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 575,
+  "attack": 8,
+  "health": 7,
+  "tags": ["flagship"],
+  "rarity": "epic",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  },
+  "flavor": "砍的是算力，不是价格；加的是字母，不是性能。",
+  "art": { "shape": "gpu_dual_fan", "palette": "nvidia", "glow": "green" }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "nvidia-multi-frame-gen",
+  "name": "多帧生成",
+  "faction": "nvidia",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "grantKeyword", "target": { "kind": "chosen", "pool": "ownUnits" }, "keyword": "windfury" }
+    ]
+  },
+  "flavor": "一帧变两帧，多出来的那帧是 AI 编的——反正你没开帧数统计。",
+  "art": { "shape": "driver_disc", "palette": "nvidia", "glow": "cyan" }
+}

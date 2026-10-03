@@ -1,0 +1,16 @@
+{
+  "id": "neutral-nh-d15",
+  "name": "猫头鹰 NH-D15",
+  "faction": "neutral",
+  "type": "accessory",
+  "cost": 250,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "grantKeyword", "target": { "kind": "chosen", "pool": "ownUnits" }, "keyword": "divine_shield" }
+    ]
+  },
+  "flavor": "屎黄配色的坚守：丑是丑了点，但 250W 压得纹丝不动——风冷永不言败。",
+  "art": { "shape": "cooler_tower", "palette": "noctua_beige" }
+}

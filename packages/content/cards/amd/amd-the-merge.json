@@ -1,0 +1,21 @@
+{
+  "id": "amd-the-merge",
+  "name": "以太坊合并",
+  "faction": "amd",
+  "type": "driver",
+  "cost": 300,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      {
+        "op": "buff",
+        "target": { "kind": "all", "pool": "allUnits", "tag": "miner" },
+        "attack": -2,
+        "health": -3
+      }
+    ]
+  },
+  "flavor": "2022.9.15 转型当晚，千万矿卡集体下岗，闲鱼价格一夜腰斩。",
+  "art": { "shape": "driver_disc", "palette": "amd_red", "glow": "amber" }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "amd-chill",
+  "name": "Radeon Chill",
+  "faction": "amd",
+  "type": "driver",
+  "cost": 150,
+  "rarity": "common",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "heal", "target": { "kind": "chosen", "pool": "ownHero" }, "amount": 4 }]
+  },
+  "flavor": "Radeon Chill 一开功耗对折温度骤降，房东看电表的眼神都温柔了。",
+  "art": { "shape": "driver_disc", "palette": "amd_red", "glow": "cyan" }
+}

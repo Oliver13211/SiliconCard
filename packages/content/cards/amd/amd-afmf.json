@@ -1,0 +1,14 @@
+{
+  "id": "amd-afmf",
+  "name": "AFMF 流体补帧",
+  "faction": "amd",
+  "type": "driver",
+  "cost": 300,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 2 }]
+  },
+  "flavor": "驱动层补帧，33 帧补出 60 帧的顺滑感——延迟是什么，能吃吗？",
+  "art": { "shape": "driver_disc", "palette": "amd_red", "glow": "red" }
+}

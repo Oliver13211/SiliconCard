@@ -1,0 +1,12 @@
+{
+  "id": "nvidia-rtx-5060",
+  "name": "RTX 5060",
+  "faction": "nvidia",
+  "type": "gpu",
+  "cost": 145,
+  "attack": 4,
+  "health": 3,
+  "rarity": "common",
+  "flavor": "8GB 显存开 4K 光追：容量，已满，谢谢惠顾。",
+  "art": { "shape": "gpu_dual_fan", "palette": "nvidia", "glow": "green" }
+}
