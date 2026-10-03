@@ -19,6 +19,7 @@ import {
   type PlayerId,
   type PlayerView,
 } from '@siliconcard/core'
+import type { AiPlayer } from '@siliconcard/ai'
 
 export interface DispatchReport {
   view: PlayerView
@@ -80,10 +81,19 @@ export class BattleDriver {
     }
   }
 
-  /** 指定玩家的合法动作（托管占位 bot 用，仍走引擎公开接口） */
+  /** 指定玩家的合法动作（仍走引擎公开接口） */
   legalActionsFor(playerId: PlayerId): readonly Action[] {
     if (!this.state) return []
     return engine().getLegalActions(this.state, playerId)
+  }
+
+  /**
+   * 托管 AI 决策入口（M1-AI1 接线）：完整 state 不出本模块，AI 经 core
+   * 公开接口自行观察（防作弊封印闸门在 @siliconcard/ai 内）。
+   */
+  aiActionFor(playerId: PlayerId, ai: AiPlayer): Action | null {
+    if (!this.state || this.isEnded()) return null
+    return ai.decideNextAction(engine(), this.state)
   }
 
   view(): PlayerView | null {

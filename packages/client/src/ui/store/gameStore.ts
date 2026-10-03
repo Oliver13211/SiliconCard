@@ -19,7 +19,8 @@ import {
   type TargetRef,
 } from '@siliconcard/core'
 import { BattleDriver, type DispatchReport } from '../game/battleDriver'
-import { pickBotAction } from '../game/bot'
+import { createBot } from '../game/bot'
+import type { AiPlayer } from '@siliconcard/ai'
 import { eventsToLogEntries, gameEndOf, type LogEntry } from '../game/eventLog'
 import {
   attackStatusOf,
@@ -105,6 +106,8 @@ interface GameStore {
 }
 
 const driver = new BattleDriver('P1')
+// 对面 AI 实例：一局一个（内部有决策 RNG 游标），startBattle 时重建
+let bot: AiPlayer | null = null
 
 const eventListeners = new Set<(events: readonly GameEvent[]) => void>()
 
@@ -254,6 +257,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
           : { spec: buildFallbackDeck(oppSeed), label: RANDOM_DECK_OPTION.name }
 
       driver.reset()
+      bot = createBot('P2', seed)
       try {
         const opening = driver.start({
           seed,
@@ -388,7 +392,8 @@ export const useGameStore = create<GameStore>()((set, get) => {
       const { view } = get()
       if (!view || view.phase === 'ended') return
       if (view.activePlayer === driver.viewer) return
-      const action = pickBotAction(driver.legalActionsFor('P2'))
+      if (!bot) return
+      const action = driver.aiActionFor('P2', bot)
       if (!action) return
       runAction(action)
     },
