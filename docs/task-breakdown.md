@@ -3,7 +3,7 @@
 > 配套文档：[design-report.md](./design-report.md) · [agent 预设](./agents/presets.md) · [workflow](./agents/workflows.md)
 > 任务 ID 规则：`<里程碑>-<类型><序号>`。类型前缀：INF 基建 / ENG 引擎 / CNT 内容 / R3D 3D渲染 / UI 界面 / AI 人机 / NET 联机 / AGT Agent接口 / QA 质量 / DOC 文档
 > 每个任务标注**执行 agent 预设**，详见 [presets.md](./agents/presets.md)
-> **进度注记（2026-10-03）**：✅ **M0 全部完成**。✅ **M1 引擎链 M1-ENG1..7 闭环**（core 0.1.0）。✅ **M1 其余四线经动态工作流并行完成**：M1-R3D1..4（渲染）、M1-UI1..3（界面+接线）、M1-QA1（覆盖率门禁 97%/90%/100%/97% ≥85）、M1-CNT 四批 60 卡 + 4 套预组卡组 + 集成接线——用户已完成画面人工验收（WF-VISUAL 视为通过）。✅ **M1-AI1**（内置人机 Normal，100 局自对弈零崩溃零非法、防作弊封印闸门、Easy/Normal/Hard 三档）。**M1 剩余：M1-INF4（Pages 部署）**。后续：M3 Agent 接口 → M2 局域网 → M4 内容量与平衡。
+> **进度注记（2026-10-04）**：✅ **M0 全部完成**。✅ **M1 引擎链 M1-ENG1..7 闭环**（core 0.1.0）。✅ **M1 其余四线经动态工作流并行完成**：M1-R3D1..4（渲染）、M1-UI1..3（界面+接线）、M1-QA1（覆盖率门禁 97%/90%/100%/97% ≥85，已挂入 CI：`ci.yml` 跑 `core test:coverage` 强制 85% 阈值）、M1-CNT 四批 60 卡 + 4 套预组卡组 + 集成接线——用户已完成画面人工验收（WF-VISUAL 视为通过）。✅ **M1-AI1**（内置人机 Normal，100 局自对弈零崩溃零非法、防作弊封印闸门、Easy/Normal/Hard 三档）。✅ **M1-INF4**（Pages 部署流水线 `deploy.yml` + 线上冒烟通过）——**M1 全部收官，线上可玩：<https://oliver13211.github.io/SiliconCard/>**。后续：M3 Agent 接口 → M2 局域网 → M4 内容量与平衡。
 
 ---
 

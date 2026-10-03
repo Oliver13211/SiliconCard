@@ -1,6 +1,7 @@
 # 硅牌 SiliconCard
 
 [![CI](https://github.com/Oliver13211/SiliconCard/actions/workflows/ci.yml/badge.svg)](https://github.com/Oliver13211/SiliconCard/actions/workflows/ci.yml)
+[![Deploy Pages](https://github.com/Oliver13211/SiliconCard/actions/workflows/deploy.yml/badge.svg)](https://github.com/Oliver13211/SiliconCard/actions/workflows/deploy.yml)
 
 > 显卡与硬件梗主题的 1v1 卡牌对战 Web 游戏 — Three.js + React
 
@@ -16,7 +17,11 @@
 
 ## 开发状态
 
-🚧 M0 立项基建进行中：设计已定稿（[设计报告](docs/design-report.md)），脚手架就绪。
+✅ **M1 可玩 MVP 完成**（2026-10-04）——**线上可玩：<https://oliver13211.github.io/SiliconCard/>**，打开链接即可与内置 AI 完整打一局。
+
+已交付：无头规则引擎（`@siliconcard/core`，60 张梗卡 + 4 套预组卡组）、Three.js 3D 牌桌 + React HUD、内置人机（Easy/Normal/Hard 三档启发式）、GitHub Pages 自动部署（push main 即上线）、CI 覆盖率门禁（core ≥85%）。
+
+后续里程碑：M3 Agent 接口 → M2 局域网对战 → M4 内容量与平衡（见[任务拆分](docs/task-breakdown.md)）。
 
 ## 快速开始
 
