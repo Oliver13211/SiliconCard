@@ -3,7 +3,7 @@
 > 配套文档：[design-report.md](./design-report.md) · [agent 预设](./agents/presets.md) · [workflow](./agents/workflows.md)
 > 任务 ID 规则：`<里程碑>-<类型><序号>`。类型前缀：INF 基建 / ENG 引擎 / CNT 内容 / R3D 3D渲染 / UI 界面 / AI 人机 / NET 联机 / AGT Agent接口 / QA 质量 / DOC 文档
 > 每个任务标注**执行 agent 预设**，详见 [presets.md](./agents/presets.md)
-> **进度注记（2026-10-02）**：✅ **M0 全部完成**。✅ **M1 引擎链 M1-ENG1..7 全部闭环**（core 0.1.0：回合机/出牌/攻击/关键词/派系技能/12 原语/胜负收口 + 回放序列化 + 4 局黄金基线锁定）。下一阶段并行线：M1-QA1（qa-balance，覆盖率 ≥85%）、M1-CNT1..4（card-content 四批 ~60 卡，依赖已满足）、M1-R3D1..4 与 M1-UI1..3（客户端双线，可与内容并行）。
+> **进度注记（2026-10-03）**：✅ **M0 全部完成**。✅ **M1 引擎链 M1-ENG1..7 闭环**（core 0.1.0）。✅ **M1 其余四线经动态工作流并行完成**：M1-R3D1..4（渲染）、M1-UI1..3（界面+接线）、M1-QA1（覆盖率门禁 97%/90%/100%/97% ≥85）、M1-CNT 四批 60 卡（N/A/I/中立）+ 4 套预组卡组 + 集成接线——全仓门禁全绿（core 421 + client 116 例）。待办：M1-INF4（Pages 部署，待人工画面验收）；WF-VISUAL 浏览器视觉验收；M1-AI1（内置人机）；M2/M3/M4 里程碑。
 
 ---
 
