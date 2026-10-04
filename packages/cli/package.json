@@ -1,6 +1,6 @@
 {
   "name": "@siliconcard/cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "main": "src/index.ts",
@@ -8,10 +8,22 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "bin": {
+    "siliconcard": "./scripts/bin.mjs"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "play": "node ../../node_modules/vite-node/vite-node.mjs src/play.ts",
+    "demo": "node ../../node_modules/vite-node/vite-node.mjs src/demo.ts",
+    "mcp": "node ../../node_modules/vite-node/vite-node.mjs src/mcp.ts",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
+    "test": "node ../../node_modules/vitest/vitest.mjs run",
+    "envprobe": "node ../../node_modules/vite-node/vite-node.mjs /tmp/env-probe2.ts"
   },
   "dependencies": {
+    "@siliconcard/ai": "workspace:^",
     "@siliconcard/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4"
   }
 }
