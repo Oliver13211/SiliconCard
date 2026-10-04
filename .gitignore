@@ -53,3 +53,6 @@ Thumbs.db
 
 # Misc
 .eslintcache
+
+# CLI 对局交换目录（运行时产物，不入库）
+silicon-card-game/
