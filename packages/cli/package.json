@@ -14,6 +14,7 @@
   "scripts": {
     "play": "node ../../node_modules/vite-node/vite-node.mjs src/play.ts",
     "demo": "node ../../node_modules/vite-node/vite-node.mjs src/demo.ts",
+    "bench": "node ../../node_modules/vite-node/vite-node.mjs src/bench.ts",
     "mcp": "node ../../node_modules/vite-node/vite-node.mjs src/mcp.ts",
     "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
     "test": "node ../../node_modules/vitest/vitest.mjs run",

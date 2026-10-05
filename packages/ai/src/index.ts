@@ -54,4 +54,19 @@ export { sealState, revealState } from './sealed'
 export { runSelfPlayGame, DEFAULT_MAX_ACTIONS } from './selfplay'
 export type { SelfPlayConfig, SelfPlayResult, SelfPlaySideConfig } from './selfplay'
 
+export {
+  runDeckMatchup,
+  runFactionBalance,
+  createBalanceEngine,
+} from './matchup'
+export type {
+  BalanceDeck,
+  CardPlayStat,
+  DeckMatchupConfig,
+  DeckMatchupResult,
+  FactionBalanceConfig,
+  FactionBalanceReport,
+  DeckOverallStat,
+} from './matchup'
+
 export { AI_CARD_POOL, makeAiDeckSpec, registerAiCardPool } from './cardPool'

@@ -20,6 +20,7 @@ import type {
   DeckSpec,
   Engine,
   FactionId,
+  GameEvent,
   GameSetup,
   GameState,
   PlayerId,
@@ -45,6 +46,13 @@ export interface SelfPlayConfig {
   maxActions?: number
   /** 双方各自的难度 / 派系 / 卡组（缺省：Normal、镜像合成卡组、P1 nvidia / P2 amd） */
   sides?: { P1?: SelfPlaySideConfig; P2?: SelfPlaySideConfig }
+  /**
+   * 事件收集（M4-QA2 平衡管线）：true 时结果附带完整 GameEvent 流，
+   * 供 CARD_PLAYED 级别的出场率 / 胜率贡献统计。缺省 false（M1 验收
+   * 路径零开销不变）。兜底路径（forceEndTurn）只结算 END_TURN，不产
+   * CARD_PLAYED，故不收集亦不影响出牌统计。
+   */
+  collectEvents?: boolean
 }
 
 export interface SelfPlayResult {
@@ -63,6 +71,8 @@ export interface SelfPlayResult {
   anomalies: string[]
   /** 逐动作 JSON 记录（确定性回归 / 调试用） */
   actionLog: string[]
+  /** 逐事件流（仅 config.collectEvents 时存在，平衡统计用） */
+  events?: GameEvent[]
 }
 
 function actionKey(action: Action): string {
@@ -122,6 +132,7 @@ export function runSelfPlayGame(engine: Engine, config: SelfPlayConfig): SelfPla
 
   const anomalies: string[] = []
   const actionLog: string[] = []
+  const events: GameEvent[] | null = config.collectEvents ? [] : null
   let actionsApplied = 0
   let illegalActions = 0
   let timedOut = false
@@ -160,7 +171,9 @@ export function runSelfPlayGame(engine: Engine, config: SelfPlayConfig): SelfPla
     }
 
     try {
-      state = engine.applyAction(state, action).state
+      const result = engine.applyAction(state, action)
+      state = result.state
+      if (events) events.push(...result.events)
       actionsApplied += 1
       actionLog.push(actionKey(action))
     } catch (error) {
@@ -183,5 +196,6 @@ export function runSelfPlayGame(engine: Engine, config: SelfPlayConfig): SelfPla
     illegalActions,
     anomalies,
     actionLog,
+    ...(events ? { events } : {}),
   }
 }
