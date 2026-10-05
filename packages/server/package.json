@@ -9,9 +9,20 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "start": "node ../../node_modules/vite-node/vite-node.mjs src/main.ts",
+    "sim:host": "node ../../node_modules/vite-node/vite-node.mjs src/sim/host.ts",
+    "sim:join": "node ../../node_modules/vite-node/vite-node.mjs src/sim/join.ts",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
+    "test": "node ../../node_modules/vitest/vitest.mjs run"
   },
   "dependencies": {
-    "@siliconcard/core": "workspace:^"
+    "@siliconcard/ai": "workspace:^",
+    "@siliconcard/core": "workspace:^",
+    "bonjour-service": "^1.4.4",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/ws": "^8"
   }
 }
