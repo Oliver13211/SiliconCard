@@ -4,7 +4,7 @@
   "faction": "amd",
   "type": "gpu",
   "cost": 150,
-  "attack": 2,
+  "attack": 3,
   "health": 4,
   "keywords": ["taunt"],
   "tags": ["miner"],

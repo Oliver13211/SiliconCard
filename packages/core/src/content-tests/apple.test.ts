@@ -231,15 +231,15 @@ describe('M4-CNT5 apple 批次：关键事件断言（整机线）', () => {
       instanceId: 'u-foe',
       cardId: 'smoke-gpu',
       attack: 3,
-      health: 6,
-      maxHealth: 6,
+      health: 5,
+      maxHealth: 5,
     })
     const state = ctlState({ hand: [handOf('apple-m1-ultra')], board: [foe] })
     const played = playP1(state, 'hand-apple-m1-ultra')
     const ultraId = played.state.board.find((unit) => unit.cardId === 'apple-m1-ultra')!.instanceId
     expect(played.state.board.find((unit) => unit.instanceId === ultraId)).toMatchObject({
-      attack: 6,
-      health: 8,
+      attack: 5,
+      health: 7,
       keywords: ['windfury'],
     })
     const nextOwn = engine.applyAction(
@@ -263,9 +263,9 @@ describe('M4-CNT5 apple 批次：关键事件断言（整机线）', () => {
       target: heroRef('P2'),
     })
     expect(swing2.events.filter((event) => event.type === 'ATTACK_DECLARED')).toHaveLength(1)
-    expect(swing2.state.players.P2.health).toBe(24) // 30 − 6
+    expect(swing2.state.players.P2.health).toBe(25) // 30 − 5
     expect(swing2.state.board.find((unit) => unit.instanceId === ultraId)).toMatchObject({
-      health: 5, // 8 − 3（反伤）
+      health: 4, // 7 − 3（反伤）
       attacksRemaining: 0,
     })
   })
@@ -291,8 +291,8 @@ describe('M4-CNT5 apple 批次：关键事件断言（整机线）', () => {
     const played = playP1(state, 'hand-apple-mac-pro-2013')
     const binId = played.state.board.find((unit) => unit.cardId === 'apple-mac-pro-2013')!.instanceId
     expect(played.state.board.find((unit) => unit.instanceId === binId)).toMatchObject({
-      attack: 3,
-      health: 10,
+      attack: 2,
+      health: 9,
       keywords: ['taunt'],
     })
     const p2Turn = engine.applyAction(played.state, { type: 'END_TURN', playerId: 'P1' })
@@ -312,18 +312,18 @@ describe('M4-CNT5 apple 批次：关键事件断言（整机线）', () => {
       target: unitRef(binId),
     })
     expect(hitBin.state.board.find((unit) => unit.instanceId === binId)).toMatchObject({
-      health: 7, // 10 − 3
+      health: 6, // 9 − 3
     })
-    // 垃圾桶只有 3 攻：反伤蹭不死对面，但足够宣示主权
-    expect(hitBin.state.board.find((unit) => unit.instanceId === 'u-foe')).toMatchObject({ health: 2 })
+    // 垃圾桶只有 2 攻：反伤蹭不死对面，但足够宣示主权
+    expect(hitBin.state.board.find((unit) => unit.instanceId === 'u-foe')).toMatchObject({ health: 3 })
   })
 
   it('MacBook Pro 16 M1 Max：战吼抽 1（买前生产力的最后一波生产力）+ 140W 适配器定价', () => {
     const state = ctlState({ hand: [handOf('apple-macbook-pro-16-m1-max')], deckP1: ['smoke-gpu'] })
     const played = playP1(state, 'hand-apple-macbook-pro-16-m1-max')
     expect(played.state.board.find((unit) => unit.cardId === 'apple-macbook-pro-16-m1-max')).toMatchObject({
-      attack: 4,
-      health: 5,
+      attack: 3,
+      health: 4,
     })
     expect(played.events.find((event) => event.type === 'CARD_DRAWN')).toMatchObject({
       playerId: 'P1',
@@ -379,8 +379,8 @@ describe('M4-CNT5 apple 批次：关键事件断言（整机线）', () => {
     cursor = playP1(cursor, 'hand-apple-macbook-pro-16-m1-max').state
     const played = playP1(cursor, 'hand-apple-macbook-air-m2')
     const byCardId = (cardId: string) => played.state.board.find((unit) => unit.cardId === cardId)
-    expect(byCardId('apple-m1-ultra')).toMatchObject({ attack: 6, health: 8 })
-    expect(byCardId('apple-macbook-pro-16-m1-max')).toMatchObject({ attack: 4, health: 5 })
+    expect(byCardId('apple-m1-ultra')).toMatchObject({ attack: 5, health: 7 })
+    expect(byCardId('apple-macbook-pro-16-m1-max')).toMatchObject({ attack: 3, health: 4 })
     expect(byCardId('apple-macbook-air-m2')).toMatchObject({ attack: 2, health: 3 })
     expect(played.state.players.P1.mana).toBe(MAX_MANA - 370 - 140 - 100)
   })

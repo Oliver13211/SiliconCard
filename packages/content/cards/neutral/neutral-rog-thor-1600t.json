@@ -7,7 +7,7 @@
   "rarity": "legendary",
   "effect": {
     "trigger": "battlecry",
-    "steps": [{ "op": "gainArmor", "player": "sourceOwner", "amount": 10 }]
+    "steps": [{ "op": "gainArmor", "player": "sourceOwner", "amount": 20 }]
   },
   "flavor": "千瓦级信仰：机箱里最贵的不是显卡，是电源上那块 OLED 小电视。供能余量，就是你的护甲。",
   "art": { "shape": "psu_block", "palette": "rog_red", "glow": "white" }

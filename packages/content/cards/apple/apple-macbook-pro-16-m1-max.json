@@ -4,8 +4,8 @@
   "faction": "apple",
   "type": "gpu",
   "cost": 140,
-  "attack": 4,
-  "health": 5,
+  "attack": 3,
+  "health": 4,
   "rarity": "rare",
   "effect": {
     "trigger": "battlecry",

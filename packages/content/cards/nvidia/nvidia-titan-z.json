@@ -4,7 +4,7 @@
   "faction": "nvidia",
   "type": "gpu",
   "cost": 375,
-  "attack": 6,
+  "attack": 5,
   "health": 6,
   "keywords": ["windfury"],
   "tags": ["flagship"],

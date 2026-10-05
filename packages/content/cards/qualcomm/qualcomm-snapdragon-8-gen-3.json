@@ -12,7 +12,7 @@
   "effect": {
     "trigger": "battlecry",
     "steps": [
-      { "op": "buff", "target": { "kind": "all", "pool": "self" }, "attack": 2 }
+      { "op": "buff", "target": { "kind": "all", "pool": "self" }, "attack": 1 }
     ]
   },
   "flavor": "较上一代提升 50%：2 攻提升 50% 本该 +1，发布会直接 +2——提升的是话术，不是架构。",

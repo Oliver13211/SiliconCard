@@ -1,0 +1,1137 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-05T16:36:41.969Z",
+    "totalGames": 7000,
+    "durationMs": 30239,
+    "gamesPerDirection": 150,
+    "mirrorGamesPerDirection": 50,
+    "seedBase": 777001,
+    "difficulty": "normal",
+    "deckCount": 7,
+    "cardCount": 90
+  },
+  "spread": 0.09499999999999997,
+  "firstPlayerWinRate": 0.5938095238095238,
+  "mirrorFirstPlayerWinRate": 0.6314285714285715,
+  "deckStats": [
+    {
+      "name": "amd-war-future",
+      "faction": "amd",
+      "games": 1800,
+      "wins": 896,
+      "draws": 0,
+      "winRate": 0.49777777777777776
+    },
+    {
+      "name": "apple-efficiency-faith",
+      "faction": "apple",
+      "games": 1800,
+      "wins": 857,
+      "draws": 0,
+      "winRate": 0.4761111111111111
+    },
+    {
+      "name": "arm-reference-swarm",
+      "faction": "arm",
+      "games": 1800,
+      "wins": 913,
+      "draws": 0,
+      "winRate": 0.5072222222222222
+    },
+    {
+      "name": "intel-driver-magic",
+      "faction": "intel",
+      "games": 1800,
+      "wins": 873,
+      "draws": 0,
+      "winRate": 0.485
+    },
+    {
+      "name": "neutral-system-builder",
+      "faction": "neutral",
+      "games": 1800,
+      "wins": 822,
+      "draws": 0,
+      "winRate": 0.45666666666666667
+    },
+    {
+      "name": "nvidia-flagship-faith",
+      "faction": "nvidia",
+      "games": 1800,
+      "wins": 993,
+      "draws": 0,
+      "winRate": 0.5516666666666666
+    },
+    {
+      "name": "qualcomm-ai-everything",
+      "faction": "qualcomm",
+      "games": 1800,
+      "wins": 946,
+      "draws": 0,
+      "winRate": 0.5255555555555556
+    }
+  ],
+  "pairs": [
+    {
+      "a": "amd-war-future",
+      "b": "amd-war-future",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 56,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "apple-efficiency-faith",
+      "games": 300,
+      "aWins": 149,
+      "bWins": 151,
+      "draws": 0,
+      "p1Wins": 179,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "arm-reference-swarm",
+      "games": 300,
+      "aWins": 151,
+      "bWins": 149,
+      "draws": 0,
+      "p1Wins": 151,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "intel-driver-magic",
+      "games": 300,
+      "aWins": 140,
+      "bWins": 160,
+      "draws": 0,
+      "p1Wins": 190,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "neutral-system-builder",
+      "games": 300,
+      "aWins": 168,
+      "bWins": 132,
+      "draws": 0,
+      "p1Wins": 170,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "nvidia-flagship-faith",
+      "games": 300,
+      "aWins": 157,
+      "bWins": 143,
+      "draws": 0,
+      "p1Wins": 199,
+      "timeouts": 0
+    },
+    {
+      "a": "amd-war-future",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 131,
+      "bWins": 169,
+      "draws": 0,
+      "p1Wins": 185,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "apple-efficiency-faith",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 60,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "arm-reference-swarm",
+      "games": 300,
+      "aWins": 134,
+      "bWins": 166,
+      "draws": 0,
+      "p1Wins": 180,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "intel-driver-magic",
+      "games": 300,
+      "aWins": 165,
+      "bWins": 135,
+      "draws": 0,
+      "p1Wins": 177,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "neutral-system-builder",
+      "games": 300,
+      "aWins": 176,
+      "bWins": 124,
+      "draws": 0,
+      "p1Wins": 166,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "nvidia-flagship-faith",
+      "games": 300,
+      "aWins": 106,
+      "bWins": 194,
+      "draws": 0,
+      "p1Wins": 192,
+      "timeouts": 0
+    },
+    {
+      "a": "apple-efficiency-faith",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 125,
+      "bWins": 175,
+      "draws": 0,
+      "p1Wins": 171,
+      "timeouts": 0
+    },
+    {
+      "a": "arm-reference-swarm",
+      "b": "arm-reference-swarm",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 72,
+      "timeouts": 0
+    },
+    {
+      "a": "arm-reference-swarm",
+      "b": "intel-driver-magic",
+      "games": 300,
+      "aWins": 152,
+      "bWins": 148,
+      "draws": 0,
+      "p1Wins": 174,
+      "timeouts": 0
+    },
+    {
+      "a": "arm-reference-swarm",
+      "b": "neutral-system-builder",
+      "games": 300,
+      "aWins": 122,
+      "bWins": 178,
+      "draws": 0,
+      "p1Wins": 170,
+      "timeouts": 0
+    },
+    {
+      "a": "arm-reference-swarm",
+      "b": "nvidia-flagship-faith",
+      "games": 300,
+      "aWins": 173,
+      "bWins": 127,
+      "draws": 0,
+      "p1Wins": 173,
+      "timeouts": 0
+    },
+    {
+      "a": "arm-reference-swarm",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 151,
+      "bWins": 149,
+      "draws": 0,
+      "p1Wins": 183,
+      "timeouts": 0
+    },
+    {
+      "a": "intel-driver-magic",
+      "b": "intel-driver-magic",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 60,
+      "timeouts": 0
+    },
+    {
+      "a": "intel-driver-magic",
+      "b": "neutral-system-builder",
+      "games": 300,
+      "aWins": 152,
+      "bWins": 148,
+      "draws": 0,
+      "p1Wins": 174,
+      "timeouts": 0
+    },
+    {
+      "a": "intel-driver-magic",
+      "b": "nvidia-flagship-faith",
+      "games": 300,
+      "aWins": 128,
+      "bWins": 172,
+      "draws": 0,
+      "p1Wins": 178,
+      "timeouts": 0
+    },
+    {
+      "a": "intel-driver-magic",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 150,
+      "bWins": 150,
+      "draws": 0,
+      "p1Wins": 186,
+      "timeouts": 0
+    },
+    {
+      "a": "neutral-system-builder",
+      "b": "neutral-system-builder",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 66,
+      "timeouts": 0
+    },
+    {
+      "a": "neutral-system-builder",
+      "b": "nvidia-flagship-faith",
+      "games": 300,
+      "aWins": 104,
+      "bWins": 196,
+      "draws": 0,
+      "p1Wins": 194,
+      "timeouts": 0
+    },
+    {
+      "a": "neutral-system-builder",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 136,
+      "bWins": 164,
+      "draws": 0,
+      "p1Wins": 168,
+      "timeouts": 0
+    },
+    {
+      "a": "nvidia-flagship-faith",
+      "b": "nvidia-flagship-faith",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 66,
+      "timeouts": 0
+    },
+    {
+      "a": "nvidia-flagship-faith",
+      "b": "qualcomm-ai-everything",
+      "games": 300,
+      "aWins": 161,
+      "bWins": 139,
+      "draws": 0,
+      "p1Wins": 181,
+      "timeouts": 0
+    },
+    {
+      "a": "qualcomm-ai-everything",
+      "b": "qualcomm-ai-everything",
+      "games": 100,
+      "aWins": 100,
+      "bWins": 0,
+      "draws": 0,
+      "p1Wins": 62,
+      "timeouts": 0
+    }
+  ],
+  "cards": [
+    {
+      "cardId": "apple-m1-ultra",
+      "playRate": 0.6335,
+      "winRateWhenPlayed": 0.5461720599842147,
+      "plays": 1459,
+      "gamesWithPlay": 1267,
+      "winsWithPlay": 692,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-snapdragon-x-elite",
+      "playRate": 0.5965,
+      "winRateWhenPlayed": 0.584241408214585,
+      "plays": 1399,
+      "gamesWithPlay": 1193,
+      "winsWithPlay": 697,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-snapdragon-8-gen-3",
+      "playRate": 0.5785,
+      "winRateWhenPlayed": 0.5159896283491789,
+      "plays": 1388,
+      "gamesWithPlay": 1157,
+      "winsWithPlay": 597,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-i9-9900k",
+      "playRate": 0.575,
+      "winRateWhenPlayed": 0.5495652173913044,
+      "plays": 1431,
+      "gamesWithPlay": 1150,
+      "winsWithPlay": 632,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "apple-macbook-air-m2",
+      "playRate": 0.5705,
+      "winRateWhenPlayed": 0.4934268185801928,
+      "plays": 1369,
+      "gamesWithPlay": 1141,
+      "winsWithPlay": 563,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-snapdragon-x-plus",
+      "playRate": 0.569,
+      "winRateWhenPlayed": 0.5202108963093146,
+      "plays": 1359,
+      "gamesWithPlay": 1138,
+      "winsWithPlay": 592,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-windows-on-arm",
+      "playRate": 0.5675,
+      "winRateWhenPlayed": 0.4722466960352423,
+      "plays": 1407,
+      "gamesWithPlay": 1135,
+      "winsWithPlay": 536,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-snapdragon-888",
+      "playRate": 0.564,
+      "winRateWhenPlayed": 0.5221631205673759,
+      "plays": 1335,
+      "gamesWithPlay": 1128,
+      "winsWithPlay": 589,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "apple-macbook-pro-16-m1-max",
+      "playRate": 0.562,
+      "winRateWhenPlayed": 0.5355871886120996,
+      "plays": 1401,
+      "gamesWithPlay": 1124,
+      "winsWithPlay": 602,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-g3x-gen-2",
+      "playRate": 0.5595,
+      "winRateWhenPlayed": 0.5317247542448614,
+      "plays": 1354,
+      "gamesWithPlay": 1119,
+      "winsWithPlay": 595,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "apple-airdrop",
+      "playRate": 0.5345,
+      "winRateWhenPlayed": 0.529466791393826,
+      "plays": 1297,
+      "gamesWithPlay": 1069,
+      "winsWithPlay": 566,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-snapdragon-8cx",
+      "playRate": 0.5315,
+      "winRateWhenPlayed": 0.5230479774223895,
+      "plays": 1317,
+      "gamesWithPlay": 1063,
+      "winsWithPlay": 556,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-480",
+      "playRate": 0.522,
+      "winRateWhenPlayed": 0.5191570881226054,
+      "plays": 1238,
+      "gamesWithPlay": 1044,
+      "winsWithPlay": 542,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-6400",
+      "playRate": 0.5115,
+      "winRateWhenPlayed": 0.49560117302052786,
+      "plays": 1201,
+      "gamesWithPlay": 1023,
+      "winsWithPlay": 507,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-copilot-plus-pc",
+      "playRate": 0.504,
+      "winRateWhenPlayed": 0.45535714285714285,
+      "plays": 1221,
+      "gamesWithPlay": 1008,
+      "winsWithPlay": 459,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-470",
+      "playRate": 0.5035,
+      "winRateWhenPlayed": 0.4716981132075472,
+      "plays": 1185,
+      "gamesWithPlay": 1007,
+      "winsWithPlay": 475,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-arc-a380",
+      "playRate": 0.5035,
+      "winRateWhenPlayed": 0.45978152929493543,
+      "plays": 2378,
+      "gamesWithPlay": 2014,
+      "winsWithPlay": 926,
+      "deckGames": 4000
+    },
+    {
+      "cardId": "apple-t2-security",
+      "playRate": 0.497,
+      "winRateWhenPlayed": 0.5331991951710262,
+      "plays": 1179,
+      "gamesWithPlay": 994,
+      "winsWithPlay": 530,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-550",
+      "playRate": 0.495,
+      "winRateWhenPlayed": 0.4858585858585859,
+      "plays": 1149,
+      "gamesWithPlay": 990,
+      "winsWithPlay": 481,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-p106-100",
+      "playRate": 0.4865,
+      "winRateWhenPlayed": 0.49743062692702983,
+      "plays": 8174,
+      "gamesWithPlay": 6811,
+      "winsWithPlay": 3388,
+      "deckGames": 14000
+    },
+    {
+      "cardId": "arm-mali-g710",
+      "playRate": 0.471,
+      "winRateWhenPlayed": 0.4968152866242038,
+      "plays": 1063,
+      "gamesWithPlay": 942,
+      "winsWithPlay": 468,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "apple-mac-pro-2013",
+      "playRate": 0.4705,
+      "winRateWhenPlayed": 0.6184909670563231,
+      "plays": 1134,
+      "gamesWithPlay": 941,
+      "winsWithPlay": 582,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-cmp-170hx",
+      "playRate": 0.463,
+      "winRateWhenPlayed": 0.5345572354211663,
+      "plays": 1036,
+      "gamesWithPlay": 926,
+      "winsWithPlay": 495,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-dimensity-9300",
+      "playRate": 0.449,
+      "winRateWhenPlayed": 0.5835189309576837,
+      "plays": 1009,
+      "gamesWithPlay": 898,
+      "winsWithPlay": 524,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-exynos-8895",
+      "playRate": 0.449,
+      "winRateWhenPlayed": 0.532293986636971,
+      "plays": 1018,
+      "gamesWithPlay": 898,
+      "winsWithPlay": 478,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-gt-1030",
+      "playRate": 0.449,
+      "winRateWhenPlayed": 0.522271714922049,
+      "plays": 1026,
+      "gamesWithPlay": 898,
+      "winsWithPlay": 469,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-rtx-5060",
+      "playRate": 0.4325,
+      "winRateWhenPlayed": 0.5757225433526012,
+      "plays": 978,
+      "gamesWithPlay": 865,
+      "winsWithPlay": 498,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-uhd-770",
+      "playRate": 0.432,
+      "winRateWhenPlayed": 0.4386574074074074,
+      "plays": 2031,
+      "gamesWithPlay": 1728,
+      "winsWithPlay": 758,
+      "deckGames": 4000
+    },
+    {
+      "cardId": "apple-unified-memory",
+      "playRate": 0.4205,
+      "winRateWhenPlayed": 0.5029726516052319,
+      "plays": 1013,
+      "gamesWithPlay": 841,
+      "winsWithPlay": 423,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-mali-400",
+      "playRate": 0.418,
+      "winRateWhenPlayed": 0.4102870813397129,
+      "plays": 939,
+      "gamesWithPlay": 836,
+      "winsWithPlay": 343,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-helio-g99",
+      "playRate": 0.413,
+      "winRateWhenPlayed": 0.4539951573849879,
+      "plays": 937,
+      "gamesWithPlay": 826,
+      "winsWithPlay": 375,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-i9-14900k",
+      "playRate": 0.3995,
+      "winRateWhenPlayed": 0.5356695869837297,
+      "plays": 799,
+      "gamesWithPlay": 799,
+      "winsWithPlay": 428,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-gt-1030",
+      "playRate": 0.39885714285714285,
+      "winRateWhenPlayed": 0.48728510028653294,
+      "plays": 6307,
+      "gamesWithPlay": 5584,
+      "winsWithPlay": 2721,
+      "deckGames": 14000
+    },
+    {
+      "cardId": "neutral-g502-hero",
+      "playRate": 0.3936428571428571,
+      "winRateWhenPlayed": 0.5269461077844312,
+      "plays": 6287,
+      "gamesWithPlay": 5511,
+      "winsWithPlay": 2904,
+      "deckGames": 14000
+    },
+    {
+      "cardId": "apple-genius-bar",
+      "playRate": 0.391,
+      "winRateWhenPlayed": 0.43350383631713557,
+      "plays": 915,
+      "gamesWithPlay": 782,
+      "winsWithPlay": 339,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-cortex-a55",
+      "playRate": 0.39,
+      "winRateWhenPlayed": 0.4282051282051282,
+      "plays": 875,
+      "gamesWithPlay": 780,
+      "winsWithPlay": 334,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-x55-modem",
+      "playRate": 0.384,
+      "winRateWhenPlayed": 0.421875,
+      "plays": 880,
+      "gamesWithPlay": 768,
+      "winsWithPlay": 324,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-dxracer-king",
+      "playRate": 0.3834,
+      "winRateWhenPlayed": 0.6223265519040166,
+      "plays": 4486,
+      "gamesWithPlay": 3834,
+      "winsWithPlay": 2386,
+      "deckGames": 10000
+    },
+    {
+      "cardId": "neutral-cherry-mx-8-0",
+      "playRate": 0.37716666666666665,
+      "winRateWhenPlayed": 0.48276623950508174,
+      "plays": 5171,
+      "gamesWithPlay": 4526,
+      "winsWithPlay": 2185,
+      "deckGames": 12000
+    },
+    {
+      "cardId": "intel-nuc-13-extreme",
+      "playRate": 0.3675,
+      "winRateWhenPlayed": 0.44761904761904764,
+      "plays": 735,
+      "gamesWithPlay": 735,
+      "winsWithPlay": 329,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-arc-b580",
+      "playRate": 0.3645,
+      "winRateWhenPlayed": 0.5555555555555556,
+      "plays": 729,
+      "gamesWithPlay": 729,
+      "winsWithPlay": 405,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-laminar-cooler",
+      "playRate": 0.3545,
+      "winRateWhenPlayed": 0.4541607898448519,
+      "plays": 709,
+      "gamesWithPlay": 709,
+      "winsWithPlay": 322,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-dlss-upscale",
+      "playRate": 0.3515,
+      "winRateWhenPlayed": 0.5163584637268848,
+      "plays": 778,
+      "gamesWithPlay": 703,
+      "winsWithPlay": 363,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-b650m-plus",
+      "playRate": 0.3502,
+      "winRateWhenPlayed": 0.4788692175899486,
+      "plays": 3738,
+      "gamesWithPlay": 3502,
+      "winsWithPlay": 1677,
+      "deckGames": 10000
+    },
+    {
+      "cardId": "apple-rosetta-2",
+      "playRate": 0.349,
+      "winRateWhenPlayed": 0.5573065902578797,
+      "plays": 817,
+      "gamesWithPlay": 698,
+      "winsWithPlay": 389,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-arc-a770-16g",
+      "playRate": 0.349,
+      "winRateWhenPlayed": 0.41117478510028654,
+      "plays": 698,
+      "gamesWithPlay": 698,
+      "winsWithPlay": 287,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-furmark",
+      "playRate": 0.3489285714285714,
+      "winRateWhenPlayed": 0.436028659160696,
+      "plays": 5484,
+      "gamesWithPlay": 4885,
+      "winsWithPlay": 2130,
+      "deckGames": 14000
+    },
+    {
+      "cardId": "intel-arc-a750",
+      "playRate": 0.346,
+      "winRateWhenPlayed": 0.4653179190751445,
+      "plays": 692,
+      "gamesWithPlay": 692,
+      "winsWithPlay": 322,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-av1-encode",
+      "playRate": 0.3285,
+      "winRateWhenPlayed": 0.4733637747336377,
+      "plays": 657,
+      "gamesWithPlay": 657,
+      "winsWithPlay": 311,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-r9-290",
+      "playRate": 0.322,
+      "winRateWhenPlayed": 0.515527950310559,
+      "plays": 644,
+      "gamesWithPlay": 644,
+      "winsWithPlay": 332,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-lineageos",
+      "playRate": 0.3205,
+      "winRateWhenPlayed": 0.40873634945397813,
+      "plays": 717,
+      "gamesWithPlay": 641,
+      "winsWithPlay": 262,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-7900-xtx",
+      "playRate": 0.3135,
+      "winRateWhenPlayed": 0.5374800637958532,
+      "plays": 627,
+      "gamesWithPlay": 627,
+      "winsWithPlay": 337,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-riser",
+      "playRate": 0.306,
+      "winRateWhenPlayed": 0.47549019607843135,
+      "plays": 612,
+      "gamesWithPlay": 612,
+      "winsWithPlay": 291,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-microcode-0x129",
+      "playRate": 0.3015,
+      "winRateWhenPlayed": 0.4295190713101161,
+      "plays": 603,
+      "gamesWithPlay": 603,
+      "winsWithPlay": 259,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-chill",
+      "playRate": 0.2975,
+      "winRateWhenPlayed": 0.4184873949579832,
+      "plays": 595,
+      "gamesWithPlay": 595,
+      "winsWithPlay": 249,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-radeon-pro-duo",
+      "playRate": 0.2945,
+      "winRateWhenPlayed": 0.568760611205433,
+      "plays": 589,
+      "gamesWithPlay": 589,
+      "winsWithPlay": 335,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "apple-applecare-plus",
+      "playRate": 0.293,
+      "winRateWhenPlayed": 0.4402730375426621,
+      "plays": 680,
+      "gamesWithPlay": 586,
+      "winsWithPlay": 258,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-rx-580",
+      "playRate": 0.29,
+      "winRateWhenPlayed": 0.506896551724138,
+      "plays": 580,
+      "gamesWithPlay": 580,
+      "winsWithPlay": 294,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-barracuda-2tb",
+      "playRate": 0.2819,
+      "winRateWhenPlayed": 0.4352607307555871,
+      "plays": 3259,
+      "gamesWithPlay": 2819,
+      "winsWithPlay": 1227,
+      "deckGames": 10000
+    },
+    {
+      "cardId": "nvidia-titan-z",
+      "playRate": 0.2805,
+      "winRateWhenPlayed": 0.5508021390374331,
+      "plays": 561,
+      "gamesWithPlay": 561,
+      "winsWithPlay": 309,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-xtu-undervolt",
+      "playRate": 0.279,
+      "winRateWhenPlayed": 0.4265232974910394,
+      "plays": 558,
+      "gamesWithPlay": 558,
+      "winsWithPlay": 238,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-nh-d15",
+      "playRate": 0.2778333333333333,
+      "winRateWhenPlayed": 0.4298140371925615,
+      "plays": 3566,
+      "gamesWithPlay": 3334,
+      "winsWithPlay": 1433,
+      "deckGames": 12000
+    },
+    {
+      "cardId": "intel-igpu-rescue",
+      "playRate": 0.27025,
+      "winRateWhenPlayed": 0.42183163737280294,
+      "plays": 1081,
+      "gamesWithPlay": 1081,
+      "winsWithPlay": 456,
+      "deckGames": 4000
+    },
+    {
+      "cardId": "nvidia-gtx-480",
+      "playRate": 0.261,
+      "winRateWhenPlayed": 0.6800766283524904,
+      "plays": 522,
+      "gamesWithPlay": 522,
+      "winsWithPlay": 355,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-xianyu",
+      "playRate": 0.2605,
+      "winRateWhenPlayed": 0.45681381957773515,
+      "plays": 521,
+      "gamesWithPlay": 521,
+      "winsWithPlay": 238,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-adrenalin",
+      "playRate": 0.2585,
+      "winRateWhenPlayed": 0.41779497098646035,
+      "plays": 517,
+      "gamesWithPlay": 517,
+      "winsWithPlay": 216,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-rtx-5080",
+      "playRate": 0.2575,
+      "winRateWhenPlayed": 0.541747572815534,
+      "plays": 515,
+      "gamesWithPlay": 515,
+      "winsWithPlay": 279,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-immortalis-g925",
+      "playRate": 0.2535,
+      "winRateWhenPlayed": 0.6883629191321499,
+      "plays": 507,
+      "gamesWithPlay": 507,
+      "winsWithPlay": 349,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-rtx-4090",
+      "playRate": 0.248,
+      "winRateWhenPlayed": 0.6270161290322581,
+      "plays": 496,
+      "gamesWithPlay": 496,
+      "winsWithPlay": 311,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-rtx-5070",
+      "playRate": 0.2465,
+      "winRateWhenPlayed": 0.5699797160243407,
+      "plays": 493,
+      "gamesWithPlay": 493,
+      "winsWithPlay": 281,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-h150i-lcd",
+      "playRate": 0.243375,
+      "winRateWhenPlayed": 0.4340010272213662,
+      "plays": 1947,
+      "gamesWithPlay": 1947,
+      "winsWithPlay": 845,
+      "deckGames": 8000
+    },
+    {
+      "cardId": "nvidia-12v-2x6",
+      "playRate": 0.243,
+      "winRateWhenPlayed": 0.5761316872427984,
+      "plays": 486,
+      "gamesWithPlay": 486,
+      "winsWithPlay": 280,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "arm-neoverse",
+      "playRate": 0.2315,
+      "winRateWhenPlayed": 0.39740820734341253,
+      "plays": 463,
+      "gamesWithPlay": 463,
+      "winsWithPlay": 184,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-the-merge",
+      "playRate": 0.197,
+      "winRateWhenPlayed": 0.41624365482233505,
+      "plays": 394,
+      "gamesWithPlay": 394,
+      "winsWithPlay": 164,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-beta-driver",
+      "playRate": 0.188,
+      "winRateWhenPlayed": 0.4627659574468085,
+      "plays": 376,
+      "gamesWithPlay": 376,
+      "winsWithPlay": 174,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "intel-driver-hotfix",
+      "playRate": 0.18375,
+      "winRateWhenPlayed": 0.4204081632653061,
+      "plays": 769,
+      "gamesWithPlay": 735,
+      "winsWithPlay": 309,
+      "deckGames": 4000
+    },
+    {
+      "cardId": "nvidia-game-ready-driver",
+      "playRate": 0.152,
+      "winRateWhenPlayed": 0.46710526315789475,
+      "plays": 304,
+      "gamesWithPlay": 304,
+      "winsWithPlay": 142,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-rtx-5090",
+      "playRate": 0.1375,
+      "winRateWhenPlayed": 0.7236363636363636,
+      "plays": 275,
+      "gamesWithPlay": 275,
+      "winsWithPlay": 199,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-990-pro",
+      "playRate": 0.122,
+      "winRateWhenPlayed": 0.4494535519125683,
+      "plays": 1615,
+      "gamesWithPlay": 1464,
+      "winsWithPlay": 658,
+      "deckGames": 12000
+    },
+    {
+      "cardId": "nvidia-rtx-5090d",
+      "playRate": 0.1175,
+      "winRateWhenPlayed": 0.5191489361702127,
+      "plays": 235,
+      "gamesWithPlay": 235,
+      "winsWithPlay": 122,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "qualcomm-adreno-driver",
+      "playRate": 0.1095,
+      "winRateWhenPlayed": 0.4977168949771689,
+      "plays": 231,
+      "gamesWithPlay": 219,
+      "winsWithPlay": 109,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "amd-afmf",
+      "playRate": 0.1005,
+      "winRateWhenPlayed": 0.39303482587064675,
+      "plays": 201,
+      "gamesWithPlay": 201,
+      "winsWithPlay": 79,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "nvidia-multi-frame-gen",
+      "playRate": 0.096,
+      "winRateWhenPlayed": 0.46875,
+      "plays": 192,
+      "gamesWithPlay": 192,
+      "winsWithPlay": 90,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-trident-z5-ddr5",
+      "playRate": 0.0765,
+      "winRateWhenPlayed": 0.5424836601307189,
+      "plays": 153,
+      "gamesWithPlay": 153,
+      "winsWithPlay": 83,
+      "deckGames": 2000
+    },
+    {
+      "cardId": "neutral-focus-gx-850",
+      "playRate": 0.047,
+      "winRateWhenPlayed": 0.425531914893617,
+      "plays": 188,
+      "gamesWithPlay": 188,
+      "winsWithPlay": 80,
+      "deckGames": 4000
+    },
+    {
+      "cardId": "neutral-rog-thor-1600t",
+      "playRate": 0.033,
+      "winRateWhenPlayed": 0.5757575757575758,
+      "plays": 66,
+      "gamesWithPlay": 66,
+      "winsWithPlay": 38,
+      "deckGames": 2000
+    }
+  ],
+  "health": {
+    "timeouts": 0,
+    "illegalActions": 0,
+    "anomalyGames": 0
+  }
+}

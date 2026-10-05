@@ -3,7 +3,7 @@
   "name": "猫头鹰 NH-D15",
   "faction": "neutral",
   "type": "accessory",
-  "cost": 250,
+  "cost": 200,
   "rarity": "rare",
   "effect": {
     "trigger": "battlecry",

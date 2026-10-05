@@ -3,7 +3,7 @@
   "name": "990 PRO",
   "faction": "neutral",
   "type": "driver",
-  "cost": 300,
+  "cost": 200,
   "rarity": "rare",
   "effect": {
     "trigger": "onPlay",

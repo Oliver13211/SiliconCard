@@ -164,7 +164,7 @@ describe('neutral 批次 schema 闸门（15 张）', () => {
       expect(findCardDefinitionIssues(def)).toBeNull()
       expect(def.id.startsWith('neutral-')).toBe(true)
       expect(def.faction).toBe('neutral')
-      expect(def.cost).toBeGreaterThanOrEqual(100)
+      expect(def.cost).toBeGreaterThanOrEqual(50)
       expect(def.cost).toBeLessThanOrEqual(1000)
     }
     expect(new Set(NEUTRAL_CARDS.map((d) => d.id)).size).toBe(15)
@@ -187,13 +187,13 @@ describe('neutral 批次 schema 闸门（15 张）', () => {
 // —— 2. 逐卡实打（每张卡至少被打出一次，断言关键事件）——
 
 describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
-  it('GT 1030：入场即潜行（无输出亮机），1/1 白板入场', () => {
+  it('GT 1030：入场即潜行（无输出亮机），2/3 白板入场', () => {
     const result = playP1(craftedState({ hand: [handCard('neutral-gt-1030')] }), 'neutral-gt-1030')
     expect(ofType(result.events, 'CARD_PLAYED')).toHaveLength(1)
     const summoned = result.events.find((e) => e.type === 'MINION_SUMMONED')
     expect(summoned).toMatchObject({
       source: 'play',
-      unit: { cardId: 'neutral-gt-1030', ownerId: 'P1', attack: 1, health: 1, keywords: ['stealth'] },
+      unit: { cardId: 'neutral-gt-1030', ownerId: 'P1', attack: 2, health: 3, keywords: ['stealth'] },
     })
     expect(result.state.board).toHaveLength(1)
   })
@@ -202,12 +202,12 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     const state = craftedState({
       hand: [handCard('neutral-p106-100')],
       deckP1: [{ cardId: 'smoke-gpu' }, { cardId: 'smoke-gpu' }, { cardId: 'smoke-gpu' }],
-      board: [makeUnit({ ownerId: 'P2', instanceId: 'u-enemy', attack: 2, health: 2, maxHealth: 2 })],
+      board: [makeUnit({ ownerId: 'P2', instanceId: 'u-enemy', attack: 3, health: 4, maxHealth: 4 })],
     })
     const played = playP1(state, 'neutral-p106-100')
     const p106 = played.state.board.find((u) => u.cardId === 'neutral-p106-100')
     expect(p106).toBeDefined()
-    // 跨一回合消除召唤失调，再对撞：P106 3/2 换掉 2/2，双双阵亡
+    // 跨一回合消除召唤失调，再对撞：P106 3/3 撞 3/4，矿卡阵亡触发亡语
     const nextTurn = advanceToNextP1Turn(played.state)
     const combat = engine.applyAction(nextTurn.state, {
       type: 'ATTACK',
@@ -231,7 +231,7 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     expect(draws.every((e) => e.source === 'deck')).toBe(true)
   })
 
-  it('FurMark 烤机：全场显卡无差别掉 1 血（甜甜圈一开双方都烫），1 血单位直接烤死', () => {
+  it('FurMark 烤机：对面显卡全体掉 1 血（甜甜圈只烤对面），1 血单位直接烤死', () => {
     const state = craftedState({
       hand: [handCard('neutral-furmark')],
       board: [
@@ -241,12 +241,15 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     })
     const result = playP1(state, 'neutral-furmark')
     const damages = ofType(result.events, 'DAMAGE_DEALT')
-    expect(damages).toHaveLength(2)
-    expect(
-      damages.every((e) => e.amount === 1 && e.source.kind === 'effect' && e.source.ref === 'neutral-furmark'),
-    ).toBe(true)
-    expect(result.state.board).toHaveLength(0)
-    expect(ofType(result.events, 'MINION_DIED')).toHaveLength(2)
+    expect(damages).toHaveLength(1)
+    expect(damages[0]).toMatchObject({
+      amount: 1,
+      source: { kind: 'effect', ref: 'neutral-furmark' },
+      target: { kind: 'unit', instanceId: 'u-theirs' },
+    })
+    expect(result.state.board).toHaveLength(1) // 己方 1 血单位不被自家烤机波及
+    expect(result.state.board[0]?.instanceId).toBe('u-mine')
+    expect(ofType(result.events, 'MINION_DIED')).toHaveLength(1)
   })
 
   it('990 PRO：出牌即检索 2 张（7450MB/s 顺序读）', () => {
@@ -261,25 +264,25 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     expect(result.state.players.P1.hand).toHaveLength(2)
   })
 
-  it('Barracuda 2TB：抽 1 但 SMR 卡顿——下回合锁定 100W，BURN_OUT 如约而至', () => {
+  it('Barracuda 2TB：抽 1 但 SMR 卡顿——下回合锁定 50W，BURN_OUT 如约而至', () => {
     const state = craftedState({
       hand: [handCard('neutral-barracuda-2tb')],
       deckP1: [{ cardId: 'smoke-gpu' }, { cardId: 'smoke-gpu' }],
       mana: 100,
     })
     const result = playP1(state, 'neutral-barracuda-2tb')
-    expect(result.state.players.P1.mana).toBe(0) // 100W 全花在抽牌上
-    expect(result.state.players.P1.lockedMana).toBe(100)
+    expect(result.state.players.P1.mana).toBe(50) // 100 − 50（SMR 盘低价，但卡顿照旧）
+    expect(result.state.players.P1.lockedMana).toBe(50)
     expect(ofType(result.events, 'CARD_DRAWN').filter((e) => e.playerId === 'P1')).toHaveLength(1)
     expect(result.events.some((e) => e.type === 'KEYWORD_TRIGGERED')).toBe(false) // 非 overload 牌：lockMana 静默结算
 
     const nextTurn = advanceToNextP1Turn(result.state)
     expect(nextTurn.state.players.P1.maxMana).toBe(200)
-    expect(nextTurn.state.players.P1.mana).toBe(100) // 200 - 100 锁定
+    expect(nextTurn.state.players.P1.mana).toBe(150) // 200 - 50 锁定
     expect(nextTurn.state.players.P1.lockedMana).toBe(0)
     expect(nextTurn.events.find((e) => e.type === 'BURN_OUT')).toMatchObject({
       playerId: 'P1',
-      lockedMana: 100,
+      lockedMana: 50,
     })
   })
 
@@ -323,27 +326,32 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     expect(van?.health).toBe(1)
   })
 
-  it('H150i LCD 水冷：己方全体 +1 血光环；水冷被烤阵亡后光环回收', () => {
+  it('H150i LCD 水冷：己方全体 +1 血光环；水冷阵亡后光环回收', () => {
     const state = craftedState({
-      hand: [
-        handCard('neutral-h150i-lcd'),
-        handCard('neutral-furmark', 'h-fur1'),
-        handCard('neutral-furmark', 'h-fur2'),
+      hand: [handCard('neutral-h150i-lcd')],
+      board: [
+        makeUnit({ ownerId: 'P1', instanceId: 'u-ally', attack: 3, health: 3, maxHealth: 3 }),
+        makeUnit({ ownerId: 'P2', instanceId: 'u-foe', attack: 2, health: 4, maxHealth: 4 }),
       ],
-      board: [makeUnit({ ownerId: 'P1', instanceId: 'u-ally', attack: 3, health: 3, maxHealth: 3 })],
     })
     const mounted = playP1(state, 'neutral-h150i-lcd')
-    // 光环投影：3/3 → 4/4（水冷自身 0/1 → 0/2）
+    // 光环投影：3/3 → 3/4（水冷自身 0/1 → 0/2）
     expect(mounted.state.board.find((u) => u.instanceId === 'u-ally')).toMatchObject({ health: 4, maxHealth: 4 })
     expect(mounted.state.board.find((u) => u.cardId === 'neutral-h150i-lcd')).toMatchObject({ health: 2, maxHealth: 2 })
 
-    const fur1 = playP1(mounted.state, 'neutral-furmark')
-    const fur2 = playP1(fur1.state, 'neutral-furmark')
-    // 两轮烤机：水冷 0/2 扛不住第二轮（health 归零阵亡），光环随之剥离 → 队友回落 1/3
-    expect(fur2.state.board.find((u) => u.instanceId === 'u-ally')).toMatchObject({ health: 1, maxHealth: 3 })
-    expect(fur2.state.board.find((u) => u.cardId === 'neutral-h150i-lcd')).toBeUndefined()
-    expect(fur2.state.players.P1.graveyard).toContainEqual({
-      instanceId: expect.any(String),
+    const coolerId = mounted.state.board.find((u) => u.cardId === 'neutral-h150i-lcd')!.instanceId
+    const p2Turn = engine.applyAction(mounted.state, { type: 'END_TURN', playerId: 'P1' })
+    const killed = engine.applyAction(p2Turn.state, {
+      type: 'ATTACK',
+      playerId: 'P2',
+      attackerId: 'u-foe',
+      target: unitRef(coolerId),
+    })
+    // 0/2 水冷被 2 攻击者带走（health 归零阵亡），光环随之剥离 → 队友回落 3/3
+    expect(killed.state.board.find((u) => u.cardId === 'neutral-h150i-lcd')).toBeUndefined()
+    expect(killed.state.board.find((u) => u.instanceId === 'u-ally')).toMatchObject({ health: 3, maxHealth: 3 })
+    expect(killed.state.players.P1.graveyard).toContainEqual({
+      instanceId: coolerId,
       cardId: 'neutral-h150i-lcd',
     })
   })
@@ -353,10 +361,10 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
       hand: [handCard('neutral-x870e-hero'), handCard('neutral-990-pro')],
       handP2: [handCard('neutral-990-pro', 'p2-990')],
     })
-    expect(state.players.P1.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(300)
+    expect(state.players.P1.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(200)
     const result = playP1(state, 'neutral-x870e-hero')
-    expect(result.state.players.P1.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(250)
-    expect(result.state.players.P2.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(300)
+    expect(result.state.players.P1.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(150)
+    expect(result.state.players.P2.hand.find((c) => c.cardId === 'neutral-990-pro')?.cost).toBe(200)
   })
 
   it('B650M 重炮手：M-ATX 也能给全队 +1 攻（攻击光环）', () => {
@@ -368,7 +376,7 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     expect(result.state.board.find((u) => u.instanceId === 'u-ally')).toMatchObject({ attack: 3, health: 2 })
   })
 
-  it('FOCUS GX-850：电涌全场打 3 + 跳闸锁 300W，下回合 BURN_OUT 结算并清零', () => {
+  it('FOCUS GX-850：电涌全场打 3 + 跳闸锁 100W，下回合 BURN_OUT 结算并清零', () => {
     const state = craftedState({
       hand: [handCard('neutral-focus-gx-850')],
       board: [
@@ -378,7 +386,7 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     })
     const result = playP1(state, 'neutral-focus-gx-850')
     expect(result.events.find((e) => e.type === 'KEYWORD_TRIGGERED')).toMatchObject({ keyword: 'overload' })
-    expect(result.state.players.P1.lockedMana).toBe(300)
+    expect(result.state.players.P1.lockedMana).toBe(100)
     // 电涌无差别：全场 3 血单位全部阵亡
     expect(result.state.board).toHaveLength(0)
     expect(result.state.players.P1.graveyard).toContainEqual({ instanceId: 'u-mine', cardId: expect.any(String) })
@@ -387,39 +395,39 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     const nextTurn = advanceToNextP1Turn(result.state)
     expect(nextTurn.events.find((e) => e.type === 'BURN_OUT')).toMatchObject({
       playerId: 'P1',
-      lockedMana: 300,
+      lockedMana: 100,
     })
     expect(nextTurn.state.players.P1.lockedMana).toBe(0)
     expect(nextTurn.state.players.P1.maxMana).toBe(200)
-    expect(nextTurn.state.players.P1.mana).toBe(0) // max(0, 200 - 300)：锁定量超过供电即全锁
+    expect(nextTurn.state.players.P1.mana).toBe(100) // 200 − 100 锁定
   })
 
-  it('ROG THOR 1600T：千瓦信仰入场即 +10 护甲（供能余量即防御）', () => {
+  it('ROG THOR 1600T：千瓦信仰入场即 +20 护甲（供能余量即防御）', () => {
     const result = playP1(
       craftedState({ hand: [handCard('neutral-rog-thor-1600t')] }),
       'neutral-rog-thor-1600t',
     )
     expect(result.events.find((e) => e.type === 'ARMOR_GAINED')).toMatchObject({
       playerId: 'P1',
-      amount: 10,
-      totalArmor: 10,
+      amount: 20,
+      totalArmor: 20,
     })
-    expect(result.state.players.P1.armor).toBe(10)
+    expect(result.state.players.P1.armor).toBe(20)
     expect(ofType(result.events, 'CARD_PLAYED')[0]).toMatchObject({ cost: 1000 })
     expect(result.state.board).toHaveLength(1) // 配件在场上（OLED 小电视）
   })
 
-  it('迪锐克斯 KING 电竞椅：2/6 信仰充值（taunt）实体入场', () => {
+  it('迪锐克斯 KING 电竞椅：4/7 信仰充值（taunt）实体入场', () => {
     const result = playP1(
       craftedState({ hand: [handCard('neutral-dxracer-king')] }),
       'neutral-dxracer-king',
     )
     expect(result.events.find((e) => e.type === 'MINION_SUMMONED')).toMatchObject({
-      unit: { cardId: 'neutral-dxracer-king', attack: 2, health: 6, keywords: ['taunt'] },
+      unit: { cardId: 'neutral-dxracer-king', attack: 4, health: 7, keywords: ['taunt'] },
     })
   })
 
-  it('CHERRY MX 8.0：被攻击受伤存活后青轴反击（onDamaged 对随机敌方单位打 1）', () => {
+  it('CHERRY MX 8.0：被攻击受伤存活后青轴反击（onDamaged 对随机敌方单位打 2）', () => {
     const state = craftedState({
       turn: 2,
       activePlayer: 'P2',
@@ -442,20 +450,20 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
       attackerId: 'u-foe',
       target: unitRef('u-cherry'),
     })
-    // 键盘战士扛下 2 点伤害存活，反手对唯一敌方单位（攻击者）敲出 1 点
+    // 键盘战士扛下 2 点伤害存活，反手对唯一敌方单位（攻击者）敲出 2 点
     expect(result.state.board.find((u) => u.instanceId === 'u-cherry')).toMatchObject({ health: 1 })
-    expect(result.state.board.find((u) => u.instanceId === 'u-foe')).toMatchObject({ health: 2 })
+    expect(result.state.board.find((u) => u.instanceId === 'u-foe')).toMatchObject({ health: 1 })
     expect(
       ofType(result.events, 'DAMAGE_DEALT').find(
         (e) => e.source.kind === 'effect' && e.source.ref === 'neutral-cherry-mx-8-0',
       ),
-    ).toMatchObject({ target: { kind: 'unit', instanceId: 'u-foe' }, amount: 1 })
+    ).toMatchObject({ target: { kind: 'unit', instanceId: 'u-foe' }, amount: 2 })
   })
 
-  it('罗技 G502 HERO：charge（超频）入场当回合即可冲锋，3/1 换掉 1/1 双双阵亡', () => {
+  it('罗技 G502 HERO：charge（超频）入场当回合即可冲锋，4/2 换掉 2/2 双双阵亡', () => {
     const state = craftedState({
       hand: [handCard('neutral-g502-hero')],
-      board: [makeUnit({ ownerId: 'P2', instanceId: 'u-fodder', attack: 1, health: 1, maxHealth: 1 })],
+      board: [makeUnit({ ownerId: 'P2', instanceId: 'u-fodder', attack: 2, health: 2, maxHealth: 2 })],
     })
     const played = playP1(state, 'neutral-g502-hero')
     const g502 = played.state.board.find((u) => u.cardId === 'neutral-g502-hero')
@@ -468,7 +476,7 @@ describe('neutral 批次逐卡实打（createEngine 实战路径）', () => {
     })
     expect(ofType(combat.events, 'ATTACK_DECLARED')).toHaveLength(1)
     expect(combat.state.board.find((u) => u.instanceId === 'u-fodder')).toBeUndefined()
-    // 3/1 换 1/1：防守方反击快照照常结算，G502 1 血归零阵亡（§2.4 同时结算语义）
+    // 4/2 换 2/2：防守方反击快照照常结算，G502 2 血归零阵亡（§2.4 同时结算语义）
     expect(combat.state.board.find((u) => u.cardId === 'neutral-g502-hero')).toBeUndefined()
     expect(combat.state.players.P2.graveyard).toContainEqual({ instanceId: 'u-fodder', cardId: expect.any(String) })
     expect(combat.state.players.P1.graveyard).toContainEqual({
@@ -617,10 +625,10 @@ describe('neutral 批次全局对局（initGame → 贪心驱动 → 确定性�
     ).toMatchObject({ playerId: 'P1', cost: 850 })
     expect(
       run.events.find((e) => e.type === 'CARD_PLAYED' && e.cardId === 'neutral-990-pro'),
-    ).toMatchObject({ playerId: 'P1', cost: 300 })
+    ).toMatchObject({ playerId: 'P1', cost: 200 })
     expect(run.events.find((e) => e.type === 'BURN_OUT')).toMatchObject({
       playerId: 'P1',
-      lockedMana: 300,
+      lockedMana: 100,
     })
     // GX-850 打出后 lockedMana 立即累加，次回合开始结算并清零（§2.2）
     expect(run.state.players.P1.lockedMana).toBe(0)

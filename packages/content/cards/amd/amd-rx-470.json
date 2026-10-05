@@ -5,7 +5,7 @@
   "type": "gpu",
   "cost": 120,
   "attack": 2,
-  "health": 2,
+  "health": 3,
   "keywords": ["deathrattle"],
   "tags": ["miner"],
   "rarity": "common",

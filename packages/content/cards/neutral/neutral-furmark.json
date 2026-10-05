@@ -7,7 +7,7 @@
   "rarity": "common",
   "effect": {
     "trigger": "onPlay",
-    "steps": [{ "op": "damage", "target": { "kind": "all", "pool": "allUnits" }, "amount": 1 }]
+    "steps": [{ "op": "damage", "target": { "kind": "all", "pool": "enemyUnits" }, "amount": 1 }]
   },
   "flavor": "显卡质检员上线：甜甜圈一出，谁与争烫。烤得过是它的体质，烤不过是你买亏了。",
   "art": { "shape": "spell_donut", "palette": "overheat_red", "glow": "amber" }

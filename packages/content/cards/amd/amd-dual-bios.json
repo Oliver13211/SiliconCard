@@ -3,7 +3,7 @@
   "name": "双 BIOS 静音开关",
   "faction": "amd",
   "type": "accessory",
-  "cost": 300,
+  "cost": 200,
   "rarity": "epic",
   "effect": {
     "trigger": "aura",

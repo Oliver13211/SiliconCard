@@ -4,7 +4,7 @@
   "faction": "intel",
   "type": "gpu",
   "cost": 125,
-  "attack": 6,
+  "attack": 5,
   "health": 6,
   "keywords": ["divine_shield", "overload"],
   "tags": ["14nm"],

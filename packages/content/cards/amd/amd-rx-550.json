@@ -4,8 +4,8 @@
   "faction": "amd",
   "type": "gpu",
   "cost": 50,
-  "attack": 1,
-  "health": 1,
+  "attack": 2,
+  "health": 2,
   "rarity": "starter",
   "flavor": "无外接供电的亮机卡，办公机的最后体面——直到你给它插上 4K 屏。",
   "art": { "shape": "gpu_single_fan", "palette": "amd_red" }

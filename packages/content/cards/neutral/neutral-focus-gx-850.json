@@ -10,7 +10,7 @@
     "trigger": "onPlay",
     "steps": [
       { "op": "damage", "target": { "kind": "all", "pool": "allUnits" }, "amount": 3 },
-      { "op": "lockMana", "player": "sourceOwner", "amount": 300 }
+      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
     ]
   },
   "flavor": "峰值 1600W 的那一瞬间，整栋楼的灯都为你眨了眨眼——跳闸，是电业局对你的最高致敬。",

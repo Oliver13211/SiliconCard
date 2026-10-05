@@ -3,13 +3,13 @@
   "name": "CHERRY MX 8.0",
   "faction": "neutral",
   "type": "gpu",
-  "cost": 300,
-  "attack": 2,
-  "health": 3,
+  "cost": 250,
+  "attack": 3,
+  "health": 4,
   "rarity": "rare",
   "effect": {
     "trigger": "onDamaged",
-    "steps": [{ "op": "damage", "target": { "kind": "random", "pool": "enemyUnits" }, "amount": 1 }]
+    "steps": [{ "op": "damage", "target": { "kind": "random", "pool": "enemyUnits" }, "amount": 2 }]
   },
   "flavor": "青轴一响，爹妈白养：现实中唯唯诺诺，键盘上重拳出击——你敢动我一下试试。",
   "art": { "shape": "keyboard_deck", "palette": "cherry_blue", "glow": "blue" }

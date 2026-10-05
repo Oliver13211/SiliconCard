@@ -3,7 +3,7 @@
   "name": "B650M 重炮手",
   "faction": "neutral",
   "type": "accessory",
-  "cost": 200,
+  "cost": 150,
   "rarity": "common",
   "effect": {
     "trigger": "aura",

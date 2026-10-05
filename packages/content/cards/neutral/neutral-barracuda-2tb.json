@@ -3,13 +3,13 @@
   "name": "Barracuda 2TB",
   "faction": "neutral",
   "type": "driver",
-  "cost": 100,
+  "cost": 50,
   "rarity": "common",
   "effect": {
     "trigger": "onPlay",
     "steps": [
       { "op": "draw", "player": "sourceOwner", "count": 1 },
-      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
+      { "op": "lockMana", "player": "sourceOwner", "amount": 50 }
     ]
   },
   "flavor": "SMR 叠瓦盘写入 40MB/s：牌是抽到了，下回合的进度条还卡在 99%。",

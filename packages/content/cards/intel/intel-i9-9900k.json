@@ -5,7 +5,7 @@
   "type": "gpu",
   "cost": 100,
   "attack": 2,
-  "health": 8,
+  "health": 6,
   "keywords": ["taunt"],
   "tags": ["14nm"],
   "rarity": "common",

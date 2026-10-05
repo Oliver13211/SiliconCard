@@ -3,14 +3,14 @@
   "name": "以太坊合并",
   "faction": "amd",
   "type": "driver",
-  "cost": 300,
+  "cost": 150,
   "rarity": "rare",
   "effect": {
     "trigger": "onPlay",
     "steps": [
       {
         "op": "buff",
-        "target": { "kind": "all", "pool": "allUnits", "tag": "miner" },
+        "target": { "kind": "all", "pool": "enemyUnits", "tag": "miner" },
         "attack": -2,
         "health": -3
       }

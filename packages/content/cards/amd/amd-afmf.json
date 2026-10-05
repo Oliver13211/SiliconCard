@@ -3,7 +3,7 @@
   "name": "AFMF 流体补帧",
   "faction": "amd",
   "type": "driver",
-  "cost": 300,
+  "cost": 250,
   "rarity": "rare",
   "effect": {
     "trigger": "onPlay",

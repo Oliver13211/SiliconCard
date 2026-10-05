@@ -4,7 +4,7 @@
   "faction": "amd",
   "type": "gpu",
   "cost": 53,
-  "attack": 1,
+  "attack": 2,
   "health": 2,
   "keywords": ["stealth"],
   "rarity": "starter",

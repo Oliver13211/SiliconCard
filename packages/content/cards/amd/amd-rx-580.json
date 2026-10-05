@@ -4,7 +4,7 @@
   "faction": "amd",
   "type": "gpu",
   "cost": 185,
-  "attack": 2,
+  "attack": 3,
   "health": 2,
   "keywords": ["deathrattle"],
   "tags": ["miner"],

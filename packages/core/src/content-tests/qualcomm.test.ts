@@ -314,7 +314,7 @@ describe('M4-CNT5 qualcomm 批次：关键事件断言（火龙 / TOPS / 发布�
     const state = ctlState({ hand: [handOf('qualcomm-snapdragon-888')], board: [foe] })
     const played = playP1(state, 'hand-qualcomm-snapdragon-888', unitRef('u-foe'))
     expect(played.state.board.find((unit) => unit.cardId === 'qualcomm-snapdragon-888')).toMatchObject({
-      attack: 4,
+      attack: 3,
       health: 4,
     })
     expect(played.events.map((event) => event.type)).toEqual([
@@ -340,7 +340,7 @@ describe('M4-CNT5 qualcomm 批次：关键事件断言（火龙 / TOPS / 发布�
     expect(played.state.players.P2.health).toBe(30) // chosen allUnits 不含英雄：火龙只烧设备
   })
 
-  it('骁龙 X Elite（传说位）：45 TOPS 战吼随机两份 +1/+1——种子 RNG 按 board 序候选恰取，可叠同一台', () => {
+  it('骁龙 X Elite（传说位）：45 TOPS 战吼随机一份 +1/+1——种子 RNG 按 board 序候选恰取', () => {
     const ally = makeUnit({
       ownerId: 'P1',
       instanceId: 'u-ally',
@@ -353,32 +353,33 @@ describe('M4-CNT5 qualcomm 批次：关键事件断言（火龙 / TOPS / 发布�
     const played = playP1(state, 'hand-qualcomm-snapdragon-x-elite')
     const elite = played.state.board.find((unit) => unit.cardId === 'qualcomm-snapdragon-x-elite')
     expect(elite).toBeDefined()
-    // 候选 = ownUnits 池按 board 序（[u-ally, X Elite]）；两份 AI 加成各自消耗一次 RNG，
+    // 候选 = ownUnits 池按 board 序（[u-ally, X Elite]）；一份 AI 加成消耗一次 RNG，
     // 用同一 PRNG 复算期望命中（与 engine/factionsM4.test.ts 的种子契约断言同款）
     const rng = createRng(TEST_SEED)
     const candidates = ['u-ally', elite!.instanceId]
-    const picks = [candidates[rng.nextInt(2)], candidates[rng.nextInt(2)]]
-    const hitsOf = (id: string) => picks.filter((pick) => pick === id).length
+    const pick = candidates[rng.nextInt(2)]
     const allyAfter = played.state.board.find((unit) => unit.instanceId === 'u-ally')
+    const allyHits = pick === 'u-ally' ? 1 : 0
     expect(allyAfter).toMatchObject({
-      attack: 2 + hitsOf('u-ally'),
-      health: 2 + hitsOf('u-ally'),
-      maxHealth: 2 + hitsOf('u-ally'), // buff health 同步抬 maxHealth（buffUnit 语义）
+      attack: 2 + allyHits,
+      health: 2 + allyHits,
+      maxHealth: 2 + allyHits, // buff health 同步抬 maxHealth（buffUnit 语义）
     })
+    const eliteHits = pick === elite!.instanceId ? 1 : 0
     expect(elite).toMatchObject({
-      attack: 4 + hitsOf(elite!.instanceId),
-      health: 6 + hitsOf(elite!.instanceId),
-      maxHealth: 6 + hitsOf(elite!.instanceId),
+      attack: 4 + eliteHits,
+      health: 4 + eliteHits,
+      maxHealth: 4 + eliteHits,
     })
     // buff 无目录事件：仅出牌 + 入场演出
     expect(played.events.map((event) => event.type)).toEqual(['CARD_PLAYED', 'MINION_SUMMONED'])
   })
 
-  it('骁龙 8 Gen 3：战吼给自己 +2 攻——「较上一代提升 50%」的发布会数学（2 攻 → 4 攻）', () => {
+  it('骁龙 8 Gen 3：战吼给自己 +1 攻——「较上一代提升 50%」的发布会数学（2 攻 → 3 攻）', () => {
     const state = ctlState({ hand: [handOf('qualcomm-snapdragon-8-gen-3')] })
     const played = playP1(state, 'hand-qualcomm-snapdragon-8-gen-3')
     expect(played.state.board.find((unit) => unit.cardId === 'qualcomm-snapdragon-8-gen-3')).toMatchObject({
-      attack: 4, // 2 + 2（self 池 buff，血量不动）
+      attack: 3, // 2 + 1（self 池 buff，血量不动）
       health: 4,
       maxHealth: 4,
     })
@@ -451,7 +452,7 @@ describe('M4-CNT5 qualcomm 批次：关键事件断言（Always Connected / 清�
     expect(played.state.players.P1.health).toBe(29)
     expect(played.state.board.find((unit) => unit.cardId === 'qualcomm-snapdragon-x-plus')).toMatchObject({
       attack: 2,
-      health: 4,
+      health: 3,
     })
     // 满血时治疗不白发（无 HEALING 事件）
     const fresh = playP1(ctlState({ hand: [handOf('qualcomm-snapdragon-x-plus')] }), 'hand-qualcomm-snapdragon-x-plus')
@@ -464,7 +465,7 @@ describe('M4-CNT5 qualcomm 批次：关键事件断言（Always Connected / 清�
     const played = playP1(state, 'hand-qualcomm-g3x-gen-2')
     expect(played.state.board.find((unit) => unit.cardId === 'qualcomm-g3x-gen-2')).toMatchObject({
       attack: 2,
-      health: 5,
+      health: 4,
       keywords: ['taunt'],
     })
     expect(played.events.find((event) => event.type === 'ARMOR_GAINED')).toMatchObject({

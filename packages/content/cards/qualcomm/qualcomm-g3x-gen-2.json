@@ -5,7 +5,7 @@
   "type": "gpu",
   "cost": 150,
   "attack": 2,
-  "health": 5,
+  "health": 4,
   "keywords": ["taunt"],
   "tags": ["soc"],
   "rarity": "rare",

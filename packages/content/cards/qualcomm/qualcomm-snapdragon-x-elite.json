@@ -5,17 +5,16 @@
   "type": "gpu",
   "cost": 200,
   "attack": 4,
-  "health": 6,
+  "health": 4,
   "keywords": [],
   "tags": ["soc"],
   "rarity": "legendary",
   "effect": {
     "trigger": "battlecry",
     "steps": [
-      { "op": "buff", "target": { "kind": "random", "pool": "ownUnits" }, "attack": 1, "health": 1 },
       { "op": "buff", "target": { "kind": "random", "pool": "ownUnits" }, "attack": 1, "health": 1 }
     ]
   },
-  "flavor": "45 TOPS 本地大模型：AI 加成随机发两份，可能叠在同一台上。TOPS 从不细算，反正营销部说够用。",
+  "flavor": "45 TOPS 本地大模型：AI 加成随机发一份。营销部原计划发两份，被财报打了回来。",
   "art": { "shape": "chip", "palette": "qualcomm", "glow": "cyan" }
 }

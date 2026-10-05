@@ -181,13 +181,13 @@ describe('M1-CNT intel 批次：卡池定义闸门', () => {
 // —— 14nm+++ 的顽固身板 ——
 
 describe('M1-CNT intel 批次：14nm+++ 顽固身板', () => {
-  it('i9-9900K：2/8 信仰充值（taunt）入场', () => {
+  it('i9-9900K：2/6 信仰充值（taunt）入场', () => {
     let s = newGame(deckOf('intel-i9-9900k', 30))
     s = waitHand(s, 'intel-i9-9900k') // 100W：首回合即可
     const { state, events } = playFromHand(s, 'P1', 'intel-i9-9900k')
     expect(ofType(events, 'CARD_PLAYED')[0]).toMatchObject({ playerId: 'P1', cardId: 'intel-i9-9900k', cost: 100 })
     expect(ofType(events, 'MINION_SUMMONED')).toHaveLength(1)
-    expect(state.board[0]).toMatchObject({ cardId: 'intel-i9-9900k', attack: 2, health: 8 })
+    expect(state.board[0]).toMatchObject({ cardId: 'intel-i9-9900k', attack: 2, health: 6 })
     expect(state.board[0]?.keywords).toContain('taunt')
   })
 
@@ -195,7 +195,7 @@ describe('M1-CNT intel 批次：14nm+++ 顽固身板', () => {
     let s = newGame(deckOf('intel-i9-14900k', 30))
     s = waitHand(s, 'intel-i9-14900k') // 125W：第 2 回合
     const { state, events } = playFromHand(s, 'P1', 'intel-i9-14900k')
-    expect(state.board[0]).toMatchObject({ cardId: 'intel-i9-14900k', attack: 6, health: 6 })
+    expect(state.board[0]).toMatchObject({ cardId: 'intel-i9-14900k', attack: 5, health: 6 })
     expect(state.board[0]?.keywords).toContain('divine_shield')
     // 跳闸：battlecry lockMana 300 → lockedMana 累加 + overload 关键词事件
     expect(state.players.P1.lockedMana).toBe(300)
@@ -273,12 +273,12 @@ describe('M1-CNT intel 批次：Arc 成长线', () => {
     expect(state.players.P1.hand).toHaveLength(handBefore) // −1 出牌 +1 战吼
   })
 
-  it('Arc B580：战吼抽 1 + 自身 +1 攻（4/5 → 5/5）', () => {
+  it('Arc B580：战吼抽 1 + 自身 +1 攻（3/4 → 4/4）', () => {
     let s = newGame(deckOf('intel-arc-b580', 30))
     s = waitHand(s, 'intel-arc-b580') // 190W：第 2 回合
     const { state, events } = playFromHand(s, 'P1', 'intel-arc-b580')
     expect(ofType(events, 'CARD_DRAWN')).toHaveLength(1)
-    expect(state.board[0]).toMatchObject({ cardId: 'intel-arc-b580', attack: 5, health: 5 })
+    expect(state.board[0]).toMatchObject({ cardId: 'intel-arc-b580', attack: 4, health: 4 })
   })
 
   it('Arc A770 16GB：turnStart 每回合 +1/+1（全场双方回合都触发，逆袭按回合刷）', () => {

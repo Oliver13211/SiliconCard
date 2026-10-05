@@ -3,7 +3,7 @@
   "name": "Adrenalin 战未来",
   "faction": "amd",
   "type": "driver",
-  "cost": 250,
+  "cost": 200,
   "rarity": "epic",
   "effect": {
     "trigger": "onPlay",

@@ -119,13 +119,14 @@ function playP1(state: GameState, uid: string, target?: TargetRef) {
 }
 
 /** 真实开局配置：15 张 ×2 = DECK_SIZE，nvidia vs amd（内置派系技能随引擎加载自动注册） */
-function nvidiaSetup(): GameSetup {
-  const deck: DeckSpec = { cards: ALL_IDS.map((cardId) => ({ cardId, count: 2 })) }
+function nvidiaSetup(seed: number = 20261003): GameSetup {
+  // 双方各自独立 DeckSpec（不共享引用；deck 是可变数据，共享会让两家的抽牌堆互相踩）
+  const deck = (): DeckSpec => ({ cards: ALL_IDS.map((cardId) => ({ cardId, count: 2 })) })
   return {
-    seed: 20261003,
+    seed,
     players: [
-      { id: 'P1', faction: 'nvidia', deck },
-      { id: 'P2', faction: 'amd', deck },
+      { id: 'P1', faction: 'nvidia', deck: deck() },
+      { id: 'P2', faction: 'amd', deck: deck() },
     ],
   }
 }
@@ -162,52 +163,71 @@ describe('M1-CNT nvidia 批次：schema 闸门', () => {
 
 describe('M1-CNT nvidia 批次：实打覆盖扫描', () => {
   it('seed 对局实打：15 张卡全部至少被打出一次（CARD_PLAYED 事件覆盖）', () => {
-    let state = engine.initGame(nvidiaSetup())
     const played = new Set<string>()
     const cardIdOfUid = (s: GameState, uid: string): string | undefined =>
       [...s.players.P1.hand, ...s.players.P2.hand].find((card) => card.uid === uid)?.cardId
+    const costOfUid = (s: GameState, uid: string): number =>
+      s.players.P1.hand.find((card) => card.uid === uid)?.cost ??
+      s.players.P2.hand.find((card) => card.uid === uid)?.cost ??
+      Number.POSITIVE_INFINITY
     const typeOfUid = (s: GameState, uid: string): string | undefined => {
       const cardId = cardIdOfUid(s, uid)
       return cardId ? DEFS_BY_ID.get(cardId)?.type : undefined
     }
 
-    for (let i = 0; i < 400 && played.size < ALL_IDS.length; i += 1) {
-      if (state.phase === 'ended') break
-      const active = state.activePlayer
-      const actions = engine.getLegalActions(state, active)
-      const plays = actions.filter(
-        (action): action is Extract<Action, { type: 'PLAY_CARD' }> => action.type === 'PLAY_CARD',
-      )
-      const fresh = plays.filter((action) => {
-        const cardId = cardIdOfUid(state, action.uid)
-        return cardId !== undefined && !played.has(cardId)
-      })
-      const ownUnits = state.board.filter((unit) => unit.ownerId === active).length
-      // 优先打出未见过的牌：driver 不占槽先行；单位牌留两个槽位余量防 7 槽塞满
-      const pick =
-        fresh.find((action) => typeOfUid(state, action.uid) === 'driver') ??
-        (ownUnits < 5 ? fresh.find((action) => typeOfUid(state, action.uid) !== 'driver') : undefined) ??
-        (ownUnits < 3 ? fresh[0] : undefined)
-      if (pick) {
-        const result = engine.applyAction(state, pick)
+    // 多 seed 扫描：单局可能提前终局或抽序漂移，最多 3 局内要求全覆盖（确定性不变）
+    for (let seedOffset = 0; seedOffset < 3 && played.size < ALL_IDS.length; seedOffset += 1) {
+      let state = engine.initGame(nvidiaSetup(20261003 + seedOffset))
+      for (let i = 0; i < 400 && played.size < ALL_IDS.length; i += 1) {
+        if (state.phase === 'ended') break
+        const active = state.activePlayer
+        const actions = engine.getLegalActions(state, active)
+        const plays = actions.filter(
+          (action): action is Extract<Action, { type: 'PLAY_CARD' }> => action.type === 'PLAY_CARD',
+        )
+        const fresh = plays.filter((action) => {
+          const cardId = cardIdOfUid(state, action.uid)
+          return cardId !== undefined && !played.has(cardId)
+        })
+        const ownUnits = state.board.filter((unit) => unit.ownerId === active).length
+        // 优先打出未见过的牌：driver 不占槽先行；单位牌留两个槽位余量防 7 槽塞满
+        const pick =
+          fresh.find((action) => typeOfUid(state, action.uid) === 'driver') ??
+          (ownUnits < 5 ? fresh.find((action) => typeOfUid(state, action.uid) !== 'driver') : undefined) ??
+          (ownUnits < 3 ? fresh[0] : undefined)
+        if (pick) {
+          const result = engine.applyAction(state, pick)
+          for (const event of result.events) if (event.type === 'CARD_PLAYED') played.add(event.cardId)
+          state = result.state
+          continue
+        }
+        // 无 fresh 牌可下：手牌接近爆仓（≥8）时先打最便宜的可出牌，防止新抽的卡
+        // 被 CARD_BURNED 烧掉导致覆盖目标永远缺席；否则攻击换牌 / 过牌
+        const hand = state.players[active].hand
+        if (hand.length >= 8 && plays.length > 0) {
+          const cheapest = [...plays].sort((a, b) => costOfUid(state, a.uid) - costOfUid(state, b.uid))[0]
+          if (cheapest) {
+            const result = engine.applyAction(state, cheapest)
+            for (const event of result.events) if (event.type === 'CARD_PLAYED') played.add(event.cardId)
+            state = result.state
+            continue
+          }
+        }
+        // 无牌可下：优先用攻击换掉对方单位（腾槽位），否则过牌
+        const attacks = actions.filter(
+          (action): action is Extract<Action, { type: 'ATTACK' }> => action.type === 'ATTACK',
+        )
+        const trade = attacks.find((action) => {
+          const target = action.target
+          if (target.kind !== 'unit') return false
+          const attacker = state.board.find((unit) => unit.instanceId === action.attackerId)
+          const victim = state.board.find((unit) => unit.instanceId === target.instanceId)
+          return attacker !== undefined && victim !== undefined && attacker.attack >= victim.health
+        })
+        const result = engine.applyAction(state, trade ?? { type: 'END_TURN', playerId: active })
         for (const event of result.events) if (event.type === 'CARD_PLAYED') played.add(event.cardId)
         state = result.state
-        continue
       }
-      // 无牌可下：优先用攻击换掉对方单位（腾槽位），否则过牌
-      const attacks = actions.filter(
-        (action): action is Extract<Action, { type: 'ATTACK' }> => action.type === 'ATTACK',
-      )
-      const trade = attacks.find((action) => {
-        const target = action.target
-        if (target.kind !== 'unit') return false
-        const attacker = state.board.find((unit) => unit.instanceId === action.attackerId)
-        const victim = state.board.find((unit) => unit.instanceId === target.instanceId)
-        return attacker !== undefined && victim !== undefined && attacker.attack >= victim.health
-      })
-      const result = engine.applyAction(state, trade ?? { type: 'END_TURN', playerId: active })
-      for (const event of result.events) if (event.type === 'CARD_PLAYED') played.add(event.cardId)
-      state = result.state
     }
 
     expect(ALL_IDS.filter((id) => !played.has(id))).toEqual([])
@@ -219,7 +239,7 @@ describe('M1-CNT nvidia 批次：关键事件断言（旗舰信仰线）', () =>
     const state = ctlState({ hand: [handOf('nvidia-rtx-5090')] })
     const played = playP1(state, 'hand-nvidia-rtx-5090', heroRef('P2'))
     const summoned = played.state.board.find((unit) => unit.cardId === 'nvidia-rtx-5090')
-    expect(summoned).toMatchObject({ attack: 9, health: 7, keywords: ['charge'] })
+    expect(summoned).toMatchObject({ attack: 8, health: 7, keywords: ['charge'] })
     expect(played.events.find((event) => event.type === 'DAMAGE_DEALT')).toMatchObject({
       source: { kind: 'effect', ref: 'nvidia-rtx-5090' },
       target: { kind: 'hero', playerId: 'P2' },
@@ -234,7 +254,7 @@ describe('M1-CNT nvidia 批次：关键事件断言（旗舰信仰线）', () =>
       target: heroRef('P2'),
     })
     expect(attacked.events.filter((event) => event.type === 'ATTACK_DECLARED')).toHaveLength(1)
-    expect(attacked.state.players.P2.health).toBe(18) // 30 − 3（战吼）− 9（攻击）
+    expect(attacked.state.players.P2.health).toBe(19) // 30 − 3（战吼）− 8（攻击）
   })
 
   it('RTX 5090D：战吼抽 1（特供版：性能砍了，售后服务补一张牌）', () => {
@@ -283,8 +303,8 @@ describe('M1-CNT nvidia 批次：关键事件断言（旗舰信仰线）', () =>
       instanceId: 'u-foe',
       cardId: 'nvidia-rtx-5060',
       attack: 3,
-      health: 6,
-      maxHealth: 6,
+      health: 5,
+      maxHealth: 5,
     })
     const state = ctlState({ hand: [handOf('nvidia-titan-z')], board: [foe] })
     const played = playP1(state, 'hand-nvidia-titan-z')
@@ -310,7 +330,7 @@ describe('M1-CNT nvidia 批次：关键事件断言（旗舰信仰线）', () =>
       target: heroRef('P2'),
     })
     expect(swing2.events.filter((event) => event.type === 'ATTACK_DECLARED')).toHaveLength(1)
-    expect(swing2.state.players.P2.health).toBe(24) // 30 − 6
+    expect(swing2.state.players.P2.health).toBe(25) // 30 − 5
     expect(swing2.state.board.find((unit) => unit.instanceId === titanId)).toMatchObject({
       health: 3, // 6 − 3（反伤）
       attacksRemaining: 0,
@@ -356,7 +376,7 @@ describe('M1-CNT nvidia 批次：关键事件断言（信仰充值 / 传家宝 /
       target: unitRef(heaterId),
     })
     expect(hitHeater.state.board.find((unit) => unit.instanceId === heaterId)).toMatchObject({
-      health: 3, // 6 − 3
+      health: 2, // 5 − 3
     })
     expect(hitHeater.state.board.find((unit) => unit.instanceId === 'u-foe')).toBeUndefined() // 反伤 5 → 阵亡
   })

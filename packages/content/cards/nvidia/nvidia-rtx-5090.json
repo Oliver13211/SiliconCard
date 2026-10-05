@@ -4,7 +4,7 @@
   "faction": "nvidia",
   "type": "gpu",
   "cost": 575,
-  "attack": 9,
+  "attack": 8,
   "health": 7,
   "keywords": ["charge"],
   "tags": ["flagship"],

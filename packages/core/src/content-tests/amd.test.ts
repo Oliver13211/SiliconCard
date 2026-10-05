@@ -217,15 +217,15 @@ describe('AMD 矿卡批次 · 批次总闸', () => {
 // —— 显卡（gpu）——
 
 describe('AMD 矿卡批次 · 显卡', () => {
-  it('RX 550：50W 亮机卡正常入场（1/1）', () => {
+  it('RX 550：50W 亮机卡正常入场（2/2）', () => {
     const ctx = newGame(deck30(['amd-rx-550', 30]), deck30(['amd-rx-550', 30]))
     const events = playWhenReady(ctx, 'amd-rx-550')
     const summoned = ev(events, 'MINION_SUMMONED')
     expect(summoned).toHaveLength(1)
     expect(summoned[0]?.source).toBe('play')
     expect(summoned[0]?.unit.cardId).toBe('amd-rx-550')
-    expect(summoned[0]?.unit.attack).toBe(1)
-    expect(summoned[0]?.unit.health).toBe(1)
+    expect(summoned[0]?.unit.attack).toBe(2)
+    expect(summoned[0]?.unit.health).toBe(2)
     expect(ownUnitOf(ctx.state, 'P1', 'amd-rx-550')).toBeDefined()
   })
 
@@ -252,31 +252,36 @@ describe('AMD 矿卡批次 · 显卡', () => {
     expect(ctx.state.players.P1.graveyard.some((entry) => entry.cardId === 'amd-rx-470')).toBe(true)
   })
 
-  it('RX 480：矿卡信仰充值（taunt）2/4 入场', () => {
+  it('RX 480：矿卡信仰充值（taunt）3/4 入场', () => {
     const ctx = newGame(deck30(['amd-rx-480', 15], ['amd-rx-550', 15]), deck30(['amd-rx-550', 30]))
     const events = playWhenReady(ctx, 'amd-rx-480')
     expect(ev(events, 'MINION_SUMMONED')).toHaveLength(1)
     const unit = ownUnitOf(ctx.state, 'P1', 'amd-rx-480')
-    expect(unit?.attack).toBe(2)
+    expect(unit?.attack).toBe(3)
     expect(unit?.health).toBe(4)
     expect(unit?.keywords).toContain('taunt')
   })
 
-  it('RX 580：被「以太坊合并」带走时亡语召唤两只 RX 550', () => {
+  it('RX 580：敌方 RX 580 被「以太坊合并」带走时亡语召唤两只 RX 550', () => {
     const ctx = newGame(
-      deck30(['amd-rx-580', 12], ['amd-the-merge', 12], ['amd-rx-550', 6]),
-      deck30(['amd-rx-550', 30]),
+      deck30(['amd-the-merge', 12], ['amd-rx-550', 18]),
+      deck30(['amd-rx-580', 30]),
     )
-    playWhenReady(ctx, 'amd-rx-580')
+    // 先推两轮让 P2 在 T2 上一只 RX 580（185W），再等 P1 打出合并
+    advanceRound(ctx)
+    advanceRound(ctx)
     const events = playWhenReady(ctx, 'amd-the-merge')
-    const died = ev(events, 'MINION_DIED').filter((e) => e.unit.cardId === 'amd-rx-580')
+    // 合并只烧对面矿卡：P2 场上的 RX 580（3/2 → 1/-1）阵亡
+    const died = ev(events, 'MINION_DIED').filter((e) => e.unit.cardId === 'amd-rx-580' && e.unit.ownerId === 'P2')
     expect(died).toHaveLength(1)
     const deadId = died[0]?.unit.instanceId
     expect(ev(events, 'KEYWORD_TRIGGERED').some((e) => e.keyword === 'deathrattle' && e.instanceId === deadId)).toBe(true)
+    // 亡语召唤两只 RX 550（归 P2 所有）；P1 没有单位被波及
     const inherited = ev(events, 'MINION_SUMMONED').filter((e) => e.source === 'effect' && e.unit.cardId === 'amd-rx-550')
     expect(inherited).toHaveLength(2)
-    for (const summon of inherited) expect(summon.unit.ownerId).toBe('P1')
-    expect(ctx.state.players.P1.graveyard.some((entry) => entry.cardId === 'amd-rx-580')).toBe(true)
+    for (const summon of inherited) expect(summon.unit.ownerId).toBe('P2')
+    expect(ctx.state.players.P2.graveyard.some((entry) => entry.cardId === 'amd-rx-580')).toBe(true)
+    expect(ctx.state.players.P1.graveyard).toHaveLength(0)
   })
 
   it('R9 290：战吼指定直伤 2 + 跳闸锁定下回合 100W（BURN_OUT）', () => {
@@ -301,7 +306,7 @@ describe('AMD 矿卡批次 · 显卡', () => {
     expect(ev(events, 'MINION_SUMMONED')).toHaveLength(1)
     const unit = ownUnitOf(ctx.state, 'P1', 'amd-rx-6400')
     expect(unit?.keywords).toContain('stealth')
-    expect(unit?.attack).toBe(1)
+    expect(unit?.attack).toBe(2)
     expect(unit?.health).toBe(2)
   })
 
@@ -341,30 +346,46 @@ describe('AMD 矿卡批次 · 显卡', () => {
 // —— 驱动（driver）——
 
 describe('AMD 矿卡批次 · 驱动', () => {
-  it('以太坊合并：全场矿卡 -2/-3（tag 过滤），RX 470 阵亡触发亡语，无 tag 的 RX 550 幸存', () => {
+  it('以太坊合并：敌方矿卡 -2/-3（tag 过滤、只烧对面），己方矿卡与无 tag 的 RX 550 幸存', () => {
     const ctx = newGame(
       deck30(['amd-the-merge', 12], ['amd-rx-470', 10], ['amd-rx-550', 8]),
-      deck30(['amd-rx-550', 30]),
+      deck30(['amd-rx-470', 30]),
     )
     playWhenReady(ctx, 'amd-rx-550')
     playWhenReady(ctx, 'amd-rx-470')
+    const own470Before = ownUnitOf(ctx.state, 'P1', 'amd-rx-470')
     const survivorBefore = ownUnitOf(ctx.state, 'P1', 'amd-rx-550')
     expect(survivorBefore).toBeDefined()
     const events = playWhenReady(ctx, 'amd-the-merge')
-    const died = ev(events, 'MINION_DIED')
-    expect(died).toHaveLength(1)
-    expect(died[0]?.unit.cardId).toBe('amd-rx-470')
-    expect(died[0]?.unit.ownerId).toBe('P1')
-    expect(ev(events, 'KEYWORD_TRIGGERED').some((e) => e.keyword === 'deathrattle')).toBe(true)
-    expect(ev(events, 'MINION_SUMMONED').some((e) => e.source === 'effect' && e.unit.cardId === 'amd-rx-550')).toBe(true)
+    // 敌方矿卡（P2 场上的 RX 470）-2/-3 阵亡并触发亡语（召唤归 P2）
+    const died = ev(events, 'MINION_DIED').filter((e) => e.unit.ownerId === 'P2')
+    expect(died.length).toBeGreaterThan(0)
+    for (const entry of died) {
+      expect(entry.unit.cardId).toBe('amd-rx-470')
+      expect(
+        ev(events, 'KEYWORD_TRIGGERED').some(
+          (e) => e.keyword === 'deathrattle' && e.instanceId === entry.unit.instanceId,
+        ),
+      ).toBe(true)
+    }
+    expect(
+      ev(events, 'MINION_SUMMONED').some(
+        (e) => e.source === 'effect' && e.unit.ownerId === 'P2' && e.unit.cardId === 'amd-rx-550',
+      ),
+    ).toBe(true)
+    // 己方 RX 470（同样带 miner tag）不受「只烧对面」的合并波及
+    const own470 = ownUnitOf(ctx.state, 'P1', 'amd-rx-470')
+    expect(own470?.instanceId).toBe(own470Before?.instanceId)
+    expect(own470?.attack).toBe(2)
+    expect(own470?.health).toBe(3)
     // 无 miner tag 的 RX 550 不受矿难波及
     const survivor = ownUnitOf(ctx.state, 'P1', 'amd-rx-550')
     expect(survivor?.instanceId).toBe(survivorBefore?.instanceId)
-    expect(survivor?.health).toBe(1)
-    expect(survivor?.attack).toBe(1)
+    expect(survivor?.health).toBe(2)
+    expect(survivor?.attack).toBe(2)
   })
 
-  it('Adrenalin 战未来：指定己方显卡攻击翻倍（2/2 → 4/2）', () => {
+  it('Adrenalin 战未来：指定己方显卡攻击翻倍（2/3 → 4/3）', () => {
     const ctx = newGame(
       deck30(['amd-adrenalin', 12], ['amd-rx-470', 10], ['amd-rx-550', 8]),
       deck30(['amd-rx-550', 30]),
@@ -375,7 +396,7 @@ describe('AMD 矿卡批次 · 驱动', () => {
     playWhenReady(ctx, 'amd-adrenalin', { target: () => ({ kind: 'unit', instanceId: target?.instanceId ?? '' }) })
     const buffed = ownUnitOf(ctx.state, 'P1', 'amd-rx-470')
     expect(buffed?.attack).toBe(4)
-    expect(buffed?.health).toBe(2)
+    expect(buffed?.health).toBe(3)
     expect(ev(ctx.log, 'CARD_PLAYED').some((e) => e.cardId === 'amd-adrenalin')).toBe(true)
   })
 
@@ -419,7 +440,7 @@ describe('AMD 矿卡批次 · 驱动', () => {
     playWhenReady(ctx, 'amd-chill', { target: () => heroRef('P1') })
     const healed = ev(ctx.log, 'HEALING').filter((e) => e.target.kind === 'hero' && e.target.playerId === 'P1')
     expect(healed.length).toBeGreaterThan(0)
-    expect(healed.at(-1)?.amount).toBe(4)
+    expect(healed.at(-1)?.amount).toBe(6)
     expect(healed.at(-1)?.resultingHealth).toBe(30)
     expect(ctx.state.players.P1.health).toBe(30)
   })
@@ -438,7 +459,7 @@ describe('AMD 矿卡批次 · 配件', () => {
     expect(riser?.health).toBe(1)
     const miner = ownUnitOf(ctx.state, 'P1', 'amd-rx-470')
     expect(miner?.attack).toBe(3) // 2 基础 + 1 光环
-    expect(miner?.health).toBe(2)
+    expect(miner?.health).toBe(3)
   })
 
   it('双 BIOS 静音开关：己方手牌功耗 -100W（scope 限源拥有者，对手不受影响）', () => {
