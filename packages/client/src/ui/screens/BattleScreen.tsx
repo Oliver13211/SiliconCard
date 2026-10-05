@@ -1,5 +1,5 @@
 /**
- * 对战界面（M1-UI1 HUD + M1-UI2 出牌/目标选择流）。
+ * 对战界面（M1-UI1 HUD + M1-UI2 出牌/目标选择流 + M2-UI4 联机复用）。
  *
  * 布局：右侧战报日志；主区自上而下 = 对手面板 → 3D 牌桌挂载点（占位，DOM 棋盘
  * 覆盖其上）→ 己方面板 + 手牌 + 技能/回合按钮。
@@ -8,12 +8,15 @@
  * - 手牌点击：无需目标的牌直接打出；需要目标则进入 target 模式（高亮候选）；
  * - 己方单位点击：宣告攻击（进入目标选择）；候选目标点击：确认；
  * - ESC / 取消按钮退出目标选择；非法操作按钮禁用并标注梗化原因；
- * - 对面回合由「简易托管」按节拍自动推进（botTick）。
+ * - 单机：对面回合由「简易托管」按节拍自动推进（botTick）；
+ * - 联机（remoteMode）：动作经服务端结算、事件由 events 帧推送——botTick 停用，
+ *   断线时盖重连提示层（服务端宽限期内 resume 无缝续局），对手掉线时挂提示横幅。
  */
 
 import { useEffect } from 'react'
 import { getFactionSkill, type BoardUnit, type PlayerId } from '@siliconcard/core'
 import { useGameStore, type TargetingState } from '../store/gameStore'
+import { useLanStore } from '../store/lanStore'
 import { BattleLog } from '../components/BattleLog'
 import { ErrorToast } from '../components/ErrorToast'
 import { PlayerPanel } from '../components/PlayerPanel'
@@ -35,6 +38,7 @@ export function BattleScreen() {
   const interactivity = useGameStore((s) => s.interactivity)
   const targeting = useGameStore((s) => s.targeting)
   const contentNotice = useGameStore((s) => s.contentNotice)
+  const remoteMode = useGameStore((s) => s.remoteMode)
   const tryPlayCard = useGameStore((s) => s.tryPlayCard)
   const tryAttack = useGameStore((s) => s.tryAttack)
   const tryHeroPower = useGameStore((s) => s.tryHeroPower)
@@ -44,13 +48,15 @@ export function BattleScreen() {
   const cancelTargeting = useGameStore((s) => s.cancelTargeting)
   const openRules = useGameStore((s) => s.openRules)
 
-  // 对面回合：简易托管按节拍推进（每次 view 变化重新调度；P1 回合不挂定时器）
+  // 对面回合：简易托管按节拍推进（每次 view 变化重新调度；P1 回合不挂定时器）。
+  // 联机模式停用：对面（人类或服务端 AI）的动作由 events 帧推送，本地不代打。
   useEffect(() => {
+    if (remoteMode) return
     if (!view || view.phase === 'ended') return
     if (view.activePlayer === view.viewer) return
     const timer = setTimeout(() => useGameStore.getState().botTick(), 700)
     return () => clearTimeout(timer)
-  }, [view])
+  }, [view, remoteMode])
 
   // ESC 取消目标选择
   useEffect(() => {
@@ -68,6 +74,7 @@ export function BattleScreen() {
       interactivity={interactivity}
       targeting={targeting}
       contentNotice={contentNotice}
+      remoteMode={remoteMode}
       tryPlayCard={tryPlayCard}
       tryAttack={tryAttack}
       tryHeroPower={tryHeroPower}
@@ -85,6 +92,7 @@ interface BattleInnerProps {
   interactivity: Interactivity
   targeting: TargetingState | null
   contentNotice: string | null
+  remoteMode: boolean
   tryPlayCard: (uid: string) => void
   tryAttack: (attackerId: string) => void
   tryHeroPower: () => void
@@ -101,6 +109,7 @@ function BattleInner(props: BattleInnerProps) {
     interactivity,
     targeting,
     contentNotice,
+    remoteMode,
     tryPlayCard,
     tryAttack,
     tryHeroPower,
@@ -115,6 +124,15 @@ function BattleInner(props: BattleInnerProps) {
   const ownUnits = view.board.filter((u) => u.ownerId === view.viewer)
   const enemyUnits = view.board.filter((u) => u.ownerId !== view.viewer)
   const ownSlots = `${ownUnits.length}/7`
+
+  // —— 联机状态（M2-UI4）：重连提示层 + 对手掉线横幅（seat_update.connected 数据源） ——
+  const lanStep = useLanStore((s) => s.step)
+  const lanLobby = useLanStore((s) => s.lobby)
+  const reconnectAttempt = useLanStore((s) => s.reconnectAttempt)
+  const mySeat = lanLobby?.seat ?? null
+  const opponentSeat = mySeat === 'P1' ? 'P2' : mySeat === 'P2' ? 'P1' : null
+  const opponentInfo = opponentSeat ? (lanLobby?.seats?.[opponentSeat] ?? null) : null
+  const opponentOffline = remoteMode && lanStep === 'lobby' && opponentInfo?.kind === 'human' && !opponentInfo.connected
 
   const skill = getFactionSkill(view.you.faction)
   const heroPower = heroPowerStatus(view, interactivity)
@@ -173,6 +191,11 @@ function BattleInner(props: BattleInnerProps) {
 
         <section className="sc-stage">
           <Table3DMount />
+          {opponentOffline ? (
+            <div className="sc-net-banner" role="status">
+              ⚡ 对面掉线了——等 TA 插回电源（服务端宽限 60s，回来自动续局）
+            </div>
+          ) : null}
           <div className="sc-board" aria-label="扩展槽棋盘（DOM 覆盖层）">
             <div className="sc-board-row is-enemy">{renderUnits(enemyUnits, 'enemy')}</div>
             <div className="sc-board-divider" />
@@ -251,6 +274,21 @@ function BattleInner(props: BattleInnerProps) {
           </div>
         </footer>
       </main>
+      {remoteMode && lanStep === 'reconnecting' ? (
+        <div className="sc-net-overlay" role="status">
+          <div className="sc-net-overlay-card">
+            <p className="sc-net-overlay-title">连接断了——正在重连…（第 {reconnectAttempt} 次尝试）</p>
+            <p className="sc-setup-note">
+              房间 {lanLobby?.roomCode ?? ''} 还在服务端等你（宽限 60s）。恢复后本局无缝继续，手牌与局势自动对齐。
+            </p>
+            <div className="sc-net-overlay-actions">
+              <button type="button" className="sc-btn sc-btn--small sc-btn--danger" onClick={() => void useLanStore.getState().leaveAndBackToMenu()}>
+                放弃对局，回主菜单
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <ErrorToast />
     </div>
   )

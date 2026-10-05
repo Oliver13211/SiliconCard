@@ -12,6 +12,7 @@ import { SetupScreen } from './screens/SetupScreen'
 import { BattleScreen } from './screens/BattleScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { RulesScreen } from './screens/RulesScreen'
+import { LanScreen } from './screens/LanScreen'
 
 export function SiliconCardApp() {
   const screen = useGameStore((s) => s.screen)
@@ -19,6 +20,7 @@ export function SiliconCardApp() {
     <div className="sc-app">
       {screen === 'menu' ? <MainMenu /> : null}
       {screen === 'setup' ? <SetupScreen /> : null}
+      {screen === 'lan' ? <LanScreen /> : null}
       {screen === 'battle' ? <BattleScreen /> : null}
       {screen === 'result' ? <ResultScreen /> : null}
       {screen === 'rules' ? <RulesScreen /> : null}

@@ -5,6 +5,7 @@
  */
 
 import { useGameStore } from '../store/gameStore'
+import { useLanStore } from '../store/lanStore'
 
 const REASON_LABELS = {
   health_zero: 'CPU 体质归零',
@@ -14,7 +15,8 @@ const REASON_LABELS = {
 export function ResultScreen() {
   const result = useGameStore((s) => s.result)
   const rematch = useGameStore((s) => s.rematch)
-  const backToMenu = useGameStore((s) => s.backToMenu)
+  const remoteMode = useGameStore((s) => s.remoteMode)
+  const leaveAndBackToMenu = useLanStore((s) => s.leaveAndBackToMenu)
   if (!result) return null
   return (
     <div className={`sc-result is-${result.winner}`}>
@@ -39,12 +41,21 @@ export function ResultScreen() {
         ))}
       </div>
       <div className="sc-setup-actions">
-        <button type="button" className="sc-btn sc-btn--primary" onClick={() => rematch()}>
-          再来一局（换新种子）
-        </button>
-        <button type="button" className="sc-btn" onClick={() => backToMenu()}>
-          返回主菜单
-        </button>
+        {remoteMode ? (
+          // 联机对局在服务端：房间制一局一票，重开请回房间/重建房（无本地 rematch）
+          <button type="button" className="sc-btn sc-btn--primary" onClick={() => void leaveAndBackToMenu()}>
+            返回主菜单（离开房间）
+          </button>
+        ) : (
+          <>
+            <button type="button" className="sc-btn sc-btn--primary" onClick={() => rematch()}>
+              再来一局（换新种子）
+            </button>
+            <button type="button" className="sc-btn" onClick={() => useGameStore.getState().backToMenu()}>
+              返回主菜单
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

@@ -40,9 +40,10 @@ import {
   type ContentReport,
 } from '../game/deckLoader'
 import { buildResult, type ResultData } from '../game/result'
+import { synthesizeOpeningEvents } from '../game/opening'
 import { FACTION_DISPLAY } from '../game/fallbackContent'
 
-export type Screen = 'menu' | 'setup' | 'battle' | 'result' | 'rules'
+export type Screen = 'menu' | 'setup' | 'battle' | 'result' | 'rules' | 'lan'
 
 export interface TargetingState {
   kind: 'play' | 'attack' | 'heroPower'
@@ -64,6 +65,21 @@ export interface UiError {
   message: string
 }
 
+/** 联机对局帧（M2-UI4）：lanStore 经 LanClient 从服务端帧落地（协议 docs/protocol.md §4） */
+export interface RemoteFrameInput {
+  view: PlayerView
+  legalActions: readonly Action[]
+  events: readonly GameEvent[]
+  /** 对局种子（开局 sync 提供；恢复对局中盘可能为 null → 记 0 仅作展示） */
+  seed: number | null
+  /**
+   * 是否为「大厅开局后的第一帧」（started → sync）：true 且视图处于第 1 回合时
+   * 合成开局事件补齐战报/3D 演出（与本地 BattleDriver.start 同构，rules.md §2.1/§6）。
+   * 断线恢复/回放续帧恒为 false，不补造历史事件。
+   */
+  fresh: boolean
+}
+
 interface GameStore {
   screen: Screen
   rulesReturn: Screen
@@ -82,6 +98,8 @@ interface GameStore {
   draftDeckId: string
   draftOpponentFaction: FactionId | 'random'
   config: BattleConfig | null
+  /** 联机模式（M2-UI4）：true 时对局事实来自服务端帧，动作原样上行（客户端零引擎逻辑） */
+  remoteMode: boolean
 
   goto: (screen: Screen) => void
   openRules: () => void
@@ -101,6 +119,8 @@ interface GameStore {
   rematch: () => void
   backToMenu: () => void
   clearError: () => void
+  /** 联机对局帧落地（M2-UI4）：lanStore 经 LanClient 调用；首帧自动进入 battle 屏 */
+  applyRemoteFrame: (frame: RemoteFrameInput) => void
   /** 测试隔离：清空全部状态与驱动（非 UI 语义） */
   _resetForTests: () => void
 }
@@ -108,6 +128,18 @@ interface GameStore {
 const driver = new BattleDriver('P1')
 // 对面 AI 实例：一局一个（内部有决策 RNG 游标），startBattle 时重建
 let bot: AiPlayer | null = null
+
+/**
+ * 联机上行口（M2-UI4）：remoteMode 下 runAction 经此把动作原样发往服务端
+ * （协议硬约束：上行仅 {type:'action'}，客户端零引擎逻辑）。由 lanStore 绑定，
+ * gameStore 不反向依赖联机模块（避免环）。
+ */
+let remoteDispatch: ((action: Action) => void) | null = null
+
+/** lanStore 在会话建立/销毁时绑定与解绑联机上行口 */
+export function bindRemoteDispatch(dispatch: ((action: Action) => void) | null): void {
+  remoteDispatch = dispatch
+}
 
 const eventListeners = new Set<(events: readonly GameEvent[]) => void>()
 
@@ -142,6 +174,7 @@ type StoreData = Pick<
   | 'draftDeckId'
   | 'draftOpponentFaction'
   | 'config'
+  | 'remoteMode'
 >
 
 // —— 集成接线：content/decks 预组卡组已落地（4 套×30 张）——
@@ -165,6 +198,7 @@ const initialState: StoreData = {
   draftDeckId: initialDeckId,
   draftOpponentFaction: 'random' as FactionId | 'random',
   config: null,
+  remoteMode: false,
 }
 
 const LOG_CAP = 300
@@ -203,6 +237,26 @@ export const useGameStore = create<GameStore>()((set, get) => {
   }
 
   function runAction(action: Action): boolean {
+    // 联机模式：动作原样上行（结算全在服务端），报告经服务端 events 帧异步落地；
+    // 上行失败（连接未就绪）立刻提示，规则违规由服务端 error 帧异步反馈（lanStore 转发）。
+    if (get().remoteMode) {
+      if (!remoteDispatch) {
+        set({ lastError: { code: 'NET', message: '联机连接尚未建立，动作发不出去' } })
+        return false
+      }
+      try {
+        remoteDispatch(action)
+        return true
+      } catch (error) {
+        set({
+          lastError: {
+            code: 'NET',
+            message: error instanceof Error ? error.message : '动作上行失败（连接可能已断开）',
+          },
+        })
+        return false
+      }
+    }
     try {
       applyReport(driver.dispatch(action))
       return true
@@ -388,6 +442,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
     cancelTargeting: () => set({ targeting: null }),
 
     botTick: () => {
+      if (get().remoteMode) return // 联机：对面动作由服务端 events 帧推送，无本地托管
       if (driver.isEnded()) return
       const { view } = get()
       if (!view || view.phase === 'ended') return
@@ -398,7 +453,13 @@ export const useGameStore = create<GameStore>()((set, get) => {
       runAction(action)
     },
 
-    rematch: () => get().startBattle(),
+    rematch: () => {
+      if (get().remoteMode) {
+        set({ lastError: { code: 'NET', message: '联机对局在服务端，回房间重开（本地再来一局不适用）' } })
+        return
+      }
+      get().startBattle()
+    },
 
     backToMenu: () => {
       driver.reset()
@@ -414,10 +475,61 @@ export const useGameStore = create<GameStore>()((set, get) => {
         contentNotice: null,
         config: null,
         deckList: initialDeckList,
+        remoteMode: false,
       })
     },
 
     clearError: () => set({ lastError: null }),
+
+    /**
+     * 联机对局帧落地（M2-UI4）。与本地 applyReport 同构：
+     * 视图/合法动作/可交互性替换 + 事件流进战报与 3D 演出口 + 终局收口（§9）。
+     * 首帧（本端尚无对局视图）自动进入 battle 屏并写入 config。
+     */
+    applyRemoteFrame: (frame) => {
+      const { view, legalActions, events, seed, fresh } = frame
+      const prev = get()
+      const firstFrame = !prev.remoteMode || prev.view === null
+
+      // 开局事件合成：仅大厅开局首帧且视图在第 1 回合（恢复/回放中盘不补造历史，见 opening.ts）
+      const opening = fresh ? synthesizeOpeningEvents(view, seed ?? 0) : []
+      const openingEntries = eventsToLogEntries(view, opening)
+      const entries = eventsToLogEntries(view, events)
+
+      // 终局收口：events 帧按 GAME_END（§9 保证最后一条且恰好一次）；
+      // sync 帧无事件——恢复时若直接落终局视图（如刷新后恢复到已结束的对局），按视图 winner 兜底
+      const end = gameEndOf(events)
+      const syncEnded = end === null && view.phase === 'ended' && prev.result === null
+      const result = end
+        ? buildResult(view, end)
+        : syncEnded
+          ? buildResult(view, { winner: view.winner, reason: 'health_zero' })
+          : prev.result
+
+      set({
+        remoteMode: true,
+        // 终局收口优先（§9）：恢复时直接落终局视图也要进 result 屏，而非 battle
+        screen: end || syncEnded ? 'result' : firstFrame ? 'battle' : prev.screen,
+        view,
+        legalActions,
+        interactivity: deriveInteractivity(view, legalActions),
+        log: [...[...openingEntries, ...entries].reverse(), ...prev.log].slice(0, LOG_CAP),
+        targeting: null,
+        result,
+        lastError: firstFrame ? null : prev.lastError,
+        config: firstFrame
+          ? {
+              playerFaction: view.you.faction,
+              opponentFaction: view.opponent.faction,
+              deckId: 'lan',
+              deckLabel: '联机卡组',
+              seed: seed ?? 0,
+            }
+          : prev.config,
+      })
+      const batch = [...opening, ...events]
+      if (batch.length > 0) notifyEvents(batch)
+    },
 
     _resetForTests: () => {
       driver.reset()

@@ -16,6 +16,9 @@ export function MainMenu() {
         <button type="button" className="sc-btn sc-btn--primary" onClick={() => goto('setup')}>
           上电开打
         </button>
+        <button type="button" className="sc-btn" onClick={() => goto('lan')}>
+          局域网对战
+        </button>
         <button type="button" className="sc-btn" onClick={() => openRules()}>
           规则书（5 分钟上手）
         </button>

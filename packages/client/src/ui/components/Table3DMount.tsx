@@ -10,33 +10,12 @@
  */
 
 import { useEffect, useRef } from 'react'
-import {
-  getCardDefinition,
-  type GameEvent,
-  type PlayerId,
-  type PlayerView,
-  type TargetRef,
-} from '@siliconcard/core'
+import { getCardDefinition, type PlayerId, type TargetRef } from '@siliconcard/core'
 import { createTableRenderer, type TableRendererHandle } from '../../three'
 import { onBattleEvents, useGameStore } from '../store/gameStore'
+import { synthesizeOpeningEvents } from '../game/opening'
 
 export const TABLE3D_MOUNT_ID = 'sc-table3d-mount'
-
-/** 按初始视图合成开局演出事件（与 BattleDriver.start 的 openingEvents 同构，rules.md §2.1/§6） */
-function synthesizeOpeningEvents(view: PlayerView, seed: number): readonly GameEvent[] {
-  if (view.turn !== 1 || view.phase !== 'main') return []
-  const activeMana = view.activePlayer === view.viewer ? view.you.maxMana : view.opponent.maxMana
-  return [
-    { type: 'GAME_START', seed, firstPlayer: view.activePlayer },
-    {
-      type: 'TURN_START',
-      turn: view.turn,
-      playerId: view.activePlayer,
-      maxMana: activeMana,
-      drawCount: 0,
-    },
-  ]
-}
 
 export function Table3DMount() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -53,7 +32,9 @@ export function Table3DMount() {
     container.appendChild(canvas)
 
     const handle: TableRendererHandle = createTableRenderer(canvas, {
-      viewer: 'P1', // 界面线 BattleDriver 固定 P1 视角（gameStore.ts）
+      // 视角方取当前对局视图的 viewer：单机恒为 P1（零回归），
+      // 联机（M2-UI4）坐 P2 位时 3D 牌桌与 HUD 同视角。
+      viewer: useGameStore.getState().view?.viewer ?? 'P1',
       getCardDef: (cardId) => getCardDefinition(cardId),
     })
 
