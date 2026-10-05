@@ -1,0 +1,14 @@
+{
+  "id": "apple-t2-security",
+  "name": "T2 安全芯片",
+  "faction": "apple",
+  "type": "driver",
+  "cost": 350,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "destroy", "target": { "kind": "chosen", "pool": "enemyUnits" } }]
+  },
+  "flavor": "序列号对不上，零件当场禁用——自己换根内存条，开机直接变砖。维修权属于生态，不属于你。",
+  "art": { "shape": "soc_die", "palette": "apple_graphite", "glow": "violet" }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "arm-mali-g710",
+  "name": "Mali-G710",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 3,
+  "health": 4,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "heal", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 2 }]
+  },
+  "flavor": "能效比首次反杀骁龙旗舰——不是我们变强了，是对手先着火了。至于驱动：SoC 停产那天，更新一并进冻结分支。",
+  "art": { "shape": "gpu_dual_fan", "palette": "arm", "glow": "green" }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "arm-helio-g99",
+  "name": "Helio G99",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 2,
+  "health": 2,
+  "keywords": ["deathrattle"],
+  "tags": ["soc"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "deathrattle",
+    "steps": [{ "op": "summon", "cardId": "arm-mali-reference", "count": 1 }]
+  },
+  "flavor": "百元机钉子户：2022 年发布，2025 年还在新机登场。官方支持 24 个月，街边刷机摊支持它到天荒地老。",
+  "art": { "shape": "gpu_single_fan", "palette": "arm", "glow": "amber" }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "qualcomm-snapdragon-8cx",
+  "name": "骁龙 8cx",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 1,
+  "health": 2,
+  "keywords": ["stealth"],
+  "tags": ["soc"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  },
+  "flavor": "Always Connected PC 元年旗舰：全网通永远在线，游戏性能永远离线。开机先抢到 99 条推送，也算 Always。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "pale" }
+}

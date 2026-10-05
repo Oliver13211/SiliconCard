@@ -1,0 +1,13 @@
+{
+  "id": "apple-macbook-air-m2",
+  "name": "MacBook Air M2",
+  "faction": "apple",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 2,
+  "health": 3,
+  "keywords": ["stealth"],
+  "rarity": "common",
+  "flavor": "官方 30W，无风扇被动散热——跑分的时候安静得像没开机，对手还以为你掉线了。核显顺手把隔壁 GT 1030 做了，这事它从来不上热搜。",
+  "art": { "shape": "macbook_air_wedge", "palette": "apple_silver" }
+}

@@ -172,7 +172,7 @@ describe('参数解析与 content 装载', () => {
     const content = loadContent()
     expect(content.cards.length).toBeGreaterThanOrEqual(50)
     expect(content.invalidCards).toEqual([])
-    expect(content.decks.map((d) => d.id).sort()).toEqual(['amd-war-future', 'intel-driver-magic', 'neutral-system-builder', 'nvidia-flagship-faith'])
+    expect(content.decks.map((d) => d.id).sort()).toEqual(['amd-war-future', 'apple-efficiency-faith', 'arm-reference-swarm', 'intel-driver-magic', 'neutral-system-builder', 'nvidia-flagship-faith', 'qualcomm-ai-everything'])
     const choice = resolveDeckChoice('amd-war-future', 'x', content, 'deck')
     expect(choice.faction).toBe('amd')
     expect(choice.spec.cards.reduce((n, c) => n + c.count, 0)).toBe(30)

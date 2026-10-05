@@ -1,0 +1,18 @@
+{
+  "id": "qualcomm-g3x-gen-2",
+  "name": "骁龙 G3x Gen 2",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 2,
+  "health": 5,
+  "keywords": ["taunt"],
+  "tags": ["soc"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "gainArmor", "player": "sourceOwner", "amount": 2 }]
+  },
+  "flavor": "骁龙 G 系掌机平台：性能不问，续航管够。风扇背夹一夹，护甲 +2——烫的是背夹，保的是掌心。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "green" }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "arm-neoverse",
+  "name": "Neoverse 云手机集群",
+  "faction": "arm",
+  "type": "driver",
+  "cost": 300,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "summon", "cardId": "arm-mali-reference", "count": 4 }]
+  },
+  "flavor": "云端一台真机，虚拟化切成八十份往外租：GPU 算力你占八十分之一，开机广告一份不少。",
+  "art": { "shape": "chip", "palette": "arm", "glow": "blue" }
+}

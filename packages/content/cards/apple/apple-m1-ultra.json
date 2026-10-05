@@ -1,0 +1,13 @@
+{
+  "id": "apple-m1-ultra",
+  "name": "M1 Ultra",
+  "faction": "apple",
+  "type": "gpu",
+  "cost": 370,
+  "attack": 6,
+  "health": 8,
+  "keywords": ["windfury"],
+  "rarity": "legendary",
+  "flavor": "两颗 M1 Max 用 UltraFusion 官方胶水粘成一颗——别叫双芯，叫『融合』。风怒那两下攻击，是胶水在替你发力。",
+  "art": { "shape": "soc_dual_die", "palette": "apple_silver", "glow": "white" }
+}

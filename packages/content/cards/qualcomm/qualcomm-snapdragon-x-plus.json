@@ -1,0 +1,20 @@
+{
+  "id": "qualcomm-snapdragon-x-plus",
+  "name": "骁龙 X Plus",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 2,
+  "health": 4,
+  "keywords": [],
+  "tags": ["soc"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "heal", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 3 }
+    ]
+  },
+  "flavor": "手机 SoC 下放笔电的性价比位：风扇都省了，续航翻倍——性能是附加题，清凉才是主科。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "aqua" }
+}

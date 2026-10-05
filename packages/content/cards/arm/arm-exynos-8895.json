@@ -1,0 +1,14 @@
+{
+  "id": "arm-exynos-8895",
+  "name": "Exynos 8895",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 4,
+  "health": 2,
+  "keywords": ["windfury", "overload"],
+  "tags": ["soc"],
+  "rarity": "rare",
+  "flavor": "Mali-G71 MP20：核心堆到 20 个，纸面参数宇宙第一。温度嘛——也跟核心数一个量级，下回合先跳闸冷静一下。",
+  "art": { "shape": "gpu_dual_fan", "palette": "arm", "glow": "orange" }
+}

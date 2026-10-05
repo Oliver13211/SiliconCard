@@ -1,0 +1,21 @@
+{
+  "id": "qualcomm-snapdragon-x-elite",
+  "name": "骁龙 X Elite",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 200,
+  "attack": 4,
+  "health": 6,
+  "keywords": [],
+  "tags": ["soc"],
+  "rarity": "legendary",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "buff", "target": { "kind": "random", "pool": "ownUnits" }, "attack": 1, "health": 1 },
+      { "op": "buff", "target": { "kind": "random", "pool": "ownUnits" }, "attack": 1, "health": 1 }
+    ]
+  },
+  "flavor": "45 TOPS 本地大模型：AI 加成随机发两份，可能叠在同一台上。TOPS 从不细算，反正营销部说够用。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "cyan" }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "apple-applecare-plus",
+  "name": "AppleCare+",
+  "faction": "apple",
+  "type": "accessory",
+  "cost": 300,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "grantKeyword", "target": { "kind": "chosen", "pool": "ownUnits" }, "keyword": "divine_shield" }
+    ]
+  },
+  "flavor": "三年质保全球联保：人为损坏除外。进水不算、摔了不算，反正总有一条适合『不算』。",
+  "art": { "shape": "warranty_card", "palette": "apple_blue", "glow": "white" }
+}

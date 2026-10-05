@@ -1,0 +1,14 @@
+{
+  "id": "arm-lineageos",
+  "name": "LineageOS 刷机包",
+  "faction": "arm",
+  "type": "driver",
+  "cost": 100,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "revive", "pick": "lastOwnedGpu", "to": "sourceOwnerBoard", "count": 1 }]
+  },
+  "flavor": "官方支持周期 24 个月，社区续命五年起步。刷进去的那一刻，EOL 设备原地满血复活。",
+  "art": { "shape": "wave", "palette": "arm", "glow": "green" }
+}

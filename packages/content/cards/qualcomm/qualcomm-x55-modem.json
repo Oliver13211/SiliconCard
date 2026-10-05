@@ -1,0 +1,18 @@
+{
+  "id": "qualcomm-x55-modem",
+  "name": "骁龙 X55 基带",
+  "faction": "qualcomm",
+  "type": "accessory",
+  "cost": 100,
+  "tags": ["modem"],
+  "rarity": "common",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "draw", "player": "sourceOwner", "count": 1 },
+      { "op": "damage", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 1 }
+    ]
+  },
+  "flavor": "外挂基带发热定律：信号每满一格，掌心烫一分。5G 全速下载，散热全靠手。",
+  "art": { "shape": "connector", "palette": "qualcomm", "glow": "red" }
+}

@@ -7,13 +7,13 @@ import { describe, expect, it } from 'vitest'
 import { DECK_SIZE, getCardDefinition } from '@siliconcard/core'
 import { RANDOM_DECK_ID, deckOptions, ensureContentRegistered, resolveDeckChoice } from '../game/deckLoader'
 
-const FACTIONS = ['nvidia', 'amd', 'intel', 'neutral'] as const
+const FACTIONS = ['nvidia', 'amd', 'intel', 'neutral', 'apple', 'qualcomm', 'arm'] as const
 
 describe('集成接线：content 卡池与预组卡组（M1 四线整合）', () => {
   it('启动注册：四批正式卡池全部注册且零结构违例', () => {
     const report = ensureContentRegistered()
     expect(report.source).toBe('content')
-    expect(report.registeredCards).toBe(60)
+    expect(report.registeredCards).toBe(90)
     expect(report.invalidCards).toEqual([])
   })
 

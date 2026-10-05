@@ -1,0 +1,17 @@
+{
+  "id": "apple-unified-memory",
+  "name": "统一内存",
+  "faction": "apple",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "buff", "target": { "kind": "chosen", "pool": "ownUnits" }, "attack": 1, "health": 1 },
+      { "op": "gainArmor", "player": "sourceOwner", "amount": 2 }
+    ]
+  },
+  "flavor": "同一片内存，CPU 分一半 GPU 分一半——16G 统一内存，卖你两份的钱。焊死了？售后管这叫『一体化设计』。",
+  "art": { "shape": "unified_memory", "palette": "apple_silver", "glow": "cyan" }
+}

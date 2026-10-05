@@ -1,0 +1,27 @@
+{
+  "id": "qualcomm-ai-everything",
+  "name": "Qualcomm · 万物皆 AI",
+  "faction": "qualcomm",
+  "cards": [
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-x-plus", "count": 2 },
+    { "cardId": "qualcomm-x55-modem", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-8-gen-3", "count": 2 },
+    { "cardId": "qualcomm-g3x-gen-2", "count": 2 },
+    { "cardId": "qualcomm-windows-on-arm", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-888", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-x-elite", "count": 2 },
+    { "cardId": "qualcomm-adreno-driver", "count": 2 },
+    { "cardId": "qualcomm-copilot-plus-pc", "count": 2 },
+    { "cardId": "neutral-gt-1030", "count": 1 },
+    { "cardId": "neutral-furmark", "count": 1 },
+    { "cardId": "neutral-barracuda-2tb", "count": 1 },
+    { "cardId": "neutral-p106-100", "count": 1 },
+    { "cardId": "neutral-g502-hero", "count": 1 },
+    { "cardId": "neutral-b650m-plus", "count": 1 },
+    { "cardId": "neutral-nh-d15", "count": 1 },
+    { "cardId": "neutral-990-pro", "count": 1 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 1 },
+    { "cardId": "neutral-dxracer-king", "count": 1 }
+  ]
+}

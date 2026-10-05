@@ -1,0 +1,14 @@
+{
+  "id": "qualcomm-copilot-plus-pc",
+  "name": "Copilot+ PC",
+  "faction": "qualcomm",
+  "type": "accessory",
+  "cost": 200,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "aura",
+    "aura": { "stat": "health", "delta": 1, "scope": "ownUnits" }
+  },
+  "flavor": "万物皆 AI：记事本会补全，截图会抠图，蓝屏了还能 AI 总结失败原因——没有 NPU 加持的功能，不许出厂。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "rainbow" }
+}

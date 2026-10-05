@@ -1,0 +1,14 @@
+{
+  "id": "apple-rosetta-2",
+  "name": "Rosetta 2",
+  "faction": "apple",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "epic",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "revive", "pick": "lastOwnedGpu", "to": "sourceOwnerBoard" }]
+  },
+  "flavor": "x86 老游戏没死，只是换了母语——转译一开，梦回 2009，帧数比当年原生还高。",
+  "art": { "shape": "driver_disc", "palette": "apple_silver", "glow": "cyan" }
+}

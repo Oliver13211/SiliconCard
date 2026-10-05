@@ -1,0 +1,16 @@
+{
+  "id": "apple-macbook-pro-16-m1-max",
+  "name": "MacBook Pro 16 M1 Max",
+  "faction": "apple",
+  "type": "gpu",
+  "cost": 140,
+  "attack": 4,
+  "health": 5,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [{ "op": "draw", "player": "sourceOwner", "count": 1 }]
+  },
+  "flavor": "买前生产力，买后爱奇艺——140W 快充喂的是剪辑软件还是播放器，只有它自己知道。屏顶那颗刘海里，是苹果憋了十年才塞进去的 1080p 摄像头。",
+  "art": { "shape": "macbook_pro_lid", "palette": "apple_graphite", "glow": "white" }
+}

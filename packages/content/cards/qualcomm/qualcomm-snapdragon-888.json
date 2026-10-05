@@ -1,0 +1,21 @@
+{
+  "id": "qualcomm-snapdragon-888",
+  "name": "骁龙 888",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 200,
+  "attack": 4,
+  "health": 4,
+  "keywords": [],
+  "tags": ["soc"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "damage", "target": { "kind": "chosen", "pool": "allUnits" }, "amount": 2 },
+      { "op": "damage", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 2 }
+    ]
+  },
+  "flavor": "初代火龙实名认证：性能没跑满，温度先到 45℃。发热面前众生平等——对面烤 2 点，自己主板也烤 2 点。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "orange_fire" }
+}

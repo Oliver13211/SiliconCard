@@ -1,0 +1,14 @@
+{
+  "id": "apple-airdrop",
+  "name": "隔空投送",
+  "faction": "apple",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "common",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [{ "op": "damage", "target": { "kind": "all", "pool": "enemyUnits" }, "amount": 2 }]
+  },
+  "flavor": "附近所有设备同时弹窗：『有人想共享一张图片』——拒绝三次之后，你的锁屏就归它了。",
+  "art": { "shape": "driver_disc", "palette": "apple_blue", "glow": "blue" }
+}

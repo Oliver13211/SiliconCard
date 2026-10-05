@@ -1,0 +1,17 @@
+{
+  "id": "apple-genius-bar",
+  "name": "天才吧",
+  "faction": "apple",
+  "type": "accessory",
+  "cost": 300,
+  "rarity": "common",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "heal", "target": { "kind": "all", "pool": "sourceOwner" }, "amount": 3 },
+      { "op": "draw", "player": "sourceOwner", "count": 1 }
+    ]
+  },
+  "flavor": "诊断五分钟，结论永远是重启；重启不行就抹掉，抹掉不行就换新。排队三小时不算服务时长，算仪式感。",
+  "art": { "shape": "genius_counter", "palette": "apple_silver" }
+}

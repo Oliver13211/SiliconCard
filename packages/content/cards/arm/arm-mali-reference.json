@@ -1,0 +1,12 @@
+{
+  "id": "arm-mali-reference",
+  "name": "公版亮机卡",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 1,
+  "health": 1,
+  "rarity": "common",
+  "flavor": "公版方案直接贴牌：授权费省了，设计费也省了，改都不改。跑得动原神吗？跑不动，但它能亮机。",
+  "art": { "shape": "gpu_bare_board", "palette": "arm", "glow": "amber" }
+}

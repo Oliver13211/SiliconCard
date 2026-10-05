@@ -1,0 +1,20 @@
+{
+  "id": "qualcomm-snapdragon-8-gen-3",
+  "name": "骁龙 8 Gen 3",
+  "faction": "qualcomm",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 2,
+  "health": 4,
+  "keywords": [],
+  "tags": ["soc"],
+  "rarity": "epic",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "buff", "target": { "kind": "all", "pool": "self" }, "attack": 2 }
+    ]
+  },
+  "flavor": "较上一代提升 50%：2 攻提升 50% 本该 +1，发布会直接 +2——提升的是话术，不是架构。",
+  "art": { "shape": "chip", "palette": "qualcomm", "glow": "violet" }
+}

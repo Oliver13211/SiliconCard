@@ -1,0 +1,20 @@
+{
+  "id": "arm-immortalis-g925",
+  "name": "Immortalis-G925",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 200,
+  "attack": 5,
+  "health": 5,
+  "tags": ["flagship"],
+  "rarity": "legendary",
+  "effect": {
+    "trigger": "battlecry",
+    "steps": [
+      { "op": "damage", "target": { "kind": "chosen", "pool": "enemyUnits" }, "amount": 2 },
+      { "op": "damage", "target": { "kind": "all", "pool": "enemyUnits" }, "amount": 1 }
+    ]
+  },
+  "flavor": "手机端硬件光追，这次是真的开了。至于帧数——光追都开了，还要什么帧数。隔壁 AMD 用户表示似曾相识。",
+  "art": { "shape": "gpu_triple_fan", "palette": "arm", "glow": "cyan" }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "arm-mali-400",
+  "name": "Mali-400 MP",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 100,
+  "attack": 1,
+  "health": 3,
+  "keywords": ["stealth"],
+  "rarity": "common",
+  "flavor": "2010 年发布，至今还在山寨平板、电视盒子、公交站牌里服役。跑得动原神吗？它连跑分软件都带不动，但你永远删不掉它。",
+  "art": { "shape": "gpu_single_fan", "palette": "arm", "glow": "pale" }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "qualcomm-adreno-driver",
+  "name": "Adreno 驱动",
+  "faction": "qualcomm",
+  "type": "driver",
+  "cost": 200,
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "draw", "player": "sourceOwner", "count": 2 },
+      { "op": "damage", "target": { "kind": "random", "pool": "ownUnits" }, "amount": 1 }
+    ]
+  },
+  "flavor": "Adreno 驱动月更：更新包比游戏补丁还勤快，偶尔夹带一个负优化当彩蛋——老卡白嫖性能，新卡陪跑更新。",
+  "art": { "shape": "driver_disc", "palette": "qualcomm", "glow": "blue" }
+}

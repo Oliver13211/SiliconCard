@@ -1,0 +1,18 @@
+{
+  "id": "qualcomm-windows-on-arm",
+  "name": "Windows on ARM",
+  "faction": "qualcomm",
+  "type": "driver",
+  "cost": 150,
+  "keywords": ["overload"],
+  "rarity": "rare",
+  "effect": {
+    "trigger": "onPlay",
+    "steps": [
+      { "op": "damage", "target": { "kind": "chosen", "pool": "anyCharacter" }, "amount": 3 },
+      { "op": "lockMana", "player": "sourceOwner", "amount": 100 }
+    ]
+  },
+  "flavor": "兼容层翻译学：x86 应用能跑，就是费电。先烧对面 3 点，下回合自己跳闸——翻译损耗，概不退换。",
+  "art": { "shape": "patch_note", "palette": "qualcomm", "glow": "amber" }
+}

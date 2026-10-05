@@ -1,0 +1,14 @@
+{
+  "id": "arm-dimensity-9300",
+  "name": "天玑 9300",
+  "faction": "arm",
+  "type": "gpu",
+  "cost": 150,
+  "attack": 4,
+  "health": 4,
+  "keywords": ["charge"],
+  "tags": ["soc"],
+  "rarity": "epic",
+  "flavor": "全大核设计：小核？不存在的。跑得动原神吗？能开 120 帧——前提是均热板贴脸、散热背夹伺候。",
+  "art": { "shape": "gpu_dual_fan", "palette": "arm", "glow": "violet" }
+}

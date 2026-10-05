@@ -1,0 +1,24 @@
+{
+  "id": "arm-reference-swarm",
+  "name": "ARM Mali · 公版小核海",
+  "faction": "arm",
+  "cards": [
+    { "cardId": "arm-mali-400", "count": 2 },
+    { "cardId": "arm-helio-g99", "count": 2 },
+    { "cardId": "arm-cortex-a55", "count": 2 },
+    { "cardId": "arm-mali-g710", "count": 2 },
+    { "cardId": "arm-exynos-8895", "count": 2 },
+    { "cardId": "arm-dimensity-9300", "count": 2 },
+    { "cardId": "arm-immortalis-g925", "count": 1 },
+    { "cardId": "arm-lineageos", "count": 2 },
+    { "cardId": "arm-neoverse", "count": 1 },
+    { "cardId": "neutral-gt-1030", "count": 2 },
+    { "cardId": "intel-uhd-770", "count": 2 },
+    { "cardId": "neutral-p106-100", "count": 2 },
+    { "cardId": "intel-arc-a380", "count": 2 },
+    { "cardId": "intel-driver-hotfix", "count": 2 },
+    { "cardId": "neutral-furmark", "count": 1 },
+    { "cardId": "neutral-g502-hero", "count": 2 },
+    { "cardId": "intel-igpu-rescue", "count": 1 }
+  ]
+}
