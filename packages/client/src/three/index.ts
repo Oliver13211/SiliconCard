@@ -63,3 +63,14 @@ export { tableThemeFor, mixHex } from './fx/theme'
 export type { TableThemeColors } from './fx/theme'
 export { CAMERA_SHOTS } from './layout'
 export type { CameraShot } from './layout'
+export {
+  initAudio,
+  getAudioDirector,
+  createAudioDirector,
+  resolveEventSound,
+  loadAudioSettings,
+  saveAudioSettings,
+  DEFAULT_AUDIO_SETTINGS,
+  AUDIO_SETTINGS_KEY,
+} from './audio'
+export type { AudioDirector, AudioWiring, AudioSettings, SoundSpec } from './audio'

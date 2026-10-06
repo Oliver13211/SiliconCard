@@ -14,6 +14,7 @@ const ALL_FEATURES: readonly FxFeature[] = [
   'shake',
   'theme',
   'trails',
+  'audioExtras',
 ]
 
 afterEach(() => {
@@ -39,6 +40,8 @@ describe('EffectQuality', () => {
     for (const f of ALL_FEATURES.filter((x) => x !== 'particles')) {
       expect(fxEnabled(f), f).toBe(false)
     }
+    // M4-SND1：audioExtras 关闭 = 次要音层/BGM 节拍降级，关键事件音不受此门控制
+    expect(fxEnabled('audioExtras')).toBe(false)
     expect(scaleFxCount(7)).toBe(4)
     expect(scaleFxCount(2)).toBe(1)
     expect(scaleFxCount(1)).toBe(1)

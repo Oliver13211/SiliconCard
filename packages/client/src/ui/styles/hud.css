@@ -1002,3 +1002,23 @@
   z-index: 5;
   white-space: nowrap;
 }
+
+/* —— 声音控制（M4-SND1）：主音量 + BGM 开关，嵌在对局操作区 —— */
+.sc-audio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+.sc-audio-btn {
+  white-space: nowrap;
+}
+.sc-audio-btn.is-off {
+  opacity: 0.55;
+}
+.sc-audio-slider {
+  width: 72px;
+  height: 4px;
+  accent-color: var(--sc-accent);
+  cursor: pointer;
+}

@@ -11,7 +11,7 @@
 
 import { useEffect, useRef } from 'react'
 import { getCardDefinition, type PlayerId, type TargetRef } from '@siliconcard/core'
-import { createTableRenderer, type TableRendererHandle } from '../../three'
+import { createTableRenderer, getAudioDirector, type TableRendererHandle } from '../../three'
 import { onBattleEvents, useGameStore } from '../store/gameStore'
 import { synthesizeOpeningEvents } from '../game/opening'
 
@@ -37,6 +37,9 @@ export function Table3DMount() {
       viewer: useGameStore.getState().view?.viewer ?? 'P1',
       getCardDef: (cardId) => getCardDefinition(cardId),
     })
+
+    // —— BGM 生命周期随对局屏挂载（M4-SND1）：进对局起播，卸载即停（菜单/结算静） ——
+    getAudioDirector()?.setBattleActive(true)
 
     // —— 开局：BattleScreen 挂载时对局已 start（startBattle 先于本 effect），
     //    开局事件已错过事件口，这里按初始视图对账 + 重放同构的开局演出 ——
@@ -84,6 +87,7 @@ export function Table3DMount() {
 
     return () => {
       unsubscribeEvents()
+      getAudioDirector()?.setBattleActive(false) // BGM 随对局屏卸载停止
       handle.dispose() // 卸载必调（渲染线验收项：资源全释放）
       canvas.remove()
     }

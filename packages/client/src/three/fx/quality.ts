@@ -4,7 +4,8 @@
  * 职责：
  * - high：全部演出开启（粒子/碎片/光柱/电弧/光束/震屏/主题染色/拖影）；
  * - low：中端设备/集显降级——只保留「可感知演出」的骨架（飘字/横幅/闪屏/
- *   实体补间），重型粒子类特效关闭，其余特效量减半。
+ *   实体补间），重型粒子类特效关闭，其余特效量减半；
+ *   M4-SND1 起同时约束音频：audioExtras 关闭（次要泛音/BGM 节拍），关键事件音保留。
  *
  * 模块级单例：池在 spawn 时读 gate，运行时切换立即生效（无需重建池）。
  * 纯逻辑部分（scaleFxCount / fxEnabled）可无头测试。
@@ -23,6 +24,7 @@ export type FxFeature =
   | 'shake' // 镜头微震
   | 'theme' // 牌桌派系染色
   | 'trails' // 帧插值拖影（DLSS）
+  | 'audioExtras' // 音效装饰层（M4-SND1：low 档关闭次要泛音/BGM 节拍，关键事件音保留）
 
 let quality: EffectQuality = 'high'
 

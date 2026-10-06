@@ -23,6 +23,7 @@ import { PlayerPanel } from '../components/PlayerPanel'
 import { HandCardView } from '../components/HandCardView'
 import { UnitCardView } from '../components/UnitCardView'
 import { Table3DMount } from '../components/Table3DMount'
+import { AudioControls } from '../components/AudioControls'
 import {
   attackStatusOf,
   endTurnStatus,
@@ -243,6 +244,7 @@ function BattleInner(props: BattleInnerProps) {
               >
                 {view.activePlayer === view.viewer ? '结束回合' : '对面回合中…'}
               </button>
+              <AudioControls />
               <button type="button" className="sc-btn sc-btn--small" onClick={openRules}>
                 规则
               </button>
