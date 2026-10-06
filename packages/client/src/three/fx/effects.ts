@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three'
+import { fxEnabled } from './quality'
 
 // —— 烧卡冒烟 ——
 
@@ -129,8 +130,10 @@ export class ShardsPool {
    * 把一张卡面碎成 3×3 碎片（MINION_DIED 碎裂演出）。
    * cardTexture 为该实体当前正面纹理（缓存共享，不复制图片数据）；
    * null（如卡背/无面实体）时生成无贴图的暗色碎片。
+   * M4-R3D5：low 质量档直接跳过（9 个新 mesh 的开销划不来，由光环+烟承接）。
    */
   burst(pos: THREE.Vector3, cardTexture: THREE.Texture | null, rotationY: number, scale = 1): void {
+    if (!fxEnabled('shards')) return
     const w = 1.0 * scale
     const h = 1.4 * scale
     const pieceW = w / SHARD_GRID

@@ -48,14 +48,18 @@ import { handTransforms, handSlotTransform } from './handLayout'
 import { SceneManager, type Updatable } from './SceneManager'
 import { CardEntityPool, CardEntity, type PickInfo } from './CardEntity'
 import { HeroPlate } from './HeroPlate'
-import { drawCardBack, drawCardFace, resolvePalette, TextureCache } from './CardFace'
+import { composeCardFaceArt, drawCardBack, drawCardFace, resolvePalette, TextureCache, type CardFaceParams } from './CardFace'
 import { AnimationDirector, type DirectorBridge } from './anim/AnimationDirector'
+import { fxEnabled, setEffectQuality, type EffectQuality } from './fx/quality'
+import { tableThemeFor } from './fx/theme'
 
 export interface TableRendererOptions {
   /** 视角方（决定手牌归属与演出文案），默认 'P1' */
   viewer?: PlayerId
   /** 内容包接入点：cardId → 卡面数据（CardDefinition.art 等） */
   getCardDef?(cardId: string): CardDefinition | undefined
+  /** 特效质量档（M4-R3D5 性能红线：全局降级开关），默认 'high'；运行时可经 handle.setFxQuality 切换 */
+  fxQuality?: EffectQuality
 }
 
 export interface PickCallbacks {
@@ -74,6 +78,8 @@ export interface TableRendererHandle {
   /** 演出快进（跳过本批全部动画） */
   fastForward(): void
   setPickCallbacks(cb: PickCallbacks): void
+  /** 运行时切换全局特效质量档（M4-R3D5：设置界面可接） */
+  setFxQuality(q: EffectQuality): void
   /** 是否有演出在播（UI 可据此显示「跳过」按钮） */
   readonly isPlaying: boolean
   dispose(): void
@@ -162,6 +168,7 @@ export function createTableRenderer(
   opts: TableRendererOptions = {},
 ): TableRendererHandle {
   const viewer: PlayerId = opts.viewer ?? 'P1'
+  setEffectQuality(opts.fxQuality ?? 'high')
   const scene = new SceneManager(canvas)
   const pool = new CardEntityPool(scene.scene, makeCardBackTexture)
   const ghostPool = new CardEntityPool(scene.scene, makeCardBackTexture)
@@ -197,9 +204,21 @@ export function createTableRenderer(
   function getFace(def: CardDefinition, cost?: number, attack?: number, health?: number): THREE.Texture | null {
     if (typeof document === 'undefined') return null
     try {
-      return faceCache.getOrDraw(cardFaceKey(def.id, cost, attack, health), () =>
-        drawCardFace({ def, cost, attack, health }),
-      )
+      const key = cardFaceKey(def.id, cost, attack, health)
+      const hit = faceCache.get(key)
+      if (hit) return hit
+      const params: CardFaceParams = { def, cost, attack, health }
+      // 同步底：背景层 + 底版文本 + 角标立即可渲染（不卡主线程）
+      const canvas = drawCardFace(params)
+      const tex = faceCache.put(key, canvas)
+      // 懒生成：SVG 图形层（形制骨架×派系母题×框饰×角标）异步解码补绘，
+      // 完成后原地刷新纹理；失败不致命（同步底版仍完整可渲染）。
+      void composeCardFaceArt(canvas, params)
+        .then(() => {
+          tex.needsUpdate = true
+        })
+        .catch(() => {})
+      return tex
     } catch {
       return null
     }
@@ -258,11 +277,26 @@ export function createTableRenderer(
       ghostPool.release(ghost)
       untrack(ghost)
     },
+    // 传说入场演出判定源：内容包卡定义的稀有度（未接入内容包 → 普通卡演出）
+    getCardRarity: (cardId) => opts.getCardDef?.(cardId)?.rarity,
   }
 
   const director = new AnimationDirector(scene, bridge)
   scene.registerUpdatable(director)
   scene.registerUpdatable(new EntityUpdater(() => liveEntities))
+
+  // —— 手牌指针跟随 tilt（M4-R3D5 需求 1）：每帧把归一化指针喂给 hover 中的手牌，
+  //    其余手牌喂 (0,0) 使其平滑收回；仅写两个数字，零分配 ——
+  scene.registerUpdatable({
+    update: () => {
+      if (hand.size === 0) return
+      const p = scene.pointerNDC
+      for (const [uid, e] of hand) {
+        if (uid === hoverUid) e.setTilt(p.x, p.y)
+        else e.setTilt(0, 0)
+      }
+    },
+  })
 
   // —— 拾取 → 交互回调 + hover 抬起 ——
   let callbacks: PickCallbacks = {}
@@ -365,7 +399,7 @@ export function createTableRenderer(
 
   function syncHand(view: PlayerView): void {
     const seen = new Set<string>()
-    view.you.hand.forEach((c) => {
+    view.you.hand.forEach((c, i) => {
       seen.add(c.uid)
       let e = hand.get(c.uid)
       if (!e) {
@@ -376,6 +410,8 @@ export function createTableRenderer(
         const def = opts.getCardDef?.(c.cardId) ?? placeholderDef(c.cardId, c.cost)
         const tex = getFace(def, c.cost)
         if (tex) e.setFaceTexture(tex)
+        // 入场演出：卡背翻正 + 浮落（起手多张按序错峰；与 CARD_DRAWN 飞牌幽灵衔接）
+        director.playHandEntrance(e, 0.22 + i * 0.07)
       }
       e.setBase({ rotY: 0 })
     })
@@ -438,6 +474,17 @@ export function createTableRenderer(
     relayoutHand(view)
     relayoutUnits(view)
     syncPiles(view)
+    syncTheme(view)
+  }
+
+  // —— 牌桌派系主题（M4-R3D5 需求 5）：双方派系色 → 灯光/环境/槽位，平滑过渡 ——
+  let themeKey = ''
+  function syncTheme(view: PlayerView): void {
+    const key = `${view.you.faction}|${view.opponent.faction}`
+    if (key === themeKey) return
+    themeKey = key
+    // low 档关闭牌桌染色（'theme' 闸门）：null → SceneManager 回落中性暗色
+    scene.setFactionTheme(fxEnabled('theme') ? tableThemeFor(view.you.faction, view.opponent.faction) : null)
   }
 
   function enqueueEvents(events: readonly GameEvent[]): void {
@@ -477,6 +524,9 @@ export function createTableRenderer(
     fastForward,
     setPickCallbacks: (cb) => {
       callbacks = cb
+    },
+    setFxQuality: (q) => {
+      setEffectQuality(q)
     },
     get isPlaying(): boolean {
       return director.timeline.active

@@ -19,7 +19,7 @@ import type { FloatTextSpec } from '../fx/textSprite'
 import type { SceneManager, Updatable } from '../SceneManager'
 import type { AnimationContext } from './types'
 import { eventAnimationMap } from './eventAnimationMap'
-import { Timeline } from './tween'
+import { Timeline, easeOutCubic } from './tween'
 
 export interface DirectorBridge {
   viewerId: PlayerId
@@ -34,6 +34,8 @@ export interface DirectorBridge {
   /** 幽灵飞行体（与对账实体池分离，演出不与 syncView 打架） */
   spawnGhost(cardTexture: THREE.Texture | null, rotY?: number): CardEntity
   releaseGhost(ghost: CardEntity): void
+  /** 卡牌稀有度（内容包接入点；传说入场演出判定用，M4-R3D5） */
+  getCardRarity(cardId: string): string | undefined
 }
 
 export class AnimationDirector implements Updatable {
@@ -74,7 +76,52 @@ export class AnimationDirector implements Updatable {
       cameraMove: (shot: CameraShot) => scene.cameraRig.moveTo(shot),
       spawnGhost: (tex, rotY = 0) => bridge.spawnGhost(tex, rotY),
       releaseGhost: (ghost) => bridge.releaseGhost(ghost),
+      // —— M4-R3D5 舞台特效出口（池在 SceneManager，spawn 时按质量档自动降级） ——
+      getCardRarity: (cardId) => bridge.getCardRarity(cardId),
+      particles: (pos, preset, scale) => scene.particles.emitPreset(pos, preset, scale),
+      ringAt: (pos, color, maxRadius, duration) => scene.rings.spawn(pos, color, maxRadius, duration),
+      pillarAt: (pos, color, duration) => scene.pillars.spawn(pos, color, duration),
+      boltBetween: (from, to, color) => scene.bolts.spawn(from, to, color),
+      beamTo: (from, to, color) => scene.beams.spawn(from, to, color),
+      progressBarAt: (pos, duration) => scene.progressFx.spawn(pos, duration),
+      shakeCamera: (trauma) => scene.shaker.addTrauma(trauma),
     }
+  }
+
+  /**
+   * 手牌入场编排（M4-R3D5 需求 1：入场翻转浮起）：
+   * 新到手的手牌以「卡背翻正 + 上空浮落」进场。delay 用于错开起手多张的节奏，
+   * 或等 CARD_DRAWN 的飞牌幽灵先落地。快进安全（补间一步推到终点复位）。
+   */
+  playHandEntrance(entity: CardEntity, delay = 0): void {
+    entity.fxRotY = Math.PI // 背面朝上
+    entity.fxOffset.y = 0.9
+    entity.opacity = 0
+    this.timeline.sequence([
+      {
+        duration: 0.34,
+        delay,
+        ease: easeOutCubic,
+        onUpdate: (p) => {
+          entity.fxRotY = Math.PI * (1 - p)
+          entity.opacity = Math.min(1, p * 2.2)
+        },
+        onDone: () => {
+          entity.fxRotY = 0
+          entity.opacity = 1
+        },
+      },
+      {
+        duration: 0.24,
+        ease: easeOutCubic,
+        onUpdate: (p) => {
+          entity.fxOffset.y = 0.9 * (1 - p)
+        },
+        onDone: () => {
+          entity.fxOffset.set(0, 0, 0)
+        },
+      },
+    ])
   }
 
   /** 批量入队（一次 applyAction 的 events 数组整批播放） */

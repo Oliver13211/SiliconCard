@@ -495,6 +495,7 @@
 }
 
 /* —— 手牌 —— */
+/* M4-R3D5：容器加 perspective，卡体 hover 绕 Y 轴 180° 翻面（CSS 3D 预览详情） */
 .sc-hand {
   display: flex;
   gap: 10px;
@@ -502,6 +503,7 @@
   overflow-x: auto;
   min-height: 118px;
   align-items: stretch;
+  perspective: 900px;
 }
 .sc-hand-card {
   position: relative;
@@ -513,10 +515,11 @@
   padding: 10px 12px 10px 26px;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.15s ease;
 }
 .sc-hand-card:hover:not(:disabled) {
-  transform: translateY(-6px);
+  transform: translateY(-10px) rotateX(7deg) rotateY(180deg);
   border-color: var(--sc-accent);
 }
 .sc-hand-card.is-disabled {
@@ -565,6 +568,47 @@
   color: var(--sc-danger);
   margin-top: 4px;
   line-height: 1.4;
+}
+
+/* —— 手牌 CSS 3D 翻转双面（M4-R3D5）：正面/背面互斥可见 —— */
+.sc-hand-face {
+  display: block;
+  backface-visibility: hidden;
+}
+.sc-hand-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background:
+    radial-gradient(140px 90px at 50% 0%, rgba(53, 208, 255, 0.12), transparent 70%),
+    linear-gradient(200deg, #131a29, #0d1119);
+  backface-visibility: hidden;
+  transform: rotateY(180deg);
+}
+.sc-hand-back-name {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--sc-accent, #35d0ff);
+}
+.sc-hand-back-flavor {
+  font-size: 10px;
+  font-style: italic;
+  color: #a7b3c0;
+  line-height: 1.45;
+}
+.sc-hand-back-meta {
+  font-size: 10px;
+  color: #8b98a9;
+}
+.sc-hand-back-keywords {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sc-gold);
 }
 
 /* —— 战报日志 —— */

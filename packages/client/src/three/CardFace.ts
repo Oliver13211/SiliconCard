@@ -1,106 +1,44 @@
 /**
- * 程序化卡面绘制器（M1-R3D2）—— CanvasTexture 方案，零外部图片资产
- * （设计支柱 4 / design-report §2.8：派系色板 + 几何抽象形，数据驱动）。
+ * 程序化卡面绘制器（M1-R3D2 建立，M4-R3D5 第一阶段升级为组合式图形系统）。
+ *
+ * 分层合成（同一 Canvas 纹理，自底向上）：
+ * 1. 背景层（cardArt/background，纯代码）：对角渐变 + 电路走线/网格/噪声场按
+ *    cardId 确定性种子选配组合，按 art.palette 或派系色着色；
+ * 2. SVG 图形层（cardArt/svg，纯函数组装）：type 形制骨架 × 派系图案母题 ×
+ *    稀有度框饰 × 关键词角标，经 data URI → Image 内联渲染（禁外部资源/网络请求）；
+ * 3. Canvas 底版与角标层：外框、art 窗口底板、名称/类型/flavor 文本、
+ *    稀有度宝石、费用与攻/血圆徽。
+ *
+ * 同步/异步协议：drawCardFace 同步产出「背景层+底版+角标」的完整可渲染卡面；
+ * SVG 图形层由 composeCardFaceArt 异步补绘（懒生成，不卡主线程），完成后调用方
+ * 对纹理 flip needsUpdate 即可原地刷新（见 TableRenderer.getFace）。
  *
  * 数据来源：
  * - 美术参数 = CardDefinition.art（shape / palette / glow，content JSON 提供）；
+ * - 图形组合参数 = cardArt/derive 派生（cardId FNV-1a 确定性哈希，禁 Math.random/Date）；
  * - 数值 = cost（手牌为生效功耗）与 gpu 的 attack/health（场上单位可传当前值）；
  * - 派系色板：art.palette 为十六进制色时直接采用；否则查内置派系色表；
  *   未知名按字符串哈希确定性生成色相（数据驱动扩展：新增派系零改动）。
  *
- * 纯函数（resolvePalette / pickShapeKind / cardFaceCacheKey / hueOf）可无头测试；
- * drawCardFace 依赖 DOM canvas，只能在浏览器调用，禁止在模块顶层执行。
+ * 纯函数（resolvePalette / pickShapeKind / cardFaceCacheKey / hueOf 等）可无头测试；
+ * drawCardFace / composeCardFaceArt 依赖 DOM canvas，只能在浏览器调用，禁止在模块顶层执行。
  */
 
-import type { CardArt, CardDefinition } from '@siliconcard/core'
+import type { CardDefinition } from '@siliconcard/core'
 import * as THREE from 'three'
+import { drawFaceBackground } from './cardArt/background'
+import { deriveFaceArt } from './cardArt/derive'
+import { buildFaceArtSvg, svgToDataUri } from './cardArt/svg'
+
+// —— 共享纯函数原语（M4-R3D5 迁至 cardArt/color，此处再导出保持既有 API 与测试兼容） ——
+
+export { FACTION_COLORS, fnv1a, hslToHex, hueOf, resolvePalette, shade } from './cardArt/color'
+export type { Palette } from './cardArt/color'
+import { fnv1a, resolvePalette, shade } from './cardArt/color'
 
 /** 卡面画布尺寸（约 5:7，与 layout.CARD_W/CARD_H 比例一致） */
 export const FACE_W = 512
 export const FACE_H = 718
-
-/** 派系色板：与 App.tsx 派系列表同源；art.palette 优先于本表（内容包可覆盖） */
-export const FACTION_COLORS: Record<string, string> = {
-  nvidia: '#76b900',
-  amd: '#ed1c24',
-  intel: '#0068b5',
-  apple: '#a2aaad',
-  qualcomm: '#3253dc',
-  arm: '#ffb400',
-  neutral: '#8b949e',
-}
-
-export interface Palette {
-  /** 主色（卡框 / 派系条） */
-  primary: string
-  /** 副色（几何形体） */
-  secondary: string
-  /** 点缀色（费用环 / 稀有度宝石底） */
-  accent: string
-}
-
-const HEX_RE = /^#[0-9a-fA-F]{6}$/
-
-/** FNV-1a 32 位字符串哈希（本地纯函数，与 core/testing 的 stableHash 用途不同勿混用） */
-export function fnv1a(str: string): number {
-  let h = 0x811c9dc5
-  for (let i = 0; i < str.length; i += 1) {
-    h ^= str.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return h >>> 0
-}
-
-/** 未知色板名的确定性色相（0..360） */
-export function hueOf(name: string): number {
-  return fnv1a(name) % 360
-}
-
-/** hsl → hex（纯函数，保证跨浏览器一致的色值输出；端点例：hsl(0,1,.5)=#ff0000） */
-export function hslToHex(h: number, s: number, l: number): string {
-  const a = s * Math.min(l, 1 - l)
-  const f = (n: number) => {
-    const k = (n + h / 30) % 12
-    const c = l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)))
-    return Math.round(255 * c)
-      .toString(16)
-      .padStart(2, '0')
-  }
-  return `#${f(0)}${f(8)}${f(4)}`
-}
-
-/**
- * 色板解析（纯函数）：art.palette 优先；十六进制直接用；
- * 派系名查表；未知名按哈希生成确定性三色。
- */
-export function resolvePalette(art: CardArt | undefined, factionId: string): Palette {
-  const named = art?.palette ?? factionId
-  if (named && HEX_RE.test(named)) {
-    return { primary: named, secondary: shade(named, 0.55), accent: shade(named, 1.35) }
-  }
-  const tabled = FACTION_COLORS[named.toLowerCase()]
-  if (tabled) {
-    return { primary: tabled, secondary: shade(tabled, 0.55), accent: shade(tabled, 1.35) }
-  }
-  const h = hueOf(named || factionId || 'neutral')
-  return {
-    primary: hslToHex(h, 0.62, 0.5),
-    secondary: hslToHex((h + 24) % 360, 0.5, 0.32),
-    accent: hslToHex((h + 180) % 360, 0.7, 0.6),
-  }
-}
-
-/** 明度缩放（-1..∞，>1 提亮、<1 压暗），纯函数 */
-export function shade(hex: string, k: number): string {
-  const n = parseInt(hex.slice(1), 16)
-  const ch = (v: number) => {
-    const out = k <= 1 ? Math.round(v * k) : Math.round(v + (255 - v) * (k - 1))
-    return Math.max(0, Math.min(255, out))
-      .toString(16)
-      .padStart(2, '0')
-  }
-  return `#${ch((n >> 16) & 0xff)}${ch((n >> 8) & 0xff)}${ch(n & 0xff)}`
-}
 
 /** 已知几何形体；未知 shape 名确定性映射到一种（数据驱动扩展零改动） */
 export type ShapeKind = 'fan' | 'chip' | 'wave' | 'die' | 'connector' | 'mineral'
@@ -150,115 +88,6 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath()
 }
 
-/** 几何抽象形：按 ShapeKind 画在 art 窗口中央（区域 x,y,w,h） */
-function drawShape(
-  ctx: CanvasRenderingContext2D,
-  kind: ShapeKind,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  pal: Palette,
-  glow: string | undefined,
-): void {
-  const cx = x + w / 2
-  const cy = y + h / 2
-  ctx.save()
-  if (glow) {
-    ctx.shadowColor = glow
-    ctx.shadowBlur = 28
-  }
-  ctx.strokeStyle = pal.primary
-  ctx.fillStyle = pal.secondary
-  ctx.lineWidth = 6
-  switch (kind) {
-    case 'fan': {
-      // 显卡风扇：中心毂 + 7 叶
-      for (let i = 0; i < 7; i += 1) {
-        const a = (i / 7) * Math.PI * 2
-        ctx.beginPath()
-        ctx.ellipse(cx + Math.cos(a) * w * 0.24, cy + Math.sin(a) * w * 0.24, w * 0.16, w * 0.075, a, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      ctx.beginPath()
-      ctx.arc(cx, cy, w * 0.14, 0, Math.PI * 2)
-      ctx.stroke()
-      break
-    }
-    case 'chip': {
-      // 裸片：矩形 + 引脚
-      const cw = w * 0.5
-      const chh = h * 0.42
-      ctx.fillRect(cx - cw / 2, cy - chh / 2, cw, chh)
-      ctx.strokeRect(cx - cw / 2, cy - chh / 2, cw, chh)
-      for (let i = 0; i < 6; i += 1) {
-        const px = cx - cw / 2 + ((i + 0.5) * cw) / 6
-        ctx.beginPath()
-        ctx.moveTo(px, cy - chh / 2 - 14)
-        ctx.lineTo(px, cy - chh / 2)
-        ctx.moveTo(px, cy + chh / 2)
-        ctx.lineTo(px, cy + chh / 2 + 14)
-        ctx.stroke()
-      }
-      break
-    }
-    case 'wave': {
-      // 信号波：三条正弦
-      for (let row = 0; row < 3; row += 1) {
-        ctx.beginPath()
-        for (let i = 0; i <= 48; i += 1) {
-          const t = i / 48
-          const px = x + t * w
-          const py = cy + (row - 1) * h * 0.18 + Math.sin(t * Math.PI * 4 + row) * h * 0.09
-          if (i === 0) ctx.moveTo(px, py)
-          else ctx.lineTo(px, py)
-        }
-        ctx.stroke()
-      }
-      break
-    }
-    case 'die': {
-      // 晶圆网格
-      const n = 4
-      const cell = Math.min(w, h) / (n + 1.6)
-      for (let i = 0; i < n; i += 1) {
-        for (let j = 0; j < n; j += 1) {
-          if ((i + j) % 2 === 0) continue
-          ctx.fillRect(cx - (n * cell) / 2 + i * cell, cy - (n * cell) / 2 + j * cell, cell * 0.86, cell * 0.86)
-        }
-      }
-      ctx.strokeRect(cx - (n * cell) / 2, cy - (n * cell) / 2, n * cell, n * cell)
-      break
-    }
-    case 'connector': {
-      // PCIe 金手指
-      const cw = w * 0.62
-      ctx.fillRect(cx - cw / 2, cy - h * 0.16, cw, h * 0.34)
-      ctx.strokeRect(cx - cw / 2, cy - h * 0.16, cw, h * 0.34)
-      ctx.fillStyle = pal.accent
-      for (let i = 0; i < 9; i += 1) {
-        ctx.fillRect(cx - cw / 2 + 8 + i * ((cw - 16) / 9), cy + h * 0.1, (cw - 16) / 18, h * 0.08)
-      }
-      break
-    }
-    case 'mineral': {
-      // 矿卡晶簇
-      ctx.beginPath()
-      ctx.moveTo(cx, cy - h * 0.3)
-      ctx.lineTo(cx + w * 0.22, cy)
-      ctx.lineTo(cx + w * 0.08, cy + h * 0.28)
-      ctx.lineTo(cx - w * 0.18, cy + h * 0.2)
-      ctx.lineTo(cx - w * 0.24, cy - h * 0.05)
-      ctx.closePath()
-      ctx.fill()
-      ctx.stroke()
-      break
-    }
-  }
-  ctx.restore()
-}
-
-/** 稀有度色（M1 简单映射；正式色板随 content 扩容） */
 function rarityColor(rarity: string | undefined): string | null {
   switch (rarity) {
     case 'legendary':
@@ -295,32 +124,27 @@ function drawBadge(
   ctx.fillText(text, x, y + r * 0.08)
 }
 
+/** 单行截断（画布文本防溢出） */
+function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (ctx.measureText(text).width <= maxWidth) return text
+  let out = text
+  while (out.length > 1 && ctx.measureText(`${out}…`).width > maxWidth) out = out.slice(0, -1)
+  return `${out}…`
+}
+
 /**
- * 绘制整张卡面到新 canvas（浏览器专用）。画素布局：
- * 外框（派系色）→ 费用圆环（左上，W 角标）→ 稀有度宝石（右上）→
- * art 几何窗 → 名称 → 类型行 → 关键词梗名点 → 攻/血角标（gpu）。
+ * 底版层：背景层 + 外框 + art 窗口底板 + 名称/类型/flavor + 稀有度宝石。
+ * （M4-R3D5：几何图形主体移交 SVG 图形层，关键词点阵移交 SVG 角标行；本层可重复调用。）
  */
-export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
+function drawFaceInto(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
   const { def } = p
-  const canvas = document.createElement('canvas')
-  canvas.width = FACE_W
-  canvas.height = FACE_H
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('drawCardFace: 2D context 不可用')
   const pal = resolvePalette(def.art, def.faction)
-  const isGpu = def.type === 'gpu'
-  const cost = p.cost ?? def.cost
-  const attack = p.attack ?? def.attack
-  const health = p.health ?? def.health
+  const params = deriveFaceArt(def)
 
-  // 底色与渐变
-  const bg = ctx.createLinearGradient(0, 0, 0, FACE_H)
-  bg.addColorStop(0, '#101418')
-  bg.addColorStop(1, '#05070a')
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, FACE_W, FACE_H)
+  // 1. 背景层（对角渐变 + 走线/网格/噪声组合，确定性）
+  drawFaceBackground(ctx, FACE_W, FACE_H, params.bg, pal)
 
-  // 外框
+  // 2. 外框（派系色，保留 M1 双线规格）
   const m = 10
   roundRect(ctx, m, m, FACE_W - m * 2, FACE_H - m * 2, 26)
   ctx.lineWidth = 8
@@ -331,7 +155,7 @@ export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
   ctx.strokeStyle = shade(pal.primary, 0.6)
   ctx.stroke()
 
-  // art 几何窗
+  // 3. art 几何窗底板（SVG 形制骨架 × 派系母题异步叠绘于此）
   const artX = 44
   const artY = 88
   const artW = FACE_W - artX * 2
@@ -339,16 +163,12 @@ export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
   ctx.fillStyle = '#0a0e12'
   roundRect(ctx, artX, artY, artW, artH, 14)
   ctx.fill()
-  drawShape(ctx, pickShapeKind(def.art?.shape), artX, artY, artW, artH, pal, def.art?.glow)
   ctx.strokeStyle = shade(pal.primary, 0.8)
   ctx.lineWidth = 2
   roundRect(ctx, artX, artY, artW, artH, 14)
   ctx.stroke()
 
-  // 费用圆环（功耗 W）
-  drawBadge(ctx, 74, 74, 44, String(cost), '#0c2a33', '#35d0ff')
-
-  // 稀有度宝石
+  // 4. 稀有度宝石（右上；框饰档位由 SVG 层承担）
   const rc = rarityColor(def.rarity)
   if (rc) {
     ctx.save()
@@ -361,57 +181,85 @@ export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
     ctx.restore()
   }
 
-  // 名称
+  // 5. 名称
   ctx.fillStyle = '#f2f5f7'
   ctx.font = '800 40px "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(truncate(ctx, def.name, artW - 24), FACE_W / 2, artY + artH + 44)
 
-  // 类型行：类型 + 派系
+  // 6. 类型行：类型 + 派系
   const typeName = def.type === 'gpu' ? '显卡' : def.type === 'driver' ? '驱动' : '外设'
   ctx.fillStyle = shade(pal.primary, 1.2)
   ctx.font = '600 24px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillText(`${typeName} · ${def.faction.toUpperCase()}`, FACE_W / 2, artY + artH + 84)
 
-  // 关键词点（梗名不画小字，正式文案待 content 提供 KeywordManifest；先以点数示意）
-  const kw = def.keywords ?? []
-  if (kw.length > 0) {
-    const dotR = 7
-    const gap = 24
-    const total = (kw.length - 1) * gap
-    kw.forEach((_, i) => {
-      ctx.beginPath()
-      ctx.arc(FACE_W / 2 - total / 2 + i * gap, artY + artH + 122, dotR, 0, Math.PI * 2)
-      ctx.fillStyle = pal.accent
-      ctx.fill()
-    })
-  }
-
-  // flavor（小字斜体，两行内截断）
+  // 7. flavor（小字斜体，两行内截断）
   if (def.flavor) {
     ctx.fillStyle = '#8b98a5'
     ctx.font = 'italic 400 21px "Segoe UI", "PingFang SC", sans-serif'
     ctx.fillText(truncate(ctx, def.flavor, artW), FACE_W / 2, FACE_H - 150)
   }
+}
 
-  // 攻/血角标（gpu 专属）
+/** 角标层：费用圆环 + 攻/血徽（压在 SVG 框饰之上，保持可读性） */
+function drawFaceOverlay(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
+  const { def } = p
+  const isGpu = def.type === 'gpu'
+  const cost = p.cost ?? def.cost
+  const attack = p.attack ?? def.attack
+  const health = p.health ?? def.health
+  drawBadge(ctx, 74, 74, 44, String(cost), '#0c2a33', '#35d0ff')
   if (isGpu && attack !== undefined) {
     drawBadge(ctx, 78, FACE_H - 84, 40, String(attack), '#3a2a08', '#ffc53d')
   }
   if (isGpu && health !== undefined) {
     drawBadge(ctx, FACE_W - 78, FACE_H - 84, 40, String(health), '#33110f', '#ff5d4d')
   }
+}
 
+/**
+ * 绘制整张卡面（同步部分，浏览器专用）。
+ * 产出「背景层 + 底版 + 角标」的完整卡面；SVG 图形层（形制骨架×派系母题×
+ * 稀有度框饰×关键词角标）由 composeCardFaceArt 异步补绘。
+ */
+export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = FACE_W
+  canvas.height = FACE_H
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('drawCardFace: 2D context 不可用')
+  drawFaceInto(ctx, p)
+  drawFaceOverlay(ctx, p)
   return canvas
 }
 
-/** 单行截断（画布文本防溢出） */
-function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
-  if (ctx.measureText(text).width <= maxWidth) return text
-  let out = text
-  while (out.length > 1 && ctx.measureText(`${out}…`).width > maxWidth) out = out.slice(0, -1)
-  return `${out}…`
+/** SVG data URI → Image 内联加载（无网络请求；data URI 属内联资源） */
+function loadSvgImage(svg: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('composeCardFaceArt: SVG data URI 加载失败'))
+    img.src = svgToDataUri(svg)
+  })
+}
+
+/**
+ * 异步补绘 SVG 图形层（懒生成，不卡主线程）：
+ * 等待 data URI 图像解码后，在同一位图上按「底版 → SVG 图形层 → 角标」
+ * 顺序整面重绘。调用方（TableRenderer）随后对 CanvasTexture flip needsUpdate。
+ * 失败不致命：同步底版仍完整可渲染，调用方应 catch 吞掉。
+ */
+export async function composeCardFaceArt(canvas: HTMLCanvasElement, p: CardFaceParams): Promise<void> {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('composeCardFaceArt: 2D context 不可用')
+  const pal = resolvePalette(p.def.art, p.def.faction)
+  const params = deriveFaceArt(p.def)
+  const svg = buildFaceArtSvg(params, pal)
+  const img = await loadSvgImage(svg)
+  drawFaceInto(ctx, p)
+  ctx.drawImage(img, 0, 0, FACE_W, FACE_H)
+  drawFaceOverlay(ctx, p)
 }
 
 /** 通用卡背（全卡共用一张纹理） */
@@ -451,7 +299,8 @@ export function drawCardBack(): HTMLCanvasElement {
 }
 
 /**
- * 纹理缓存（M1-R3D2/R3D4 验收项）：键 = cardFaceCacheKey。
+ * 纹理缓存（M1-R3D2/R3D4 验收项；M4-R3D5 增补 put 以支持异步补绘）：
+ * 键 = cardFaceCacheKey / TableRenderer 的 cardFaceKey。
  * put/get 分离以便测试注入假缓存；dispose 时统一清空。
  */
 export class TextureCache {
@@ -461,15 +310,20 @@ export class TextureCache {
     return this.map.get(key)
   }
 
-  /** 缓存未命中时用 factory 绘制并入库 */
-  getOrDraw(key: string, factory: () => HTMLCanvasElement): THREE.CanvasTexture {
-    const hit = this.map.get(key)
-    if (hit) return hit
-    const tex = new THREE.CanvasTexture(factory())
+  /** 已绘制画布直接入库（drawCardFace 同步产出 → composeCardFaceArt 异步补绘场景） */
+  put(key: string, canvas: HTMLCanvasElement): THREE.CanvasTexture {
+    const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = 4
     this.map.set(key, tex)
     return tex
+  }
+
+  /** 缓存未命中时用 factory 绘制并入库 */
+  getOrDraw(key: string, factory: () => HTMLCanvasElement): THREE.CanvasTexture {
+    const hit = this.map.get(key)
+    if (hit) return hit
+    return this.put(key, factory())
   }
 
   get size(): number {
