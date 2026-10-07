@@ -43,7 +43,7 @@ export class SmokePool {
 
   constructor(private readonly scene: THREE.Scene) {}
 
-  /** 在 pos 冒一撮烟（烧牌：cardId 燃毁；count 控制烟量） */
+  /** 在 pos 冒一撮烟（烧牌：cardId 燃毁；count 控制烟量；烟团更大更久——演出修正阶段一） */
   spawn(pos: THREE.Vector3, count = 7): void {
     const tex = getSmokeTexture()
     for (let i = 0; i < count; i += 1) {
@@ -54,7 +54,7 @@ export class SmokePool {
         depthWrite: false,
       })
       const sprite = new THREE.Sprite(material)
-      const baseScale = 0.35 + Math.random() * 0.3
+      const baseScale = 0.45 + Math.random() * 0.35
       sprite.scale.setScalar(baseScale)
       sprite.position.set(pos.x + (Math.random() - 0.5) * 0.5, pos.y, pos.z + (Math.random() - 0.5) * 0.3)
       sprite.renderOrder = 15
@@ -63,8 +63,8 @@ export class SmokePool {
         sprite,
         material,
         age: 0,
-        life: 0.9 + Math.random() * 0.6,
-        vel: new THREE.Vector3((Math.random() - 0.5) * 0.35, 1.1 + Math.random() * 0.7, (Math.random() - 0.5) * 0.25),
+        life: 1.1 + Math.random() * 0.7,
+        vel: new THREE.Vector3((Math.random() - 0.5) * 0.35, 1.2 + Math.random() * 0.8, (Math.random() - 0.5) * 0.25),
         grow: 0.9 + Math.random() * 0.8,
         baseScale,
       })
@@ -166,8 +166,8 @@ export class ShardsPool {
           mesh,
           material,
           age: 0,
-          life: 0.85 + Math.random() * 0.25,
-          vel: new THREE.Vector3((ix - 1) * 1.6 + Math.random(), 2.2 + Math.random() * 1.2, (Math.random() - 0.3) * 1.4),
+          life: 1.0 + Math.random() * 0.3,
+          vel: new THREE.Vector3((ix - 1) * 1.9 + Math.random(), 2.6 + Math.random() * 1.4, (Math.random() - 0.3) * 1.6),
           spin: new THREE.Vector3(Math.random() * 8 - 4, Math.random() * 6 - 3, Math.random() * 8 - 4),
         })
       }

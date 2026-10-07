@@ -1,8 +1,11 @@
 /**
- * 卡面背景层绘制（M4-R3D5 第一阶段）—— 纯代码生成，零外部图片资产。
+ * 卡面背景层绘制（M4-R3D5 第一阶段；演出修正阶段二升级底色分级）——
+ * 纯代码生成，零外部图片资产。
  *
- * 在 SVG 图形层之下铺一层确定性背景，四种元素按 FaceArtParams.bg 选配组合：
- * - diagonal：对角渐变（恒开，底色）——暗色基调 + 派系副色微染；
+ * 在 SVG 图形层之下铺一层确定性背景，元素按 FaceArtParams.bg 选配组合：
+ * - diagonal：对角渐变（恒开，底色）——按稀有度分级的派系底色
+ *   （cardArt/ground.faceGround：角部派系色提亮 → 文字带压暗保对比度，
+ *   rare+ 附顶部辉光，legendary 金色底光呼应金框）；
  * - traces  ：电路走线——种子化直角折线 + 过孔节点；
  * - grid    ：细网格——横竖线场；
  * - noise   ：噪声场——种子化散点。
@@ -11,31 +14,50 @@
  * 依赖 DOM canvas 2D context，只能在浏览器调用，禁止在模块顶层执行。
  */
 
-import { mulberry32, shade, type Palette } from './color'
-import type { BgLayers } from './derive'
+import { mulberry32, type Palette } from './color'
+import type { BgLayers, RarityTier } from './derive'
+import { faceGround } from './ground'
 
-/** 绘制背景层（铺满 0,0..w,h）。调用方保证 ctx 有效。 */
+/** 绘制背景层（铺满 0,0..w,h）。调用方保证 ctx 有效。tier 缺省按 common。 */
 export function drawFaceBackground(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
   bg: BgLayers,
   pal: Palette,
+  tier: RarityTier = 'common',
 ): void {
-  if (bg.diagonal) drawDiagonal(ctx, w, h, pal)
+  if (bg.diagonal) drawGround(ctx, w, h, pal, tier)
   if (bg.traces) drawTraces(ctx, w, h, bg.traceSeed, pal)
   if (bg.grid) drawGrid(ctx, w, h, pal)
   if (bg.noise) drawNoise(ctx, w, h, bg.noiseSeed, pal)
 }
 
-/** 对角渐变底：暗色基调 + 副色微染（保持 M1 的深色卡面基调） */
-function drawDiagonal(ctx: CanvasRenderingContext2D, w: number, h: number, pal: Palette): void {
+/** 分级底色：对角渐变（faceGround 纯函数给停靠点）+ 顶部稀有度辉光 */
+function drawGround(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  pal: Palette,
+  tier: RarityTier,
+): void {
+  const spec = faceGround(pal, tier)
   const g = ctx.createLinearGradient(0, 0, w, h)
-  g.addColorStop(0, shade(pal.secondary, 0.5))
-  g.addColorStop(0.45, '#101418')
-  g.addColorStop(1, '#05070a')
+  for (const s of spec.stops) g.addColorStop(s.at, s.color)
   ctx.fillStyle = g
   ctx.fillRect(0, 0, w, h)
+  // 顶部辉光：中心在框饰带（art 窗上沿之上），legendary 为金色底光
+  if (spec.glow) {
+    const rg = ctx.createRadialGradient(w / 2, h * 0.075, 0, w / 2, h * 0.075, w * 0.62)
+    rg.addColorStop(0, spec.glow.color)
+    rg.addColorStop(1, '#000000')
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    ctx.globalAlpha = spec.glow.alpha
+    ctx.fillStyle = rg
+    ctx.fillRect(0, 0, w, h)
+    ctx.restore()
+  }
 }
 
 /** 电路走线：左侧起点的直角折线束 + 过孔（种子化，低透明度不抢主体） */

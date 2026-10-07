@@ -66,6 +66,12 @@ export interface AnimationContext {
   progressBarAt?(pos: THREE.Vector3, duration?: number): void
   /** 镜头微震（trauma 0..1；0.2 轻撞 / 0.45 传说 / 0.6 跳闸） */
   shakeCamera?(trauma: number): void
+  /**
+   * 全屏演出（演出修正阶段一）：冲击波扩散 + 色偏一瞬 + 边缘暗角脉冲，
+   * 与镜头微震叠加（本出口不碰相机变换）。强力时刻专用：
+   * 高费入场 / 传说入场 / 大额一次伤害 / AOE 批次（阈值见 eventAnimationMap 导出常量）。
+   */
+  screenImpact?(color: string, intensity?: number): void
 }
 
 /** 映射表条目：真动画，或带逐条理由的豁免（验收允许明确豁免） */

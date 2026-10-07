@@ -12,12 +12,19 @@
  * - fxRotX/fxRotY：动画层旋转通道（入场翻面 / 出牌空翻）；
  * - flash(color)：受击/传说描边流光——frame 平面短促染色闪烁，update 内衰减。
  *
+ * 演出修正阶段二增补：
+ * - outline：inverted hull 立体描边（cardOutline.ts）——背面扩张盒体，描边色
+ *   按派系（传说金边），hover/选中切换共享亮态材质；几何每实体一份随池复用，
+ *   材质全局共享注册表（≤16 实例），杜绝每张卡独立材质。
+ *   描边盒（1.05×1.04）小于拾取面与迟滞外圈，不影响任何射线命中语义。
+ *
  * 池化（性能预算，design-report §3.4）：CardEntityPool.acquire/release 复用
  * Group 与材质，避免每张牌进出场都新建 mesh 造成 GC 抖动。
  */
 
 import * as THREE from 'three'
 import { CARD_H, CARD_W, HAND_HOVER_LIFT } from './layout'
+import { OUTLINE_NEUTRAL, isSharedOutlineMaterial, outlineMaterial } from './cardOutline'
 
 /** 拾取信息（raycasting 命中后由 SceneManager 回传给交互层） */
 export type PickInfo =
@@ -55,10 +62,27 @@ export class CardEntity {
   readonly group: THREE.Group
   /** 命中检测用的隐形碰撞面（含 hover 区域比牌面略大，手感更好） */
   readonly pickMesh: THREE.Mesh
+  /**
+   * hover 迟滞外圈（演出修正阶段一）：比 pickMesh 更大的隐形面，自身带
+   * hoverGuard 标记与同一 pick 信息。SceneManager 的迟滞状态机（tilt.ts
+   * nextHoverState）据此区分内外圈命中——已 hover 时指针漂到外圈仍维持，
+   * tilt 引起的边缘投影漂移不再造成 hover 反复进出。
+   */
+  readonly hoverGuard: THREE.Mesh
+  /**
+   * inverted hull 立体描边（演出修正阶段二）：略大于牌面的背面扩张盒体。
+   * 材质来自全局共享注册表（outlineMaterial），随 hover/选中在常态/亮态间
+   * 整体切换；几何每实体一份，随池复用。
+   */
+  readonly outlineMesh: THREE.Mesh
 
   private frontMat: THREE.MeshBasicMaterial
   private backMat: THREE.MeshBasicMaterial
   private frameMat: THREE.MeshBasicMaterial
+  /** 描边色（hex，由渲染线按卡牌派系/稀有度设置；共享材质注册表的键源） */
+  private outlineHex: string = OUTLINE_NEUTRAL
+  /** 已套用的 (hex, bright) 材质状态；update 仅在翻转时查询共享注册表（渲染循环零分配） */
+  private outlineState: { hex: string; bright: boolean } | null = null
 
   private base: Pose = identityPose()
   private hoverTarget = 0
@@ -116,13 +140,28 @@ export class CardEntity {
     const frame = new THREE.Mesh(frameGeo, this.frameMat)
     frame.position.z = 0.006
 
+    // 立体描边（inverted hull 背面扩张）：BackSide 盒体略大于牌面，牌面遮挡
+    // 中心后四周露出色环；renderOrder 置后（牌面先写深度，中心被深度剔除，
+    // 只剩轮廓），淡出时随 opacity 关闭避免悬浮描边。
+    const outlineGeo = new THREE.BoxGeometry(CARD_W * 1.05, CARD_H * 1.04, 0.055)
+    this.outlineMesh = new THREE.Mesh(outlineGeo, outlineMaterial(this.outlineHex, false))
+    this.outlineMesh.renderOrder = 2
+
     this.pickMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(CARD_W * 1.15, CARD_H * 1.12),
       new THREE.MeshBasicMaterial({ visible: false }),
     )
     this.pickMesh.position.z = 0.02
 
-    this.group.add(frame, front, back, this.pickMesh)
+    // 迟滞外圈：进出迟滞带需越过 1.38×1.32（外圈行程 > 满 tilt 的边缘投影漂移上限）
+    this.hoverGuard = new THREE.Mesh(
+      new THREE.PlaneGeometry(CARD_W * 1.38, CARD_H * 1.32),
+      new THREE.MeshBasicMaterial({ visible: false }),
+    )
+    this.hoverGuard.position.z = 0.01
+    this.hoverGuard.userData.hoverGuard = true
+
+    this.group.add(this.outlineMesh, frame, front, back, this.pickMesh, this.hoverGuard)
   }
 
   get uuidOf(): string {
@@ -170,13 +209,20 @@ export class CardEntity {
     this.frontMat.needsUpdate = true
   }
 
+  /** 设置描边色（演出修正阶段二）：渲染线按卡牌派系/稀有度派生后喂入 */
+  setOutline(hex: string): void {
+    this.outlineHex = hex
+  }
+
   setPickInfo(info: PickInfo): void {
     this.pickMesh.userData.pick = info
+    this.hoverGuard.userData.pick = info
     this.group.userData.pick = info
   }
 
   setInteractive(on: boolean): void {
     this.pickMesh.userData.pick = on ? this.pickMesh.userData.pick : undefined
+    this.hoverGuard.userData.pick = on ? this.hoverGuard.userData.pick : undefined
     this.group.userData.pick = on ? this.group.userData.pick : undefined
   }
 
@@ -184,8 +230,10 @@ export class CardEntity {
   update(dt: number): void {
     const k = 1 - Math.exp(-dt * 12)
     this.hoverK += (this.hoverTarget - this.hoverK) * k
-    // tilt 平滑趋近（hover 抬起时才允许展开；松开随 hoverK 自然收回）
-    const tk = 1 - Math.exp(-dt * 10)
+    // tilt 平滑趋近（hover 抬起时才允许展开；松开随 hoverK 自然收回）。
+    // 阻尼 10 → 6.5（时间常数 ~154ms）：叠加迟滞与目标角钳制，边缘残留的
+    // 微小目标波动被进一步滤平（演出修正阶段一）。
+    const tk = 1 - Math.exp(-dt * 6.5)
     this.tiltSX += (this.tiltTX * this.hoverK - this.tiltSX) * tk
     this.tiltSY += (this.tiltTY * this.hoverK - this.tiltSY) * tk
     if (this.flashK > 0) this.flashK = Math.max(0, this.flashK - dt * FLASH_DECAY)
@@ -205,6 +253,19 @@ export class CardEntity {
     const o = this.opacity
     this.frontMat.opacity = o
     this.backMat.opacity = o
+    // 立体描边：常态派系色 → hover/选中切共享亮态（同色系提亮）；淡出时关闭，
+    // 避免烧卡/飞入演出中留下悬浮轮廓。共享材质整体切换，零 per-card 克隆。
+    this.outlineMesh.visible = o > 0.55
+    const bright = this.selected || this.hoverK > 0.45
+    if (
+      this.outlineState === null ||
+      this.outlineState.hex !== this.outlineHex ||
+      this.outlineState.bright !== bright
+    ) {
+      const wantMat = outlineMaterial(this.outlineHex, bright)
+      if (this.outlineMesh.material !== wantMat) this.outlineMesh.material = wantMat
+      this.outlineState = { hex: this.outlineHex, bright }
+    }
     // 描边：hover 常态 → 流光染色短暂接管（M4-R3D5 受击闪色 / 传说流光）
     const baseOp = Math.max(this.hoverK * 0.55, this.selected ? 0.85 : 0)
     this.frameMat.opacity = Math.max(baseOp, this.flashK * 0.95)
@@ -232,7 +293,13 @@ export class CardEntity {
     this.faceTexture = null
     this.frontMat.map = null
     this.frontMat.needsUpdate = true
+    // 描边归位中性常态（材质为共享实例，此处只换引用不销毁）
+    this.outlineHex = OUTLINE_NEUTRAL
+    this.outlineMesh.material = outlineMaterial(this.outlineHex, false)
+    this.outlineState = { hex: this.outlineHex, bright: false }
+    this.outlineMesh.visible = true
     this.pickMesh.userData.pick = undefined
+    this.hoverGuard.userData.pick = undefined
     this.group.userData.pick = undefined
     this.group.visible = false
   }
@@ -294,7 +361,11 @@ export class CardEntityPool {
         if (obj instanceof THREE.Mesh) {
           obj.geometry.dispose()
           const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-          for (const m of mats) m.dispose()
+          for (const m of mats) {
+            // 描边材质为跨实体共享（cardOutline 注册表），只换引用不销毁
+            if (isSharedOutlineMaterial(m)) continue
+            m.dispose()
+          }
         }
       })
     }

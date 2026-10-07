@@ -2,8 +2,9 @@
  * 程序化卡面绘制器（M1-R3D2 建立，M4-R3D5 第一阶段升级为组合式图形系统）。
  *
  * 分层合成（同一 Canvas 纹理，自底向上）：
- * 1. 背景层（cardArt/background，纯代码）：对角渐变 + 电路走线/网格/噪声场按
- *    cardId 确定性种子选配组合，按 art.palette 或派系色着色；
+ * 1. 背景层（cardArt/background，纯代码）：按稀有度分级的派系底色对角渐变
+ *    （cardArt/ground：common 素 → legendary 浓艳+金光）+ 电路走线/网格/噪声场
+ *    按 cardId 确定性种子选配组合，按 art.palette 或派系色着色；
  * 2. SVG 图形层（cardArt/svg，纯函数组装）：type 形制骨架 × 派系图案母题 ×
  *    稀有度框饰 × 关键词角标，经 data URI → Image 内联渲染（禁外部资源/网络请求）；
  * 3. Canvas 底版与角标层：外框、art 窗口底板、名称/类型/flavor 文本、
@@ -141,8 +142,8 @@ function drawFaceInto(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
   const pal = resolvePalette(def.art, def.faction)
   const params = deriveFaceArt(def)
 
-  // 1. 背景层（对角渐变 + 走线/网格/噪声组合，确定性）
-  drawFaceBackground(ctx, FACE_W, FACE_H, params.bg, pal)
+  // 1. 背景层（按稀有度分级的派系底色 + 走线/网格/噪声组合，确定性）
+  drawFaceBackground(ctx, FACE_W, FACE_H, params.bg, pal, params.rarityTier)
 
   // 2. 外框（派系色，保留 M1 双线规格）
   const m = 10

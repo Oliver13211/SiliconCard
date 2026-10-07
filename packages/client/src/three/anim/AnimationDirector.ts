@@ -18,7 +18,7 @@ import type { CameraShot } from '../layout'
 import type { FloatTextSpec } from '../fx/textSprite'
 import type { SceneManager, Updatable } from '../SceneManager'
 import type { AnimationContext } from './types'
-import { eventAnimationMap } from './eventAnimationMap'
+import { eventAnimationMap, isAoeDamageBatch, FULLSCREEN_AOE_COLOR } from './eventAnimationMap'
 import { Timeline, easeOutCubic } from './tween'
 
 export interface DirectorBridge {
@@ -85,6 +85,7 @@ export class AnimationDirector implements Updatable {
       beamTo: (from, to, color) => scene.beams.spawn(from, to, color),
       progressBarAt: (pos, duration) => scene.progressFx.spawn(pos, duration),
       shakeCamera: (trauma) => scene.shaker.addTrauma(trauma),
+      screenImpact: (color, intensity = 1) => scene.impact.fire(color, intensity),
     }
   }
 
@@ -127,6 +128,9 @@ export class AnimationDirector implements Updatable {
   /** 批量入队（一次 applyAction 的 events 数组整批播放） */
   enqueueEvents(events: readonly GameEvent[]): void {
     for (const ev of events) this.playOne(ev)
+    // 强力时刻全屏演出：AOE 批（同批 ≥3 个不同目标受击；渲染层批处理启发式，
+    // 引擎事件不动）。重入 fire 由 ScreenImpactFx 合并为一次演出。
+    if (events.length > 1 && isAoeDamageBatch(events)) this.ctx.screenImpact?.(FULLSCREEN_AOE_COLOR, 1.0)
     if (events.length > 0) {
       // 哨兵：本批最后一条演出结束时回收待释放实体（快进同样触发）
       this.timeline.add({ duration: 0.05, onDone: () => this.bridge.flushReleased() })

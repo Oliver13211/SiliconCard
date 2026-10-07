@@ -86,20 +86,24 @@ export interface ParticleEmitSpec {
   drag?: number
 }
 
-/** 事件演出粒子配方（key 即 ParticlePresetName；颜色在此定格为 Color 实例避免逐次解析） */
+/**
+ * 事件演出粒子配方（key 即 ParticlePresetName；颜色在此定格为 Color 实例避免逐次解析）。
+ * 演出修正阶段一：存在感整体上调一档（数量 +40~55%、尺寸 +25~35%、
+ * 速度 +15~25%、寿命 +15~25%），仍受池容量与 low 档减半约束。
+ */
 export const PARTICLE_PRESETS = {
-  hitSpark: { count: 14, color: '#ff6a4d', speed: 2.6, up: 1.2, gravity: -6.5, life: 0.5, size: 0.09, spread: 0.18 },
-  healMote: { count: 10, color: '#4ade80', speed: 0.35, up: 1.5, gravity: 0.4, life: 0.9, size: 0.08, spread: 0.5 },
-  dust: { count: 8, color: '#9a8f7d', speed: 1.1, up: 0.5, gravity: -3.2, life: 0.6, size: 0.08, spread: 0.4 },
-  ember: { count: 12, color: '#ffb14d', speed: 1.4, up: 2.0, gravity: -2.2, life: 0.8, size: 0.07, spread: 0.35 },
-  goldBurst: { count: 16, color: '#ffc53d', speed: 2.2, up: 2.2, gravity: -2.0, life: 0.7, size: 0.09, spread: 0.25 },
-  legendSpark: { count: 22, color: '#ff9d2e', speed: 2.8, up: 2.6, gravity: -3.5, life: 0.9, size: 0.1, spread: 0.5 },
-  drawStreak: { count: 3, color: '#35d0ff', speed: 0.4, up: 0.2, gravity: 0, life: 0.35, size: 0.07, spread: 0.08 },
-  armorUp: { count: 10, color: '#c8d4dd', speed: 0.5, up: 1.3, gravity: 0.2, life: 0.8, size: 0.08, spread: 0.45 },
-  confetti: { count: 30, color: '#ffd23d', speed: 3.4, up: 3.2, gravity: -5.5, life: 1.2, size: 0.09, spread: 0.6 },
-  dustClean: { count: 12, color: '#b9b2a4', speed: 1.6, up: 0.9, gravity: -4.0, life: 0.55, size: 0.07, spread: 0.3 },
-  topsBurst: { count: 18, color: '#6f8bff', speed: 2.6, up: 2.2, gravity: -4.2, life: 0.7, size: 0.09, spread: 0.3 },
-  teleport: { count: 16, color: '#7fd8ff', speed: 0.7, up: 2.4, gravity: 1.2, life: 0.8, size: 0.08, spread: 0.4 },
+  hitSpark: { count: 21, color: '#ff6a4d', speed: 3.1, up: 1.5, gravity: -6.5, life: 0.62, size: 0.12, spread: 0.22 },
+  healMote: { count: 14, color: '#4ade80', speed: 0.42, up: 1.9, gravity: 0.4, life: 1.05, size: 0.1, spread: 0.55 },
+  dust: { count: 12, color: '#9a8f7d', speed: 1.3, up: 0.6, gravity: -3.2, life: 0.75, size: 0.1, spread: 0.45 },
+  ember: { count: 17, color: '#ffb14d', speed: 1.6, up: 2.3, gravity: -2.2, life: 0.95, size: 0.09, spread: 0.4 },
+  goldBurst: { count: 23, color: '#ffc53d', speed: 2.6, up: 2.6, gravity: -2.0, life: 0.85, size: 0.12, spread: 0.3 },
+  legendSpark: { count: 32, color: '#ff9d2e', speed: 3.3, up: 3.0, gravity: -3.5, life: 1.1, size: 0.13, spread: 0.55 },
+  drawStreak: { count: 5, color: '#35d0ff', speed: 0.5, up: 0.25, gravity: 0, life: 0.45, size: 0.09, spread: 0.1 },
+  armorUp: { count: 14, color: '#c8d4dd', speed: 0.6, up: 1.6, gravity: 0.2, life: 0.95, size: 0.1, spread: 0.5 },
+  confetti: { count: 44, color: '#ffd23d', speed: 3.9, up: 3.7, gravity: -5.5, life: 1.45, size: 0.12, spread: 0.65 },
+  dustClean: { count: 17, color: '#b9b2a4', speed: 1.9, up: 1.1, gravity: -4.0, life: 0.7, size: 0.09, spread: 0.35 },
+  topsBurst: { count: 26, color: '#6f8bff', speed: 3.0, up: 2.6, gravity: -4.2, life: 0.85, size: 0.12, spread: 0.35 },
+  teleport: { count: 23, color: '#7fd8ff', speed: 0.85, up: 2.8, gravity: 1.2, life: 0.95, size: 0.1, spread: 0.45 },
 } as const satisfies Record<string, ParticleEmitSpec>
 
 export type ParticlePresetName = keyof typeof PARTICLE_PRESETS
@@ -142,7 +146,9 @@ export class ParticlePool {
   private liveCount = 0
 
   constructor(scene: THREE.Scene, opts: ParticlePoolOptions = {}) {
-    this.cap = opts.capacity ?? 256
+    // 容量 256 → 384（演出修正阶段一：配方普遍加量后，多组特效叠播仍有余量；
+    // 池满仍走「保新弃旧」回收，内存增量 < 30KB 定长缓冲）
+    this.cap = opts.capacity ?? 384
     const n = this.cap
     this.positions = new Float32Array(n * 3)
     this.colors = new Float32Array(n * 3)
@@ -169,10 +175,11 @@ export class ParticlePool {
     geo.setDrawRange(0, this.cap)
     const tex = opts.texture !== undefined ? opts.texture : getDotTexture()
     const mat = new THREE.PointsMaterial({
-      size: 0.1,
+      size: 0.14, // 0.1 → 0.14（+40% 存在感；PointsMaterial 全局尺寸，逐粒子 size 为预留通道）
       map: tex,
       vertexColors: true,
       transparent: true,
+      opacity: 0.95,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -276,7 +283,8 @@ export class ParticlePool {
       this.positions[i3 + 1] = (this.positions[i3 + 1] as number) + (this.vel[i3 + 1] as number) * dt
       this.positions[i3 + 2] = (this.positions[i3 + 2] as number) + (this.vel[i3 + 2] as number) * dt
       const t = (this.age[slot] as number) / (this.life[slot] as number)
-      const fade = t < 0.12 ? t / 0.12 : 1 - (t - 0.12) / 0.88
+      // 亮度曲线（演出修正阶段一）：快起亮 → 中段保持满亮（存在感平台）→ 收尾线性熄灭
+      const fade = t < 0.1 ? t / 0.1 : t < 0.55 ? 1 : 1 - (t - 0.55) / 0.45
       this.colors[i3] = (this.baseCol[i3] as number) * fade
       this.colors[i3 + 1] = (this.baseCol[i3 + 1] as number) * fade
       this.colors[i3 + 2] = (this.baseCol[i3 + 2] as number) * fade
@@ -357,7 +365,8 @@ export class RingPool {
   private readonly cursor = { i: 0 }
 
   constructor(scene: THREE.Scene, capacity = 10) {
-    const geo = new THREE.RingGeometry(0.86, 1.0, 48)
+    // 内径 0.86 → 0.78：环带更厚（演出修正阶段一，冲击感上调）
+    const geo = new THREE.RingGeometry(0.78, 1.0, 48)
     for (let i = 0; i < capacity; i += 1) {
       const material = new THREE.MeshBasicMaterial({
         color: '#ffffff',
@@ -385,7 +394,7 @@ export class RingPool {
     slot.duration = Math.max(0.05, duration)
     slot.maxRadius = maxRadius
     slot.material.color.set(color)
-    slot.material.opacity = 0.9
+    slot.material.opacity = 1
     slot.mesh.position.set(pos.x, Math.max(0.02, pos.y - 0.45), pos.z)
     slot.mesh.scale.setScalar(0.2)
     slot.mesh.visible = true
@@ -402,7 +411,7 @@ export class RingPool {
         continue
       }
       s.mesh.scale.setScalar(0.2 + (s.maxRadius - 0.2) * (1 - (1 - p) ** 2))
-      s.material.opacity = 0.9 * (1 - p)
+      s.material.opacity = 1 - p
     }
   }
 
@@ -442,7 +451,8 @@ export class PillarPool {
   private readonly cursor = { i: 0 }
 
   constructor(scene: THREE.Scene, capacity = 4) {
-    const geo = new THREE.CylinderGeometry(0.42, 0.58, 1, 14, 1, true)
+    // 柱径 0.42/0.58 → 0.5/0.68（演出修正阶段一：光柱更粗更亮）
+    const geo = new THREE.CylinderGeometry(0.5, 0.68, 1, 14, 1, true)
     for (let i = 0; i < capacity; i += 1) {
       const material = new THREE.MeshBasicMaterial({
         color: '#ffffff',
@@ -469,7 +479,7 @@ export class PillarPool {
     slot.age = 0
     slot.duration = Math.max(0.05, duration)
     slot.material.color.set(color)
-    slot.material.opacity = 0.9
+    slot.material.opacity = 1
     slot.mesh.position.set(pos.x, pos.y + 1.6, pos.z)
     slot.mesh.scale.set(1, 3.2, 1)
     slot.mesh.visible = true
@@ -488,7 +498,7 @@ export class PillarPool {
       // 前段快速立起（含少许过冲），后段渐熄
       const grow = p < 0.18 ? p / 0.18 : 1
       s.mesh.scale.set(0.7 + 0.3 * grow, 3.2 * (0.12 + 0.88 * grow), 0.7 + 0.3 * grow)
-      s.material.opacity = p < 0.5 ? 0.9 : 0.9 * (1 - (p - 0.5) / 0.5)
+      s.material.opacity = p < 0.5 ? 1 : 1 - (p - 0.5) / 0.5
     }
   }
 
@@ -550,13 +560,13 @@ export class BoltPool {
     }
   }
 
-  /** 在 from→to 间生成一道折线电弧（中点垂向抖动，频闪衰减） */
+  /** 在 from→to 间生成一道折线电弧（中点垂向抖动，频闪衰减；寿命 0.3 → 0.38 上调） */
   spawn(from: THREE.Vector3, to: THREE.Vector3, color: string): void {
     if (!fxEnabled('bolts')) return
     const slot = takeSlot(this.slots, this.cursor)
     slot.active = true
     slot.age = 0
-    slot.life = 0.3
+    slot.life = 0.38
     slot.from.copy(from)
     slot.to.copy(to)
     slot.material.color.set(color)
@@ -565,16 +575,16 @@ export class BoltPool {
     slot.line.visible = true
   }
 
-  /** 重写折线顶点（写预分配缓冲，零分配；seed 抖动相位） */
+  /** 重写折线顶点（写预分配缓冲，零分配；seed 抖动相位；抖幅 +30%） */
   private rejag(slot: BoltSlot, seed: number): void {
     const attr = slot.line.geometry.getAttribute('position') as THREE.BufferAttribute
     const arr = attr.array as Float32Array
     for (let i = 0; i < BOLT_POINTS; i += 1) {
       const t = i / (BOLT_POINTS - 1)
       const jitter = i === 0 || i === BOLT_POINTS - 1 ? 0 : Math.sin(seed * 12.9898 + i * 78.233) * 0.5
-      arr[i * 3] = slot.from.x + (slot.to.x - slot.from.x) * t + jitter * 0.14
-      arr[i * 3 + 1] = slot.from.y + (slot.to.y - slot.from.y) * t + Math.abs(jitter) * 0.22
-      arr[i * 3 + 2] = slot.from.z + (slot.to.z - slot.from.z) * t + jitter * 0.14
+      arr[i * 3] = slot.from.x + (slot.to.x - slot.from.x) * t + jitter * 0.18
+      arr[i * 3 + 1] = slot.from.y + (slot.to.y - slot.from.y) * t + Math.abs(jitter) * 0.28
+      arr[i * 3 + 2] = slot.from.z + (slot.to.z - slot.from.z) * t + jitter * 0.18
     }
     attr.needsUpdate = true
   }
@@ -589,9 +599,9 @@ export class BoltPool {
         s.line.visible = false
         continue
       }
-      // 每 60ms 重抖一次路径 + 频闪
+      // 每 60ms 重抖一次路径 + 频闪（频闪下限 0.55 → 0.62，电弧更实）
       if (Math.floor(s.age / 0.06) !== Math.floor((s.age - dt) / 0.06)) this.rejag(s, s.age * 60)
-      const flicker = 0.55 + 0.45 * Math.sin(s.age * 90)
+      const flicker = 0.62 + 0.38 * Math.sin(s.age * 90)
       s.material.opacity = (1 - p) * flicker
     }
   }
@@ -637,7 +647,8 @@ export class BeamPool {
   private readonly cursor = { i: 0 }
 
   constructor(scene: THREE.Scene, capacity = 4) {
-    const geo = new THREE.CylinderGeometry(0.06, 0.09, 1, 8, 1, true)
+    // 束径 0.06/0.09 → 0.075/0.115；寿命 0.5 → 0.6（演出修正阶段一上调）
+    const geo = new THREE.CylinderGeometry(0.075, 0.115, 1, 8, 1, true)
     for (let i = 0; i < capacity; i += 1) {
       const material = new THREE.MeshBasicMaterial({
         color: '#ff2a2a',
@@ -662,7 +673,7 @@ export class BeamPool {
     const slot = takeSlot(this.slots, this.cursor)
     slot.active = true
     slot.age = 0
-    slot.life = 0.5
+    slot.life = 0.6
     slot.mid.copy(from).add(to).multiplyScalar(0.5)
     slot.dir.copy(to).sub(from)
     const len = Math.max(0.001, slot.dir.length())
@@ -685,7 +696,7 @@ export class BeamPool {
         continue
       }
       // 先涨后衰的束流呼吸 + 微抖
-      s.material.opacity = 0.95 * (p < 0.2 ? p / 0.2 : 1 - (p - 0.2) / 0.8)
+      s.material.opacity = p < 0.2 ? p / 0.2 : 1 - (p - 0.2) / 0.8
       const w = 1 + Math.sin(s.age * 70) * 0.15
       s.mesh.scale.x = w
       s.mesh.scale.z = w

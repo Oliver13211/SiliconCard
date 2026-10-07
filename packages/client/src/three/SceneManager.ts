@@ -14,8 +14,12 @@
 
 import * as THREE from 'three'
 import { BOARD_SLOT_DX, BOARD_Z, CAMERA_SHOTS, TABLE_D, TABLE_W, type CameraShot } from './layout'
+import type { HoverHit, HoverZone } from './tilt'
+import { nextHoverState, resolveHoverHit, sameHoverPick } from './tilt'
 import { FloatingTextPool } from './fx/textSprite'
 import { ScreenFlash, ShardsPool, SmokePool } from './fx/effects'
+import { ScreenImpactFx } from './fx/screenImpact'
+import { isSharedOutlineMaterial } from './cardOutline'
 import {
   BeamPool,
   BoltPool,
@@ -151,6 +155,8 @@ export class SceneManager {
   readonly beams: BeamPool
   readonly progressFx: ProgressFx
   readonly shaker: CameraShaker
+  /** 全屏演出层（演出修正阶段一：强力时刻的冲击波/色偏/暗角脉冲，单实例池化） */
+  readonly impact: ScreenImpactFx
 
   private canvas: HTMLCanvasElement
   private clock = new THREE.Clock()
@@ -235,6 +241,7 @@ export class SceneManager {
     this.beams = new BeamPool(this.scene)
     this.progressFx = new ProgressFx(this.scene)
     this.shaker = new CameraShaker()
+    this.impact = new ScreenImpactFx(this.camera)
     this.registerUpdatable(this.floaters)
     this.registerUpdatable(this.smoke)
     this.registerUpdatable(this.shards)
@@ -245,6 +252,7 @@ export class SceneManager {
     this.registerUpdatable(this.bolts)
     this.registerUpdatable(this.beams)
     this.registerUpdatable(this.progressFx)
+    this.registerUpdatable(this.impact)
 
     this.bindEvents()
     this.resize()
@@ -369,7 +377,7 @@ export class SceneManager {
     this.camera.updateProjectionMatrix()
   }
 
-  // —— raycasting 拾取（R3D3 验收项） ——
+  // —— raycasting 拾取（R3D3 验收项；hover 迟滞见 tilt.ts） ——
 
   private setPointer(ev: PointerEvent): void {
     const rect = this.canvas.getBoundingClientRect()
@@ -379,36 +387,57 @@ export class SceneManager {
     )
   }
 
-  /** 命中最近一个带 pick 信息的对象 */
-  private pickAt(ev: PointerEvent): ExportedPick | null {
+  /**
+   * 命中最近一个带 pick 信息的对象，并标注命中区域（inner=核心拾取面 / outer=迟滞外圈）。
+   * 命中筛选规则在 tilt.ts resolveHoverHit（纯函数）：迟滞外圈只服务既有 hover，
+   * 非同目标的 guard 命中被跳过——否则满手牌时扇心侧邻卡的外圈会侵入当前卡
+   * 拾取面并抢走首命中，卡牌边缘出现 hover 死区（独立审查修复）。
+   */
+  private pickAt(ev: PointerEvent): { info: ExportedPick | null; zone: HoverZone } {
     this.setPointer(ev)
     this.raycaster.setFromCamera(this.pointer, this.camera)
     const hits = this.raycaster.intersectObjects(this.scene.children, true)
+    // 解析为命中序列（事件级分配；raycaster.intersectObjects 本身即逐事件分配，
+    // 非帧循环热路径）：每条命中取对象链上首个 pick 信息 + 外圈标记
+    const parsed: HoverHit[] = []
     for (const hit of hits) {
+      const guard = hit.object.userData.hoverGuard === true
       let obj: THREE.Object3D | null = hit.object
       while (obj) {
         const info = obj.userData.pick as ExportedPick | undefined
-        if (info) return info
+        if (info) {
+          parsed.push({ info, guard })
+          break
+        }
         obj = obj.parent
       }
     }
-    return null
+    const resolved = resolveHoverHit(parsed, this.lastHover)
+    if (resolved) return { info: resolved.info as ExportedPick, zone: resolved.zone }
+    return { info: null, zone: 'none' }
   }
 
   private onPointerMove = (ev: PointerEvent): void => {
-    const info = this.pickAt(ev)
-    const changed = (info?.kind ?? null) !== (this.lastHover?.kind ?? null)
-      || (info?.kind === 'handCard' && this.lastHover?.kind === 'handCard' && info.uid !== this.lastHover.uid)
-      || (info?.kind === 'unit' && this.lastHover?.kind === 'unit' && info.instanceId !== this.lastHover.instanceId)
-    if (changed) {
-      this.lastHover = info
-      this.handlers.onPickHover?.(info)
+    const { info, zone } = this.pickAt(ev)
+    // hover 迟滞（tilt.ts 纯函数）：内圈命中才进入；已 hover 时外圈命中仍维持，
+    // 离开外圈才交出 —— tilt 在卡牌边缘引起的投影漂移落在迟滞带内，不再抽动。
+    const prev = this.lastHover
+    const sameTarget = sameHoverPick(info, prev)
+    const hovered = nextHoverState(prev !== null, zone, sameTarget)
+    const effective = hovered ? info : null
+    if (!sameHoverPick(effective, prev)) {
+      this.lastHover = effective
+      this.handlers.onPickHover?.(effective)
     }
   }
 
   private onPointerDown = (ev: PointerEvent): void => {
-    const info = this.pickAt(ev)
-    if (info) this.handlers.onPickClick?.(info)
+    const { info, zone } = this.pickAt(ev)
+    if (!info) return
+    // 点击与 hover 同一套迟滞语义：外圈命中仅在已 hover 同一目标时算点击
+    const innerClick = zone === 'inner'
+    const fringeClick = zone === 'outer' && sameHoverPick(info, this.lastHover)
+    if (innerClick || fringeClick) this.handlers.onPickClick?.(info)
   }
 
   private onPointerLeave = (): void => {
@@ -445,12 +474,16 @@ export class SceneManager {
     this.bolts.dispose()
     this.beams.dispose()
     this.progressFx.dispose()
+    this.impact.dispose()
     this.shaker.dispose()
     this.scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose()
         const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
         for (const m of mats) {
+          // 描边材质为跨实体共享（cardOutline 注册表，userData.shared 标记），
+          // 场景销毁只解挂不销毁，否则后续新建场景的描边会全部失效
+          if (isSharedOutlineMaterial(m)) continue
           const map = (m as THREE.MeshBasicMaterial).map
           if (map) map.dispose()
           m.dispose()

@@ -407,6 +407,47 @@
   border-color: var(--sc-danger);
   box-shadow: 0 0 0 2px rgba(255, 107, 94, 0.75), 0 0 16px rgba(255, 107, 94, 0.4);
 }
+
+/* —— 卡牌 2.5D 描边（演出修正阶段二·需求 2）——
+   四档稀有度（普通素灰 / 稀有蓝 / 史诗紫 / 传说金），色源与卡面稀有度宝石、
+   3D 场景描边（three/cardOutline）一致；多层 box-shadow = 外圈辉光 + 挤出
+   侧面（--rim-deep）+ 落影，构成 2.5D 立体描边。交互态（is-selectable /
+   is-targetable / is-selected）按后续更高优先级规则覆盖描边表现。 */
+.sc-unit,
+.sc-hand-card {
+  --rim: rgba(139, 148, 165, 0.55);
+  --rim-bright: #bcc5d4;
+  --rim-glow: rgba(139, 148, 165, 0.22);
+  --rim-deep: #0a0d12;
+}
+.sc-unit.is-rare,
+.sc-hand-card.is-rare {
+  --rim: rgba(63, 157, 255, 0.85);
+  --rim-bright: #8fc4ff;
+  --rim-glow: rgba(63, 157, 255, 0.38);
+  --rim-deep: #0a2036;
+}
+.sc-unit.is-epic,
+.sc-hand-card.is-epic {
+  --rim: rgba(180, 92, 255, 0.9);
+  --rim-bright: #d29dff;
+  --rim-glow: rgba(180, 92, 255, 0.42);
+  --rim-deep: #1c0d2c;
+}
+.sc-unit.is-legendary,
+.sc-hand-card.is-legendary {
+  --rim: #ff9d2e;
+  --rim-bright: #ffd98a;
+  --rim-glow: rgba(255, 157, 46, 0.5);
+  --rim-deep: #2c1a06;
+}
+.sc-unit {
+  border-color: var(--rim);
+  box-shadow:
+    0 0 0 1px var(--rim-glow),
+    0 3px 0 -1px var(--rim-deep),
+    0 6px 10px rgba(0, 0, 0, 0.45);
+}
 .sc-unit-name {
   display: block;
   font-size: 13px;
@@ -510,17 +551,26 @@
   flex: none;
   width: 132px;
   border-radius: 12px;
-  border: 1px solid var(--sc-line);
+  border: 1px solid var(--rim);
   background: linear-gradient(165deg, #1c2333, #11151f);
   padding: 10px 12px 10px 26px;
   text-align: left;
   cursor: pointer;
   transform-style: preserve-3d;
   transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.15s ease;
+  box-shadow:
+    0 0 0 1px var(--rim-glow),
+    0 3px 0 -1px var(--rim-deep),
+    0 6px 12px rgba(0, 0, 0, 0.5);
 }
 .sc-hand-card:hover:not(:disabled) {
   transform: translateY(-10px) rotateX(7deg) rotateY(180deg);
-  border-color: var(--sc-accent);
+  border-color: var(--rim-bright);
+  box-shadow:
+    0 0 0 1px var(--rim-bright),
+    0 0 16px var(--rim-glow),
+    0 3px 0 -1px var(--rim-deep),
+    0 10px 18px rgba(0, 0, 0, 0.55);
 }
 .sc-hand-card.is-disabled {
   opacity: 0.55;
@@ -529,6 +579,18 @@
 .sc-hand-card.is-selected {
   border-color: var(--sc-gold);
   box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.5);
+}
+/* 传说档：渐变金边（呼应卡面金框与 3D 金描边）；hover/选中保持渐变，
+   经 --rim-glow 辉光加亮 */
+.sc-hand-card.is-legendary {
+  border-color: transparent;
+  background:
+    linear-gradient(165deg, #221a0e, #12100b) padding-box,
+    linear-gradient(160deg, #8a5a1e, #ffc53d 30%, #ff9d2e 52%, #ffd98a 78%, #8a5a1e) border-box;
+}
+.sc-hand-card.is-legendary:hover:not(:disabled),
+.sc-hand-card.is-legendary.is-selected {
+  border-color: transparent;
 }
 .sc-hand-cost {
   position: absolute;

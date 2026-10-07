@@ -101,3 +101,21 @@ export function shade(hex: string, k: number): string {
   }
   return `#${ch((n >> 16) & 0xff)}${ch((n >> 8) & 0xff)}${ch(n & 0xff)}`
 }
+
+/**
+ * 饱和度缩放（0..∞，>1 增艳、1 原样、<1 变灰），纯函数。
+ * 各通道绕通道均值拉伸：ch' = mean + (ch - mean) × k，色相不变、艳度按 k 缩放。
+ * 与 shade 组合实现「又亮又艳」的底色分级（演出修正阶段二）。
+ */
+export function saturate(hex: string, k: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  const r = (n >> 16) & 0xff
+  const g = (n >> 8) & 0xff
+  const b = n & 0xff
+  const mean = (r + g + b) / 3
+  const ch = (v: number) =>
+    Math.max(0, Math.min(255, Math.round(mean + (v - mean) * k)))
+      .toString(16)
+      .padStart(2, '0')
+  return `#${ch(r)}${ch(g)}${ch(b)}`
+}

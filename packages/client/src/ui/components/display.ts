@@ -27,6 +27,23 @@ export function typeLabel(type: CardType): string {
   return CARD_TYPE_LABELS[type]
 }
 
+/**
+ * 稀有度 → CSS 修饰类（演出修正阶段二：2.5D 描边四档分级）。
+ * starter/未定义归 is-common 档；与 hud.css 的 --rim 变量组配合。
+ */
+export function rarityClassName(rarity: string | undefined): string {
+  switch (rarity) {
+    case 'legendary':
+      return 'is-legendary'
+    case 'epic':
+      return 'is-epic'
+    case 'rare':
+      return 'is-rare'
+    default:
+      return 'is-common'
+  }
+}
+
 export function isUnitTarget(target: TargetRef): target is Extract<TargetRef, { kind: 'unit' }> {
   return target.kind === 'unit'
 }

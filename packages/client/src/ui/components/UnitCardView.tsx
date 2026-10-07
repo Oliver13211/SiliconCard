@@ -1,10 +1,12 @@
 /**
  * 场上单位卡（M1-UI1）：攻/血角标、关键词梗名徽标、可选中/可作为目标的高亮。
  * 点击语义由 BattleScreen 决定（攻击宣告 / 确认目标）。
+ * 演出修正阶段二：按稀有度挂 2.5D 描边档位类（is-rare/is-epic/is-legendary），
+ * 交互态（is-selectable/is-targetable）优先级高于描边档位（见 hud.css 规则顺序）。
  */
 
 import type { BoardUnit } from '@siliconcard/core'
-import { cardDef, keywordLabelOf } from './display'
+import { cardDef, keywordLabelOf, rarityClassName } from './display'
 import { targetKey } from '../game/legal'
 
 export function UnitCardView({
@@ -25,6 +27,7 @@ export function UnitCardView({
       type="button"
       className={[
         'sc-unit',
+        rarityClassName(def?.rarity),
         targetable ? 'is-targetable' : '',
         selectable ? 'is-selectable' : '',
         unit.attacksRemaining > 0 ? 'can-attack' : '',

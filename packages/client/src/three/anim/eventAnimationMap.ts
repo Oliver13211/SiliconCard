@@ -12,15 +12,18 @@
  * - TURN_START        回合横幅 + 回合方英雄位光环
  * - TURN_END          回合结束横幅（仅对手可见弱化，自己回合开始才是主演出）
  * - CARD_DRAWN        卡背弧线飞入手牌 + 沿途蓝光拖迹（source=fatigue 无卡可飞）
- * - CARD_PLAYED       出牌空翻弧线增强 + 落场冲击环；传说卡金焰拖迹 + 落场光柱
+ * - CARD_PLAYED       出牌空翻弧线增强 + 落场冲击环；传说卡金焰拖迹 + 落场光柱；
+ *                     【全屏演出】传说卡 / 高费卡（≥400W，FULLSCREEN_COST_THRESHOLD）
  * - CARD_BURNED       烧卡冒烟 + 余烬粒子上腾
  * - MINION_SUMMONED   普通卡：空投 + easeOutBack 弹性 + 落场尘土 + 冲击环；
  *                     **传说卡专属演出**：光柱 + 镜头微震 + 金色描边流光 +
- *                     传说金环 + 金色迸发粒子 + ⭐ 横幅，时长近普通版两倍
+ *                     传说金环 + 金色迸发粒子 + ⭐ 横幅，时长近普通版两倍；
+ *                     【全屏演出】效果入场（source='effect'）的传说卡在此补齐
  * - MINION_DIED       死亡碎裂（3×3 碎片）+ 碎裂冲击环 + 黑烟
  * - ATTACK_DECLARED   蓄力后撤 → 弹冲，命中瞬间目标点冲击环 + 火花 + 镜头微震
  * - DAMAGE_DEALT      红飘字 + 命中火花 + 本体受击红闪（血条闪烁反馈）；
- *                     盾耗：金色涟漪 +「三年质保碎裂」；护甲吸收：灰白小涟漪
+ *                     盾耗：金色涟漪 +「三年质保碎裂」；护甲吸收：灰白小涟漪；
+ *                     【全屏演出】大额一次伤害（≥5，FULLSCREEN_BIG_DAMAGE）
  * - HEALING           绿飘字 + 上升治疗粒子
  * - KEYWORD_TRIGGERED 关键词脉冲 + 梗名飘字 + 金色迸发；
  *                     detail='光追失败'（amd 30% 失败借位契约，rules.md §5）：
@@ -31,6 +34,11 @@
  * - BURN_OUT          跳闸：黄色两连闪屏 + 折线电弧 ×3 + 镜头微震 + 锁定提示
  * - ARMOR_GAINED      护甲飘字 + 灰白涟漪 + 上浮护甲粒子
  * - GAME_END          结算机位 + 胜负横幅 + 定格闪屏 + 胜方彩带迸发 + 重震
+ *
+ * 强力时刻全屏演出（演出修正阶段一）：以上【全屏演出】标记的事件经可选出口
+ * ctx.screenImpact 触发（fx/screenImpact.ScreenImpactFx：冲击波扩散 + 色偏一瞬 +
+ * 边缘暗角脉冲，与镜头微震叠加）；AOE 以批次启发式判定（同批 ≥3 个不同目标受击，
+ * isAoeDamageBatch，AnimationDirector.enqueueEvents 调用）——引擎事件不动。
  *
  * 派系技能专属动画（rules.md §8，skillId → faction 静态表）：
  * - nvidia dlss             DLSS 帧插值拖影：目标单位残影 ×3 依次淡出（帧生成的梗）
@@ -47,7 +55,7 @@
  */
 
 import * as THREE from 'three'
-import type { Keyword } from '@siliconcard/core'
+import type { GameEvent, Keyword } from '@siliconcard/core'
 import type { EventAnimationMap } from './types'
 import { easeInCubic, easeOutBack, easeOutCubic, easeOutElastic } from './tween'
 import { fxEnabled } from '../fx/quality'
@@ -103,6 +111,32 @@ const offset = (pos: THREE.Vector3, x: number, y: number, z = 0): THREE.Vector3 
 /** MINION_SUMMONED：普通卡与传说卡共用入场本体补间的参数 */
 const LEGENDARY_RARITY = 'legendary'
 
+// —— 强力时刻全屏演出（演出修正阶段一，需求 3；引擎事件不动，渲染层自行判定） ——
+
+/** 高费入场阈值：≥400W。依据：供电上限 MAX_MANA=1000W（core/constants）的 40%，
+ *  内容包 90 张中仅 8 张达标 —— 后段大招才有的全场演出分量。 */
+export const FULLSCREEN_COST_THRESHOLD = 400
+/** 大额一次伤害阈值：≥5 点。依据：CPU 体质 HERO_MAX_HEALTH=30 的 1/6，
+ *  单位攻击面板上限 8 —— 一拳打掉六分之一血才算「重锤」。 */
+export const FULLSCREEN_BIG_DAMAGE = 5
+/** AOE 批次全屏演出的染色（与直伤同色系，重入 fire 合并为一次演出） */
+export const FULLSCREEN_AOE_COLOR = '#ff5d4d'
+
+/**
+ * AOE 批判定（纯函数）：同一批引擎事件中 ≥3 个**不同目标**的伤害。
+ * 依据渲染契约：引擎不发 AOE 事件，范围效果以多条 DAMAGE_DEALT 逐目标落批；
+ * 阈值取 3 以排除普通交换单挑（攻击 + 反击 = 同批 2 个目标）的误报。
+ */
+export function isAoeDamageBatch(events: readonly GameEvent[]): boolean {
+  const seen = new Set<string>()
+  for (const ev of events) {
+    if (ev.type !== 'DAMAGE_DEALT') continue
+    const t = ev.target
+    seen.add(t.kind === 'unit' ? `u:${t.instanceId}` : `h:${t.playerId}`)
+  }
+  return seen.size >= 3
+}
+
 export const eventAnimationMap: EventAnimationMap = {
   GAME_START: {
     kind: 'animation',
@@ -157,10 +191,10 @@ export const eventAnimationMap: EventAnimationMap = {
           const cz = from.z + (to.z - from.z) * p
           ghost.setBase({ x: cx, y: cy, z: cz })
           ghost.opacity = p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2
-          if (p - lastEmit > 0.14) {
+          if (p - lastEmit > 0.11) {
             lastEmit = p
             trailPos.set(cx, cy, cz)
-            ctx.particles?.(trailPos, 'drawStreak')
+            ctx.particles?.(trailPos, 'drawStreak', 1.3)
           }
         },
         onDone: () => ctx.releaseGhost(ghost),
@@ -175,6 +209,14 @@ export const eventAnimationMap: EventAnimationMap = {
       const from = card ? card.getWorldPosition(v3()) : ctx.handAnchor(ev.playerId)
       if (card) card.hide()
       const legendary = ctx.getCardRarity?.(ev.cardId) === LEGENDARY_RARITY
+      // 强力时刻全屏演出：传说卡 / 高费卡（≥400W）入场——冲击波 + 色偏 + 暗角脉冲
+      if (legendary) {
+        ctx.screenImpact?.(LEGEND, 1.1)
+        ctx.shakeCamera?.(0.3)
+      } else if (ev.cost >= FULLSCREEN_COST_THRESHOLD) {
+        ctx.screenImpact?.(INFO, 0.9)
+        ctx.shakeCamera?.(0.25)
+      }
       const ghost = ctx.spawnGhost(card?.faceTexture ?? null)
       ghost.setBase({ x: from.x, y: from.y, z: from.z })
       const to = ctx.boardCenter(ev.playerId)
@@ -194,17 +236,17 @@ export const eventAnimationMap: EventAnimationMap = {
           ghost.fxRotY = Math.PI * 2 * p // 空翻一周
           ghost.fxScale = 1 - 0.2 * p
           ghost.opacity = p < 0.72 ? 1 : 1 - (p - 0.72) / 0.28
-          if (legendary && p - lastEmit > 0.12) {
+          if (legendary && p - lastEmit > 0.1) {
             lastEmit = p
             trailPos.set(cx, cy, cz) // 同步插值位置（见 CARD_DRAWN 注）
-            ctx.particles?.(trailPos, 'legendSpark', 0.5)
+            ctx.particles?.(trailPos, 'legendSpark', 0.75)
           }
         },
         onDone: () => {
           ghost.fxRotY = 0
           // 落场冲击环 + 尘土；驱动/外设（法术位）不落场，环弱一档
-          ctx.ringAt?.(land, legendary ? LEGEND : INFO, legendary ? 2.0 : 1.4, 0.45)
-          ctx.particles?.(land, 'dust', 0.7)
+          ctx.ringAt?.(land, legendary ? LEGEND : INFO, legendary ? 2.2 : 1.5, 0.5)
+          ctx.particles?.(land, 'dust', 1.0)
           ctx.releaseGhost(ghost)
         },
       })
@@ -216,8 +258,8 @@ export const eventAnimationMap: EventAnimationMap = {
     play: (ctx, ev) => {
       // 手牌超限：烧的是手牌区末端 —— 手牌锚点即近似冒烟位置
       const pos = ctx.handAnchor(ev.playerId)
-      ctx.smokeAt(pos, 9)
-      ctx.particles?.(offset(pos, 0, 0.2), 'ember')
+      ctx.smokeAt(pos, 12)
+      ctx.particles?.(offset(pos, 0, 0.2), 'ember', 1.3)
       ctx.floatText(offset(pos, 0, 0.6), { text: '烧卡！', color: '#ffb14d', size: 52 })
     },
   },
@@ -232,10 +274,13 @@ export const eventAnimationMap: EventAnimationMap = {
 
       if (legendary) {
         // —— 传说卡专属入场（验收硬标准）：光柱 + 镜头微震 + 描边流光 ——
-        ctx.pillarAt?.(v3(pos.x, 0, pos.z), LEGEND, 1.15)
+        // 全屏演出由同批 CARD_PLAYED(source='play') 承担；效果入场（source='effect'
+        // 亡语/增益等）无 CARD_PLAYED，在此补齐，重入 fire 自动合并
+        if (ev.source === 'effect') ctx.screenImpact?.(LEGEND, 1.1)
+        ctx.pillarAt?.(v3(pos.x, 0, pos.z), LEGEND, 1.3)
         ctx.shakeCamera?.(0.45)
-        ctx.particles?.(pos, 'legendSpark')
-        ctx.ringAt?.(v3(pos.x, 0.4, pos.z), LEGEND, 2.3, 0.85)
+        ctx.particles?.(pos, 'legendSpark', 1.3)
+        ctx.ringAt?.(v3(pos.x, 0.4, pos.z), LEGEND, 2.6, 0.95)
         unit.flash(LEGEND) // 金色描边流光（update 内衰减）
         ctx.floatText(offset(pos, 0, 1.5), { text: '⭐ 传说降临', color: LEGEND, size: 60, life: 1.4 })
         // 本体：更高更慢的空投 + 大幅弹性，与普通卡明显区分
@@ -272,8 +317,8 @@ export const eventAnimationMap: EventAnimationMap = {
       unit.fxOffset.set(0, 2.1, 0)
       unit.opacity = 0
       ctx.pillarAt?.(v3(pos.x, 0, pos.z), INFO, 0.55)
-      ctx.particles?.(v3(pos.x, 0.2, pos.z), 'dust')
-      ctx.ringAt?.(v3(pos.x, 0.4, pos.z), INFO, 1.2, 0.4)
+      ctx.particles?.(v3(pos.x, 0.2, pos.z), 'dust', 1.3)
+      ctx.ringAt?.(v3(pos.x, 0.4, pos.z), INFO, 1.4, 0.45)
       ctx.timeline.sequence([
         {
           duration: 0.34,
@@ -306,8 +351,8 @@ export const eventAnimationMap: EventAnimationMap = {
       if (!unit) return
       const pos = unit.getWorldPosition(v3())
       ctx.shatterAt(pos, unit.faceTexture, unit.group.rotation.y)
-      ctx.ringAt?.(v3(pos.x, 0.4, pos.z), PALE, 1.8, 0.55)
-      ctx.smokeAt(pos, 5)
+      ctx.ringAt?.(v3(pos.x, 0.4, pos.z), PALE, 2.0, 0.6)
+      ctx.smokeAt(pos, 7)
       unit.hide()
     },
   },
@@ -331,8 +376,8 @@ export const eventAnimationMap: EventAnimationMap = {
       const impact = () => {
         if (impacted) return
         impacted = true
-        ctx.ringAt?.(v3(hitPos.x, 0.4, hitPos.z), DANGER, 1.5, 0.4)
-        ctx.particles?.(offset(hitPos, 0, 0.35), 'hitSpark')
+        ctx.ringAt?.(v3(hitPos.x, 0.4, hitPos.z), DANGER, 1.7, 0.45)
+        ctx.particles?.(offset(hitPos, 0, 0.35), 'hitSpark', 1.3)
         ctx.shakeCamera?.(0.24)
         const victim = ev.target.kind === 'unit' ? ctx.getUnit(ev.target.instanceId) : null
         victim?.flash(DANGER) // 受击红闪（血条闪烁的 3D 反馈）
@@ -366,9 +411,11 @@ export const eventAnimationMap: EventAnimationMap = {
     play: (ctx, ev) => {
       const pos = ctx.targetPosition(ev.target)
       if (!pos) return
+      // 强力时刻全屏演出：大额一次伤害（≥5 且未被三年质保完全格挡）
+      if (ev.amount >= FULLSCREEN_BIG_DAMAGE && !ev.shieldConsumed) ctx.screenImpact?.(DANGER, 0.85)
       const at = offset(pos, 0, 0.7)
       ctx.floatText(at, { text: `-${ev.amount}`, color: DANGER, size: 84 })
-      ctx.particles?.(offset(pos, 0, 0.35), 'hitSpark', 0.8)
+      ctx.particles?.(offset(pos, 0, 0.35), 'hitSpark', 1.15)
       const victim = ev.target.kind === 'unit' ? ctx.getUnit(ev.target.instanceId) : null
       // 英雄本体受击：红色暗角闪（铭牌数值由 syncView 刷新，此处补「挨打了」的体感）
       if (ev.target.kind === 'hero') ctx.screenFlash(DANGER, 0.14, 2.0)
@@ -394,7 +441,7 @@ export const eventAnimationMap: EventAnimationMap = {
       const pos = ctx.targetPosition(ev.target)
       if (!pos) return
       ctx.floatText(offset(pos, 0, 0.7), { text: `+${ev.amount}`, color: HEAL, size: 72 })
-      ctx.particles?.(offset(pos, 0, 0.2), 'healMote')
+      ctx.particles?.(offset(pos, 0, 0.2), 'healMote', 1.3)
     },
   },
 
@@ -409,7 +456,7 @@ export const eventAnimationMap: EventAnimationMap = {
         // 红色电弧抽搐两道 + 一撮灰（「开着开着就灭了」）
         ctx.boltBetween?.(top, offset(pos, 0.3, 0.4), '#ff4b3a')
         ctx.boltBetween?.(offset(top, -0.5, 0.3), offset(pos, -0.2, 0.4), '#ff4b3a')
-        ctx.particles?.(pos, 'dustClean', 0.7)
+        ctx.particles?.(pos, 'dustClean', 1.0)
         ctx.floatText(offset(pos, 0, 1.2), {
           text: '光追失败 · 回去等驱动吧',
           color: '#b3453c',
@@ -432,7 +479,7 @@ export const eventAnimationMap: EventAnimationMap = {
           onDone: () => (unit.fxScale = 1),
         },
       ])
-      ctx.particles?.(offset(pos, 0, 0.4), 'goldBurst', 0.7)
+      ctx.particles?.(offset(pos, 0, 0.4), 'goldBurst', 1.0)
       ctx.floatText(offset(pos, 0, 1.1), {
         text: ev.detail || KEYWORD_DISPLAY[ev.keyword],
         color: GOLD,
@@ -471,7 +518,7 @@ export const eventAnimationMap: EventAnimationMap = {
               onDone: () => ctx.releaseGhost(ghost),
             })
           }
-          ctx.particles?.(base, 'drawStreak', 1.4)
+          ctx.particles?.(base, 'drawStreak', 1.8)
           ctx.floatText(offset(base, 0, 1.2), { text: `${skillName} · 帧数 +1`, color: INFO, size: 52 })
           break
         }
@@ -493,7 +540,7 @@ export const eventAnimationMap: EventAnimationMap = {
         case 'neutral': {
           // 清灰：目标位灰尘扬起 + 小吸尘涡环
           const to = ev.target ? (ctx.targetPosition(ev.target) ?? heroPos) : heroPos
-          ctx.particles?.(to, 'dustClean')
+          ctx.particles?.(to, 'dustClean', 1.3)
           ctx.ringAt?.(v3(to.x, to.y - 0.3, to.z), PALE, 1.0, 0.45)
           ctx.floatText(offset(to, 0, 1.0), { text: `${skillName} · 吹走 1 点`, color: PALE, size: 48 })
           break
@@ -502,13 +549,13 @@ export const eventAnimationMap: EventAnimationMap = {
           // 能效比：绿色能效护盾环 + 上升绿粒子（不发热=散热好）
           ctx.ringAt?.(v3(heroPos.x, 0.4, heroPos.z), HEAL, 2.0, 0.8)
           ctx.ringAt?.(v3(heroPos.x, 0.4, heroPos.z), HEAL, 1.2, 0.5)
-          ctx.particles?.(heroPos, 'healMote', 1.2)
+          ctx.particles?.(heroPos, 'healMote', 1.5)
           ctx.floatText(offset(heroPos, 0, 1.0), { text: `${skillName} · +2 护甲`, color: HEAL, size: 52 })
           break
         }
         case 'qualcomm': {
           // TOPS 营销：紫色数据迸发 + 连环营销环 + 微震（数字即正义）
-          ctx.particles?.(heroPos, 'topsBurst')
+          ctx.particles?.(heroPos, 'topsBurst', 1.3)
           ctx.ringAt?.(v3(heroPos.x, 0.4, heroPos.z), '#6f8bff', 1.3, 0.4)
           ctx.ringAt?.(v3(heroPos.x, 0.4, heroPos.z), '#6f8bff', 2.0, 0.6)
           ctx.shakeCamera?.(0.18)
@@ -519,7 +566,7 @@ export const eventAnimationMap: EventAnimationMap = {
           // 公版方案：召唤点传送光柱 + 蓝白垂直粒子（参考设计从天而降）
           const land = ctx.boardCenter(ev.playerId)
           ctx.pillarAt?.(v3(land.x, 0, land.z), '#7fd8ff', 0.8)
-          ctx.particles?.(v3(land.x, 1.6, land.z), 'teleport')
+          ctx.particles?.(v3(land.x, 1.6, land.z), 'teleport', 1.3)
           ctx.ringAt?.(v3(land.x, 0.4, land.z), INFO, 1.4, 0.5)
           ctx.floatText(offset(heroPos, 0, 1.0), { text: `${skillName} · 部署中`, color: INFO, size: 48 })
           break
@@ -543,8 +590,8 @@ export const eventAnimationMap: EventAnimationMap = {
       // 疲劳红闪 + 冒烟 + 伤害飘字（CARD_DRAWN(fatigue) 无卡可飞，全部演出在此）
       ctx.screenFlash(DANGER, 0.22, 1.6)
       ctx.floatText(offset(pos, 0, 0.9), { text: `疲劳 -${ev.damage}`, color: DANGER, size: 72 })
-      ctx.smokeAt(pos, 4)
-      ctx.particles?.(offset(pos, 0, 0.3), 'ember', 0.6)
+      ctx.smokeAt(pos, 6)
+      ctx.particles?.(offset(pos, 0, 0.3), 'ember', 0.9)
     },
   },
 
@@ -575,7 +622,7 @@ export const eventAnimationMap: EventAnimationMap = {
       const pos = hero.getWorldPosition(v3())
       // 护甲格挡涟漪 + 上浮护甲粒子
       ctx.ringAt?.(v3(pos.x, 0.4, pos.z), PALE, 1.6, 0.55)
-      ctx.particles?.(offset(pos, 0, 0.2), 'armorUp')
+      ctx.particles?.(offset(pos, 0, 0.2), 'armorUp', 1.3)
       ctx.floatText(offset(pos, 0, 0.9), { text: `+${ev.amount} 护甲`, color: PALE, size: 60 })
     },
   },
@@ -596,7 +643,7 @@ export const eventAnimationMap: EventAnimationMap = {
       ctx.shakeCamera?.(ev.winner === ctx.viewerId ? 0.5 : 0.3)
       if (ev.winner === ctx.viewerId) {
         ctx.particles?.(v3(0, 1.2, 0.8), 'confetti')
-        ctx.pillarAt?.(v3(0, 0, 0.8), GOLD, 1.2)
+        ctx.pillarAt?.(v3(0, 0, 0.8), GOLD, 1.4)
       }
     },
   },

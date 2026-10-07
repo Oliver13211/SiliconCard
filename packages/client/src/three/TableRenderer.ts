@@ -50,8 +50,10 @@ import { CardEntityPool, CardEntity, type PickInfo } from './CardEntity'
 import { HeroPlate } from './HeroPlate'
 import { composeCardFaceArt, drawCardBack, drawCardFace, resolvePalette, TextureCache, type CardFaceParams } from './CardFace'
 import { AnimationDirector, type DirectorBridge } from './anim/AnimationDirector'
+import { computeTiltTarget } from './tilt'
 import { fxEnabled, setEffectQuality, type EffectQuality } from './fx/quality'
 import { tableThemeFor } from './fx/theme'
+import { outlineColorFor } from './cardOutline'
 
 export interface TableRendererOptions {
   /** 视角方（决定手牌归属与演出文案），默认 'P1' */
@@ -238,6 +240,8 @@ export function createTableRenderer(
 
   // —— 桥接（导演需要的一切经此回调，不直接持有对账表） ——
   const v3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z)
+  /** tilt 目标角计算的复用向量（每帧投影卡面中心用，帧内零分配） */
+  const tiltCenterScratch = new THREE.Vector3()
   /**
    * 事件里的玩家 id → 近/远侧系数：视角方永远坐近侧（+z），
    * 对手坐远侧；场上单位排仍按绝对 ownerId 布局（双方可见）。
@@ -285,15 +289,23 @@ export function createTableRenderer(
   scene.registerUpdatable(director)
   scene.registerUpdatable(new EntityUpdater(() => liveEntities))
 
-  // —— 手牌指针跟随 tilt（M4-R3D5 需求 1）：每帧把归一化指针喂给 hover 中的手牌，
-  //    其余手牌喂 (0,0) 使其平滑收回；仅写两个数字，零分配 ——
+  // —— 手牌指针跟随 tilt（M4-R3D5 需求 1；演出修正阶段一重写目标角计算）：
+  //    目标角 = 指针相对卡面中心的偏移（投影到 NDC）按轴归一化并饱和钳制（tilt.ts），
+  //    边缘处目标角有界、梯度归零；其余手牌喂 (0,0) 平滑收回。
+  //    零分配：投影复用闭包级 scratch 向量，帧内不 new ——
   scene.registerUpdatable({
     update: () => {
       if (hand.size === 0) return
       const p = scene.pointerNDC
       for (const [uid, e] of hand) {
-        if (uid === hoverUid) e.setTilt(p.x, p.y)
-        else e.setTilt(0, 0)
+        if (uid === hoverUid) {
+          e.getWorldPosition(tiltCenterScratch)
+          tiltCenterScratch.project(scene.camera)
+          const t = computeTiltTarget(p.x, p.y, tiltCenterScratch.x, tiltCenterScratch.y)
+          e.setTilt(t.x, t.y)
+        } else {
+          e.setTilt(0, 0)
+        }
       }
     },
   })
@@ -410,6 +422,8 @@ export function createTableRenderer(
         const def = opts.getCardDef?.(c.cardId) ?? placeholderDef(c.cardId, c.cost)
         const tex = getFace(def, c.cost)
         if (tex) e.setFaceTexture(tex)
+        // 立体描边（演出修正阶段二）：按派系上色，传说卡金边
+        e.setOutline(outlineColorFor(def.faction, def.rarity))
         // 入场演出：卡背翻正 + 浮落（起手多张按序错峰；与 CARD_DRAWN 飞牌幽灵衔接）
         director.playHandEntrance(e, 0.22 + i * 0.07)
       }
@@ -422,10 +436,11 @@ export function createTableRenderer(
       e.setInteractive(false)
       pendingRelease.add(e)
     }
-    // 对手手牌：只有张数，画卡背
+    // 对手手牌：只有张数，画卡背；描边按对手派系（牌面未知的派系色环）
     while (enemyHand.length < view.opponent.handSize) {
       const e = pool.acquire()
       track(e)
+      e.setOutline(outlineColorFor(view.opponent.faction, undefined))
       enemyHand.push(e)
     }
     while (enemyHand.length > view.opponent.handSize) {
@@ -448,6 +463,8 @@ export function createTableRenderer(
       const def = opts.getCardDef?.(u.cardId) ?? placeholderDef(u.cardId, 0, u.attack, u.health)
       const tex = getFace(def, def.cost, u.attack, u.health)
       if (tex && tex !== e.faceTexture) e.setFaceTexture(tex)
+      // 立体描边（演出修正阶段二）：按派系上色，传说卡金边
+      e.setOutline(outlineColorFor(def.faction, def.rarity))
       e.show()
     }
     for (const [instanceId, e] of units) {
