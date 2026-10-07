@@ -94,4 +94,30 @@ describe('内容包 90 卡全量扫描（组合覆盖 + 恒同图）', () => {
       }
     }
   })
+
+  it('大改版承诺：全部卡牌 SVG 均含主视觉插画窗、插画区稀有度环与形制骨架标记', () => {
+    for (const def of defs) {
+      const params = deriveFaceArt(def)
+      const svg = buildFaceArtSvg(params, resolvePalette(def.art, def.faction))
+      expect(svg).toContain('data-art="1"')
+      expect(svg).toContain(`data-art-tier="${params.rarityTier}"`)
+      expect(svg).toContain('data-skeleton=')
+      expect(svg).toContain('data-motif=')
+      // 主体可辨：风扇数清晰可数（每个风扇一个 data-fan）
+      if (params.skeleton === 'gpu_fans') {
+        expect(svg.match(/data-fan=/g)?.length).toBe(params.fanCount)
+      }
+    }
+  })
+
+  it('大改版承诺：子变体渲染覆盖（已知 shape 名全部透传进 SVG data-variant）', () => {
+    for (const def of defs) {
+      const shape = def.art?.shape
+      if (shape === undefined) continue
+      const params = deriveFaceArt(def)
+      expect(params.variant).toBe(shape)
+      const svg = buildFaceArtSvg(params, resolvePalette(def.art, def.faction))
+      expect(svg).toContain(`data-variant="${shape}"`)
+    }
+  })
 })

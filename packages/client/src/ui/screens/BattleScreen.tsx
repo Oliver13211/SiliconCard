@@ -126,6 +126,15 @@ function BattleInner(props: BattleInnerProps) {
   const enemyUnits = view.board.filter((u) => u.ownerId !== view.viewer)
   const ownSlots = `${ownUnits.length}/7`
 
+  // 手牌可打性一次性推导（展示用）：功耗不足（"供电不够"）时让功耗条红脉冲提醒
+  const handEntries = view.you.hand.map((card) => ({
+    card,
+    status: handCardStatus(view, interactivity, card),
+  }))
+  const powerStarved = handEntries.some(
+    ({ status }) => !status.available && typeof status.reason === 'string' && status.reason.includes('供电不够'),
+  )
+
   // —— 联机状态（M2-UI4）：重连提示层 + 对手掉线横幅（seat_update.connected 数据源） ——
   const lanStep = useLanStore((s) => s.step)
   const lanLobby = useLanStore((s) => s.lobby)
@@ -222,7 +231,7 @@ function BattleInner(props: BattleInnerProps) {
               className={`sc-hero-hitbox${targetKeys.has(targetKey({ kind: 'hero', playerId: view.viewer })) ? ' is-targetable' : ''}`}
               onClick={() => onHeroClick(view.viewer)}
             >
-              <PlayerPanel player={view.you} side="self" slotUsage={ownSlots} />
+              <PlayerPanel player={view.you} side="self" slotUsage={ownSlots} starved={powerStarved} />
             </div>
             <div className="sc-actions">
               <button
@@ -263,11 +272,11 @@ function BattleInner(props: BattleInnerProps) {
             {view.you.hand.length === 0 ? (
               <span className="sc-board-empty">手牌空了——等下回合抽卡</span>
             ) : (
-              view.you.hand.map((card) => (
+              handEntries.map(({ card, status }) => (
                 <HandCardView
                   key={card.uid}
                   card={card}
-                  status={handCardStatus(view, interactivity, card)}
+                  status={status}
                   selected={selectedUid === card.uid}
                   onClick={() => tryPlayCard(card.uid)}
                 />

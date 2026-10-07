@@ -1,0 +1,205 @@
+/*
+ * 硅牌设计令牌 + 基元（UI 现代化）—— 暗色玻璃拟态设计语言的唯一取值处。
+ *
+ * 原则：
+ * - 间距 / 圆角 / 字号 / 时长 / 缓动一律走变量，组件层禁止再散落魔法数；
+ * - 玻璃面板 = 半透明渐变底 + backdrop-blur + 细边框 + 层次阴影（克制，不堆光晕）；
+ * - 派系点缀色是 UI 提亮版（与 fallbackContent 的品牌色同源、3D 桌面染色呼应），
+ *   经 data-faction 注入 --faction 后只作点缀（头像环/侧缘线），不参与语义色。
+ */
+
+.sc-app {
+  /* —— 基础色板 —— */
+  --sc-bg: #0a0d13;
+  --sc-panel-solid: #12161f;
+  --sc-panel-2: #161b26;
+  --sc-line: rgba(150, 166, 197, 0.14);
+  --sc-line-strong: rgba(150, 166, 197, 0.3);
+  --sc-text: #dce4f2;
+  --sc-dim: #8d97ad;
+  --sc-accent: #58e6a8;
+  --sc-danger: #ff6b5e;
+  --sc-mana: #4da3ff;
+  --sc-gold: #ffc857;
+
+  /* —— 玻璃拟态面板 —— */
+  --sc-glass-bg: linear-gradient(180deg, rgba(27, 34, 52, 0.72), rgba(13, 17, 27, 0.66));
+  --sc-glass-bg-soft: linear-gradient(180deg, rgba(27, 34, 52, 0.55), rgba(13, 17, 27, 0.45));
+  --sc-glass-border: rgba(163, 183, 222, 0.12);
+  --sc-glass-blur: 14px;
+  --sc-glass-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.38);
+
+  /* —— 圆角 —— */
+  --sc-radius-sm: 8px;
+  --sc-radius-md: 12px;
+  --sc-radius-lg: 16px;
+  --sc-radius-pill: 999px;
+
+  /* —— 间距 —— */
+  --sc-space-1: 4px;
+  --sc-space-2: 8px;
+  --sc-space-3: 12px;
+  --sc-space-4: 16px;
+  --sc-space-5: 24px;
+  --sc-space-6: 32px;
+
+  /* —— 字号层级 —— */
+  --sc-fs-xs: 11px;
+  --sc-fs-sm: 12px;
+  --sc-fs-md: 13px;
+  --sc-fs-base: 14px;
+  --sc-fs-lg: 16px;
+  --sc-fs-xl: 20px;
+  --sc-fs-2xl: 32px;
+  --sc-fs-display: 64px;
+
+  /* —— 阴影 —— */
+  --sc-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --sc-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.38);
+  --sc-shadow-3: 0 18px 48px rgba(0, 0, 0, 0.5);
+  --sc-hairline: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+
+  /* —— 动效（时长 + 缓动，motion.css 统一消费） —— */
+  --sc-dur-fast: 140ms;
+  --sc-dur-base: 220ms;
+  --sc-dur-slow: 320ms;
+  --sc-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --sc-ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+
+  /* —— 派系点缀色（UI 提亮版；来源 fallbackContent 品牌色，暗底可读） —— */
+  --sc-faction-nvidia: #86d322;
+  --sc-faction-amd: #ff5f54;
+  --sc-faction-intel: #3f95ff;
+  --sc-faction-neutral: #9aa5b8;
+
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 500px at 70% -10%, rgba(88, 230, 168, 0.07), transparent 60%),
+    radial-gradient(900px 420px at 10% 110%, rgba(77, 163, 255, 0.06), transparent 60%),
+    var(--sc-bg);
+  color: var(--sc-text);
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  font-size: var(--sc-fs-base);
+  line-height: 1.5;
+}
+
+.sc-app ::selection {
+  background: rgba(88, 230, 168, 0.28);
+}
+
+.sc-app button {
+  font: inherit;
+  color: inherit;
+}
+
+/* —— 通用按钮：玻璃面 + hover 抬升 + active 按压 + 焦点环 —— */
+.sc-btn {
+  border: 1px solid var(--sc-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015)),
+    var(--sc-panel-2);
+  border-radius: var(--sc-radius-md);
+  padding: 10px 18px;
+  cursor: pointer;
+  box-shadow: var(--sc-hairline), var(--sc-shadow-1);
+  transition:
+    border-color var(--sc-dur-fast) ease,
+    transform var(--sc-dur-fast) var(--sc-ease-out),
+    background var(--sc-dur-fast) ease,
+    box-shadow var(--sc-dur-base) ease;
+}
+.sc-btn:hover:not(:disabled) {
+  border-color: var(--sc-line-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--sc-hairline), var(--sc-shadow-2);
+}
+.sc-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 50ms;
+}
+.sc-btn:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+.sc-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sc-btn--primary {
+  background:
+    linear-gradient(180deg, rgba(88, 230, 168, 0.22), rgba(88, 230, 168, 0.08)),
+    var(--sc-panel-2);
+  border-color: var(--sc-accent);
+  font-weight: 700;
+}
+.sc-btn--primary:hover:not(:disabled) {
+  border-color: var(--sc-accent);
+  box-shadow: var(--sc-hairline), 0 6px 20px rgba(88, 230, 168, 0.18);
+}
+.sc-btn--danger {
+  border-color: rgba(255, 107, 94, 0.5);
+  color: #ffb0a8;
+}
+.sc-btn--small {
+  padding: 6px 12px;
+  font-size: var(--sc-fs-md);
+  border-radius: var(--sc-radius-sm);
+}
+
+/* —— 输入控件：玻璃暗面 + 聚焦辉光环 —— */
+.sc-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(10, 13, 20, 0.6);
+  color: var(--sc-text);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  padding: 9px 12px;
+  font: inherit;
+  transition: border-color var(--sc-dur-fast) ease, box-shadow var(--sc-dur-fast) ease;
+}
+.sc-input:focus {
+  outline: none;
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 0 3px rgba(88, 230, 168, 0.14);
+}
+.sc-input--code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  max-width: 280px;
+}
+
+.sc-app select {
+  transition: border-color var(--sc-dur-fast) ease, box-shadow var(--sc-dur-fast) ease;
+}
+.sc-app select:focus-visible {
+  outline: none;
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 0 3px rgba(88, 230, 168, 0.14);
+}
+
+/* —— 滚动条：细身暗色（战报 / 手牌横滚） —— */
+.sc-log-list,
+.sc-hand {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 166, 197, 0.28) transparent;
+}
+.sc-log-list::-webkit-scrollbar,
+.sc-hand::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.sc-log-list::-webkit-scrollbar-thumb,
+.sc-hand::-webkit-scrollbar-thumb {
+  background: rgba(150, 166, 197, 0.25);
+  border-radius: var(--sc-radius-pill);
+}
+.sc-log-list::-webkit-scrollbar-thumb:hover,
+.sc-hand::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 166, 197, 0.45);
+}
+.sc-log-list::-webkit-scrollbar-track,
+.sc-hand::-webkit-scrollbar-track {
+  background: transparent;
+}

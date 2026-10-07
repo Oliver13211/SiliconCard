@@ -79,14 +79,20 @@ export interface FaceArtParams {
   bg: BgLayers
   /** art.glow 是否存在（存在时骨架加径向辉光衬底，保留 M1 art 参数语义） */
   glow: boolean
+  /** 已知 art.shape 名（形制子变体渲染选择，如 gaming_mouse / ram_stick）；未知/缺省为 '' */
+  variant: string
+  /** 形态流 0..1：风扇扫掠角/纹样密度/几何变体等 cardId 确定性来源 */
+  morph: number
+  /** 第二形态流 0..1：风扇倾角/波形频率等 */
+  morph2: number
+  /** 第三形态流 0..1：微调/点缀相位等 */
+  morph3: number
 }
 
 // —— 卡面几何常量（SVG 层与 Canvas 底版共用，单位 = 画布像素） ——
 
-/** art 几何窗（与 M1 布局一致：44,88 起，424×268，圆角 14） */
-export const ART_WINDOW = { x: 44, y: 88, w: 424, h: 268, r: 14 } as const
-/** 关键词角标行基线 y（名称 400 / 类型行 440 之下、flavor 568 之上） */
-export const KEYWORD_ROW_Y = 478
+/** 布局常量移至 cardArt/layout（卡面大改版：插画窗升格主视觉），此处再导出保持既有引用路径 */
+export { ART_WINDOW, KEYWORD_ROW_Y } from './layout'
 
 // —— 已知 art.shape → 形制骨架 全表（content 现存 44 名逐一覆盖；未知名走 type 兜底） ——
 
@@ -189,6 +195,10 @@ export function deriveFaceArt(def: CardDefinition): FaceArtParams {
   const j4 = rng()
   const j5 = rng()
   const j6 = rng()
+  // 形态流（卡面大改版新增，追加在既有消费序之后，j1..j6 语义不变）
+  const j7 = rng()
+  const j8 = rng()
+  const j9 = rng()
 
   // 1. 形制骨架：art.shape 查表；未知/缺省按 type 兜底（数据驱动扩展零改动）
   const shape = def.art?.shape
@@ -253,5 +263,9 @@ export function deriveFaceArt(def: CardDefinition): FaceArtParams {
     marks,
     bg,
     glow: (def.art?.glow ?? '') !== '',
+    variant: hit ? (shape ?? '') : '',
+    morph: Math.round(j7 * 10000) / 10000,
+    morph2: Math.round(j8 * 10000) / 10000,
+    morph3: Math.round(j9 * 10000) / 10000,
   }
 }

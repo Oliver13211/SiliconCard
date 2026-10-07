@@ -8,6 +8,7 @@
 import type { BoardUnit } from '@siliconcard/core'
 import { cardDef, keywordLabelOf, rarityClassName } from './display'
 import { targetKey } from '../game/legal'
+import { AnimatedNumber } from './AnimatedNumber'
 
 export function UnitCardView({
   unit,
@@ -46,8 +47,12 @@ export function UnitCardView({
           ))}
         </span>
       ) : null}
-      <span className="sc-unit-attack">{unit.attack}</span>
-      <span className={`sc-unit-health${unit.health < unit.maxHealth ? ' is-hurt' : ''}`}>{unit.health}</span>
+      <span className="sc-unit-attack">
+        <AnimatedNumber value={unit.attack} />
+      </span>
+      <span className={`sc-unit-health${unit.health < unit.maxHealth ? ' is-hurt' : ''}`}>
+        <AnimatedNumber value={unit.health} />
+      </span>
     </button>
   )
 }

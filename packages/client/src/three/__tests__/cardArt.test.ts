@@ -7,7 +7,8 @@
 
 import { describe, expect, it } from 'vitest'
 import type { CardDefinition, Keyword } from '@siliconcard/core'
-import { deriveFaceArt, keywordMarkOf, mulberry32, rarityTierOf } from '../cardArt/derive'
+import { ART_WINDOW, deriveFaceArt, keywordMarkOf, mulberry32, rarityTierOf } from '../cardArt/derive'
+import { FACE_H, FACE_W } from '../cardArt/layout'
 import { buildFaceArtSvg, svgToDataUri } from '../cardArt/svg'
 import { resolvePalette } from '../CardFace'
 import { fnv1a } from '../cardArt/color'
@@ -226,5 +227,91 @@ describe('svgToDataUri（内联编码）', () => {
     expect(uri.startsWith('data:image/svg+xml;charset=utf-8,')).toBe(true)
     expect(uri).not.toContain('<') // 已全量转义，无裸标记
     expect(decodeURIComponent(uri.slice(uri.indexOf(',') + 1))).toBe(svg)
+  })
+})
+
+describe('卡面大改版：SVG 主体主视觉（形态变体 + 主视觉布局 + 插画区稀有度）', () => {
+  const pal = resolvePalette({ shape: 'fan', palette: 'nvidia' }, 'nvidia')
+
+  it('variant 透传已知 shape 名（子变体渲染选择），未知 shape 为空串', () => {
+    expect(deriveFaceArt(defOf({ art: { shape: 'gaming_mouse', palette: 'logitech_blue' } }))?.variant).toBe('gaming_mouse')
+    expect(deriveFaceArt(defOf({ art: { shape: 'ram_stick', palette: 'neutral_gray' } }))?.variant).toBe('ram_stick')
+    expect(deriveFaceArt(defOf({ art: { shape: 'brand_new_form', palette: 'nvidia' } }))?.variant).toBe('')
+    expect(deriveFaceArt(defOf({ art: undefined }))?.variant).toBe('')
+  })
+
+  it('morph 形态三流在 [0,1) 且同卡恒同（风扇扫掠/纹样密度的确定性来源）', () => {
+    const ids = ['morph-a', 'morph-b', 'morph-c']
+    for (const id of ids) {
+      const a = deriveFaceArt(defOf({ id }))
+      const b = deriveFaceArt(defOf({ id }))
+      for (const k of ['morph', 'morph2', 'morph3'] as const) {
+        expect(a[k]).toBe(b[k])
+        expect(a[k]).toBeGreaterThanOrEqual(0)
+        expect(a[k]).toBeLessThan(1)
+      }
+    }
+    // 不同卡大概率不同（可辨识根基之一）
+    const m1 = deriveFaceArt(defOf({ id: 'morph-a' }))
+    const m2 = deriveFaceArt(defOf({ id: 'morph-b' }))
+    expect([m1.morph, m1.morph2, m1.morph3]).not.toEqual([m2.morph, m2.morph2, m2.morph3])
+  })
+
+  it('插画窗升格主视觉：竖向占比 ≥40%、横向 ≥85%，且在卡面边框内', () => {
+    expect(ART_WINDOW.h / FACE_H).toBeGreaterThanOrEqual(0.4)
+    expect(ART_WINDOW.w / FACE_W).toBeGreaterThanOrEqual(0.85)
+    expect(ART_WINDOW.x).toBeGreaterThanOrEqual(18)
+    expect(ART_WINDOW.y).toBeGreaterThanOrEqual(18)
+    expect(ART_WINDOW.x + ART_WINDOW.w).toBeLessThanOrEqual(FACE_W - 18)
+    expect(ART_WINDOW.y + ART_WINDOW.h).toBeLessThanOrEqual(FACE_H - 18)
+  })
+
+  it('风扇数量一眼可数：扇叶 path 数 = fanCount × bladeCount（gpu_fans）', () => {
+    for (const [shape, fanCount] of [
+      ['gpu_single_fan', 1],
+      ['gpu_dual_fan', 2],
+      ['gpu_triple_fan', 3],
+    ] as const) {
+      const params = deriveFaceArt(defOf({ art: { shape, palette: 'nvidia' } }))
+      const svg = buildFaceArtSvg(params, pal)
+      expect(svg.match(/url\(#blade-grad\)/g)?.length).toBe(fanCount * (params?.bladeCount ?? 0))
+      expect(svg.match(/data-fan=/g)?.length).toBe(fanCount)
+    }
+  })
+
+  it('子变体渲染选择写入 data-variant（accessory 形体直白的实现锚点）', () => {
+    const mouse = buildFaceArtSvg(deriveFaceArt(defOf({ type: 'accessory', art: { shape: 'gaming_mouse', palette: 'logitech_blue' } })), pal)
+    expect(mouse).toContain('data-skeleton="peripheral"')
+    expect(mouse).toContain('data-variant="gaming_mouse"')
+    const stick = buildFaceArtSvg(deriveFaceArt(defOf({ type: 'accessory', art: { shape: 'ram_stick', palette: 'neutral_gray' } })), pal)
+    expect(stick).toContain('data-variant="ram_stick"')
+    // 未知 shape 不输出 data-variant
+    const unknown = buildFaceArtSvg(deriveFaceArt(defOf({ art: { shape: 'brand_new_form', palette: 'nvidia' } })), pal)
+    expect(unknown).not.toContain('data-variant=')
+  })
+
+  it('稀有度在插画区可读：data-art / data-art-tier 全档存在，legendary 自带威压层', () => {
+    for (const tier of ['common', 'rare', 'epic', 'legendary'] as const) {
+      const rarity = tier === 'common' ? 'starter' : tier
+      const svg = buildFaceArtSvg(deriveFaceArt(defOf({ rarity })), pal)
+      expect(svg).toContain('data-art="1"')
+      expect(svg).toContain(`data-art-tier="${tier}"`)
+    }
+    const leg = buildFaceArtSvg(deriveFaceArt(defOf({ rarity: 'legendary' })), pal)
+    expect(leg).toContain('data-legendary="1"') // 金色放射威压层
+    expect(leg.match(/data-legendary="1"/g)?.length).toBe(1)
+    const rare = buildFaceArtSvg(deriveFaceArt(defOf({ rarity: 'rare' })), pal)
+    expect(rare).not.toContain('data-legendary=')
+  })
+
+  it('插画窗底板与质感底融合：底板半透明（fill-opacity < 1）', () => {
+    const svg = buildFaceArtSvg(deriveFaceArt(defOf()), pal)
+    expect(svg).toContain('fill="url(#art-bg)" fill-opacity="0.86"')
+  })
+
+  it('同卡恒同图承诺延伸到新字段：variant/morph 全量参与序列化等值', () => {
+    const def = defOf({ id: 'stable-v2', keywords: ['taunt'], rarity: 'epic' })
+    expect(deriveFaceArt(def)).toEqual(deriveFaceArt({ ...def }))
+    expect(buildFaceArtSvg(deriveFaceArt(def), pal)).toBe(buildFaceArtSvg(deriveFaceArt({ ...def }), pal))
   })
 })

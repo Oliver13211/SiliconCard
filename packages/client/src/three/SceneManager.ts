@@ -1,15 +1,17 @@
 /**
- * Three.js 场景管理器（M1-R3D1；M4-R3D5 增补舞台特效池与派系主题）：
+ * Three.js 场景管理器（M1-R3D1；M4-R3D5 增补舞台特效池与派系主题；
+ * 演出修正阶段三增补程序化牌桌皮肤 tableSkin/）：
  * 渲染器 / 牌桌 / 相机（含演出机位）/ 灯光 / canvas 挂载与 resize / 渲染循环 /
  * raycasting 拾取 / 粒子·光环·光柱·电弧·光束·进度条·镜头微震特效池 /
- * 双方派系色灯光与环境染色（平滑过渡）。
+ * 双方派系色灯光与环境染色（平滑过渡）/
+ * 「暗色机房」氛围：绒布台面纹理、机架墙背景、机房地板、槽位柔光、环境尘埃。
  *
  * 架构铁律：Three 场景独立于 React 树——本类只持有 canvas，不感知 React/state；
  * 上层（TableRenderer）经本类的公开 API 驱动。交付验收见 WF-VISUAL（截图评审）。
  *
  * 性能预算（中端核显 60fps）：渲染循环单 RAF；桌面与卡面用 MeshBasicMaterial
- * 免光照计算；阴影关闭；纹理缓存共享；特效全池化（update 零分配）；一切可
- * dispose 的资源在 dispose() 释放。
+ * 免光照计算；阴影关闭；纹理缓存共享（tableSkin 纹理一次性生成 + 模块级缓存）；
+ * 特效全池化（update 零分配）；一切可 dispose 的资源在 dispose() 释放。
  */
 
 import * as THREE from 'three'
@@ -30,6 +32,9 @@ import {
   ParticlePool,
 } from './fx/stageFx'
 import type { TableThemeColors } from './fx/theme'
+import { floorTintFor, wallTintFor, BACKDROP_GEOMETRY } from './tableSkin/params'
+import { getBackdropCanvas, getFloorCanvas, getSlotGlowCanvas, getTableTopCanvas } from './tableSkin/textures'
+import { AmbientDust } from './tableSkin/dust'
 import type { PickInfo } from './CardEntity'
 
 export type ExportedPick = PickInfo
@@ -44,56 +49,6 @@ export interface PickHandlers {
   onPickHover?(info: ExportedPick | null): void
   /** 左键点击命中 */
   onPickClick?(info: ExportedPick): void
-}
-
-/** 桌面电路板纹理（程序化，零外部图片资产） */
-function drawTableTexture(): HTMLCanvasElement {
-  const w = 1024
-  const h = 640
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('drawTableTexture: 2D context 不可用')
-  const bg = ctx.createLinearGradient(0, 0, 0, h)
-  bg.addColorStop(0, '#0b1a12')
-  bg.addColorStop(1, '#06110b')
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, w, h)
-  // 走线
-  ctx.strokeStyle = 'rgba(46,110,80,0.5)'
-  ctx.lineWidth = 2
-  let seed = 0x9e3779b9
-  const rnd = () => {
-    seed = (Math.imul(seed ^ (seed >>> 15), 1 | seed) + 0x6d2b79f5) | 0
-    return ((seed >>> 0) % 1000) / 1000
-  }
-  for (let i = 0; i < 90; i += 1) {
-    const x = rnd() * w
-    const y = rnd() * h
-    const len = 60 + rnd() * 180
-    const vertical = rnd() > 0.5
-    ctx.beginPath()
-    ctx.moveTo(x, y)
-    if (vertical) ctx.lineTo(x, y + len)
-    else ctx.lineTo(x + len, y)
-    ctx.stroke()
-    // 焊盘
-    ctx.beginPath()
-    ctx.arc(vertical ? x : x + len, vertical ? y + len : y, 4, 0, Math.PI * 2)
-    ctx.fillStyle = 'rgba(120,190,150,0.35)'
-    ctx.fill()
-  }
-  // 中线（战场地界）
-  ctx.strokeStyle = 'rgba(53,208,255,0.22)'
-  ctx.lineWidth = 6
-  ctx.setLineDash([26, 18])
-  ctx.beginPath()
-  ctx.moveTo(0, h / 2)
-  ctx.lineTo(w, h / 2)
-  ctx.stroke()
-  ctx.setLineDash([])
-  return canvas
 }
 
 /** 相机机位装置：命名机位 + 阻尼趋近（演出机位切换 = 一行 moveTo） */
@@ -192,6 +147,14 @@ export class SceneManager {
   private readonly farTarget = new THREE.Color('#1a2430')
   private readonly slotNearTarget = new THREE.Color('#1d5a44')
   private readonly slotFarTarget = new THREE.Color('#1d5a44')
+  // —— tableSkin「暗色机房」氛围层（程序化纹理 × 材质染色，随派系主题平滑过渡） ——
+  private readonly wallMat = new THREE.MeshBasicMaterial({ color: wallTintFor(null) })
+  private readonly floorMat = new THREE.MeshBasicMaterial({ color: floorTintFor(null) })
+  private readonly wallTarget = new THREE.Color(wallTintFor(null))
+  private readonly wallCurrent = new THREE.Color(wallTintFor(null))
+  private readonly floorTarget = new THREE.Color(floorTintFor(null))
+  private readonly floorCurrent = new THREE.Color(floorTintFor(null))
+  private readonly dust: AmbientDust
 
   /** 最近一次拾取的归一化指针坐标（手牌 tilt 视差的驱动源，只读） */
   get pointerNDC(): THREE.Vector2 {
@@ -229,6 +192,10 @@ export class SceneManager {
     this.scene.add(this.lightNear, this.lightFar)
 
     this.buildTable()
+    this.buildBackdrop()
+
+    this.dust = new AmbientDust(this.scene)
+    this.registerUpdatable(this.dust)
 
     this.floaters = new FloatingTextPool(this.scene)
     this.smoke = new SmokePool(this.scene)
@@ -261,6 +228,7 @@ export class SceneManager {
   /**
    * 应用双方派系主题色（M4-R3D5）：本帧只设目标色，tick 内向目标平滑过渡。
    * colors 为 null 时回落中性暗色（低配档 / 未接入内容包）。
+   * tableSkin 氛围层（机架墙/地板）的材质染色目标一并派生（tableSkin/params 纯函数）。
    */
   setFactionTheme(colors: TableThemeColors | null): void {
     if (!colors) {
@@ -269,6 +237,8 @@ export class SceneManager {
       this.farTarget.set('#1a2430')
       this.slotNearTarget.set('#1d5a44')
       this.slotFarTarget.set('#1d5a44')
+      this.wallTarget.set(wallTintFor(null))
+      this.floorTarget.set(floorTintFor(null))
       return
     }
     this.nearTarget.set(colors.nearLight)
@@ -276,21 +246,44 @@ export class SceneManager {
     this.bgTarget.set(colors.background)
     this.slotNearTarget.set(colors.slotNear)
     this.slotFarTarget.set(colors.slotFar)
+    this.wallTarget.set(wallTintFor(colors))
+    this.floorTarget.set(floorTintFor(colors))
+  }
+
+  /** tableSkin 画布 → CanvasTexture（一次性生成已在模块内缓存；无头环境 null 回落） */
+  private makeSkinTexture(get: () => HTMLCanvasElement | null): THREE.CanvasTexture | null {
+    const canvas = get()
+    if (!canvas) return null
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.anisotropy = 4
+    return tex
   }
 
   private buildTable(): void {
-    const tex = new THREE.CanvasTexture(drawTableTexture())
-    tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 4
+    const tex = this.makeSkinTexture(getTableTopCanvas)
     const table = new THREE.Mesh(
       new THREE.PlaneGeometry(TABLE_W, TABLE_D),
-      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.05 }),
+      new THREE.MeshStandardMaterial({
+        map: tex ?? undefined,
+        color: tex ? '#ffffff' : '#0d1319',
+        roughness: 0.94,
+        metalness: 0.04,
+      }),
     )
     table.rotation.x = -Math.PI / 2
     table.position.y = -0.06
     this.scene.add(table)
 
-    // 场上槽位标记（双方各 7 槽；两行独立材质供派系主题分别染色）
+    // 场上槽位标记（双方各 7 槽；两行独立材质供派系主题分别染色；
+    // 柔光贴图让槽位从「硬矩形色块」变成软边呼吸灯垫，光色仍由材质 color 派系染色）
+    const glowTex = this.makeSkinTexture(getSlotGlowCanvas)
+    if (glowTex) {
+      this.slotMatNear.map = glowTex
+      this.slotMatFar.map = glowTex
+      this.slotMatNear.needsUpdate = true
+      this.slotMatFar.needsUpdate = true
+    }
     const slotGeo = new THREE.PlaneGeometry(1.06, 1.46)
     for (const side of ['P1', 'P2'] as const) {
       for (let i = 0; i < 7; i += 1) {
@@ -300,6 +293,29 @@ export class SceneManager {
         this.scene.add(slot)
       }
     }
+  }
+
+  /**
+   * 「暗色机房」背景装配（tableSkin）：机架墙 + 机房地板。
+   * 材质均 MeshBasicMaterial（免光照，帧内只做 color lerp 零分配）；
+   * 开 fog：远端自动被雾吞掉，雾色即派系背景色 → 染色过渡免费获得。
+   */
+  private buildBackdrop(): void {
+    const floorTex = this.makeSkinTexture(getFloorCanvas)
+    if (floorTex) this.floorMat.map = floorTex
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(BACKDROP_GEOMETRY.floorW, BACKDROP_GEOMETRY.floorD), this.floorMat)
+    floor.rotation.x = -Math.PI / 2
+    floor.position.y = BACKDROP_GEOMETRY.floorY
+    this.scene.add(floor)
+
+    const wallTex = this.makeSkinTexture(getBackdropCanvas)
+    if (wallTex) this.wallMat.map = wallTex
+    const wall = new THREE.Mesh(
+      new THREE.PlaneGeometry(BACKDROP_GEOMETRY.wallW, BACKDROP_GEOMETRY.wallH),
+      this.wallMat,
+    )
+    wall.position.set(0, BACKDROP_GEOMETRY.wallY, BACKDROP_GEOMETRY.wallZ)
+    this.scene.add(wall)
   }
 
   // —— 挂载与循环 ——
@@ -335,15 +351,19 @@ export class SceneManager {
     this.cameraRig.update(dt)
     // 镜头微震在机位 rig 之后施加（只改旋转，每帧被 rig 重置，不累积）
     this.shaker.apply(this.camera, dt)
-    // 派系主题平滑过渡：灯光/槽位/背景向目标色指数趋近
+    // 派系主题平滑过渡：灯光/槽位/背景/氛围层（墙·地板）向目标色指数趋近
     const k = 1 - Math.exp(-dt * 2.5)
     this.lightNear.color.lerp(this.nearTarget, k)
     this.lightFar.color.lerp(this.farTarget, k)
     this.slotMatNear.color.lerp(this.slotNearTarget, k)
     this.slotMatFar.color.lerp(this.slotFarTarget, k)
     this.bgCurrent.lerp(this.bgTarget, k)
+    this.wallCurrent.lerp(this.wallTarget, k)
+    this.floorCurrent.lerp(this.floorTarget, k)
     ;(this.scene.background as THREE.Color).copy(this.bgCurrent)
     if (this.scene.fog) (this.scene.fog as THREE.Fog).color.copy(this.bgCurrent)
+    this.wallMat.color.copy(this.wallCurrent)
+    this.floorMat.color.copy(this.floorCurrent)
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -464,6 +484,7 @@ export class SceneManager {
     this.resizeObserver?.disconnect()
     this.resizeObserver = null
     this.updatables = []
+    this.dust.dispose()
     this.floaters.dispose()
     this.smoke.dispose()
     this.shards.dispose()

@@ -1,0 +1,428 @@
+/*
+ * 屏级样式（UI 现代化）—— 主菜单 / 开局配置 / 规则 / 局域网 / 结算。
+ * 玻璃拟态区块卡 + 派系点缀色；入场动效统一在 motion.css 编排。
+ */
+
+/* ————— 主菜单 / 结算 / 规则（居中屏骨架） ————— */
+.sc-menu,
+.sc-result,
+.sc-rules {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 64px 32px 48px;
+}
+.sc-eyebrow {
+  letter-spacing: 0.35em;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  text-transform: uppercase;
+}
+.sc-menu-title {
+  font-size: 72px;
+  margin: var(--sc-space-3) 0 var(--sc-space-2);
+  background: linear-gradient(92deg, #58e6a8 10%, #4da3ff 60%, #8f7bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 26px rgba(88, 230, 168, 0.18));
+}
+.sc-menu-sub {
+  color: var(--sc-dim);
+  margin-bottom: var(--sc-space-6);
+}
+.sc-menu-actions {
+  display: flex;
+  gap: var(--sc-space-4);
+}
+.sc-menu-foot {
+  margin-top: 48px;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-3);
+  flex-wrap: wrap;
+}
+.sc-motion-toggle {
+  opacity: 0.85;
+}
+
+/* ————— 开局配置 ————— */
+.sc-screen-title {
+  font-size: var(--sc-fs-2xl);
+  margin: 0 0 var(--sc-space-5);
+}
+.sc-setup {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+.sc-setup-section {
+  margin-bottom: 28px;
+}
+.sc-setup-section h2 {
+  font-size: var(--sc-fs-lg);
+  color: var(--sc-dim);
+  margin: 0 0 var(--sc-space-3);
+  font-weight: 600;
+}
+.sc-faction-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sc-space-4);
+}
+.sc-faction-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: var(--sc-space-4);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-glass-bg-soft);
+  box-shadow: var(--sc-hairline);
+  cursor: pointer;
+  transition:
+    border-color var(--sc-dur-fast) ease,
+    transform var(--sc-dur-fast) var(--sc-ease-out),
+    box-shadow var(--sc-dur-base) ease;
+}
+.sc-faction-card:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent, var(--sc-accent)) 55%, transparent);
+  box-shadow: var(--sc-hairline), var(--sc-shadow-2);
+}
+.sc-faction-card.is-active {
+  border-color: var(--accent, var(--sc-accent));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent, var(--sc-accent)) 12%, transparent), transparent),
+    var(--sc-glass-bg-soft);
+  box-shadow:
+    0 0 0 1px var(--accent, var(--sc-accent)),
+    0 0 18px color-mix(in srgb, var(--accent, var(--sc-accent)) 22%, transparent),
+    var(--sc-shadow-2);
+}
+.sc-faction-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sc-faction-name {
+  font-weight: 800;
+  font-size: 17px;
+}
+.sc-faction-skill {
+  color: var(--accent, var(--sc-accent));
+  font-size: var(--sc-fs-md);
+}
+.sc-faction-blurb {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+  line-height: 1.5;
+}
+.sc-deck-picker select {
+  background: var(--sc-panel-2);
+  color: var(--sc-text);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  padding: var(--sc-space-2) var(--sc-space-3);
+  min-width: 320px;
+}
+.sc-setup-note {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  max-width: 640px;
+  line-height: 1.6;
+}
+.sc-setup-actions {
+  display: flex;
+  gap: var(--sc-space-4);
+  margin-top: 28px;
+}
+
+/* ————— 规则页 ————— */
+.sc-rules-section {
+  border: 1px solid var(--sc-glass-border);
+  background: var(--sc-glass-bg);
+  backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  padding: 18px 22px;
+  margin-bottom: var(--sc-space-4);
+}
+.sc-rules-section h2 {
+  font-size: var(--sc-fs-lg);
+  margin: 0 0 10px;
+  color: var(--sc-accent);
+}
+.sc-rules-section ul {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.9;
+  font-size: var(--sc-fs-base);
+}
+.sc-rules-foot {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+/* ————— 局域网对战屏 ————— */
+.sc-lan {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 32px;
+}
+.sc-lan-section {
+  border: 1px solid var(--sc-glass-border);
+  background: var(--sc-glass-bg);
+  backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  padding: 18px 22px;
+  margin-bottom: var(--sc-space-4);
+}
+.sc-lan-section h2 {
+  font-size: var(--sc-fs-lg);
+  margin: 0 0 var(--sc-space-3);
+  color: var(--sc-dim);
+  font-weight: 600;
+}
+.sc-lan-restore {
+  border-color: color-mix(in srgb, var(--sc-gold) 55%, transparent);
+}
+.sc-lan-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sc-space-4);
+}
+.sc-lan-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-3);
+  align-items: flex-start;
+}
+.sc-lan-address-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.sc-lan-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  font-size: var(--sc-fs-base);
+  color: var(--sc-text);
+  cursor: pointer;
+}
+.sc-lan-check input {
+  accent-color: var(--sc-accent);
+}
+.sc-lan-error {
+  color: #ffb0a8;
+  border: 1px solid rgba(255, 107, 94, 0.5);
+  background: rgba(255, 107, 94, 0.08);
+  border-radius: var(--sc-radius-md);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-3);
+}
+.sc-lan-scan-error {
+  color: #ffb26b;
+}
+.sc-room-list {
+  list-style: none;
+  margin: var(--sc-space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+}
+.sc-room-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--sc-line);
+  background: rgba(22, 27, 38, 0.6);
+  border-radius: var(--sc-radius-md);
+  padding: var(--sc-space-2) var(--sc-space-3);
+  transition: border-color var(--sc-dur-fast) ease, transform var(--sc-dur-fast) var(--sc-ease-out);
+}
+.sc-room-item:hover {
+  border-color: var(--sc-line-strong);
+  transform: translateX(2px);
+}
+.sc-room-item-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  letter-spacing: 0.2em;
+  color: var(--sc-accent);
+}
+.sc-room-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-room-item-phase {
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+.sc-room-item-phase.is-playing {
+  color: var(--sc-gold);
+}
+.sc-room-item-seats {
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+.sc-lan-deck-picker {
+  width: 100%;
+}
+.sc-lan-center {
+  align-items: center;
+  text-align: center;
+}
+.sc-lan-big {
+  font-size: var(--sc-fs-xl);
+  font-weight: 700;
+  margin: 0;
+}
+.sc-lan-lobby {
+  align-items: stretch;
+}
+.sc-lan-code-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sc-lan-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 0.35em;
+  color: var(--sc-accent);
+  text-shadow: 0 0 24px rgba(88, 230, 168, 0.35);
+}
+.sc-seat-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sc-space-3);
+  margin-top: var(--sc-space-2);
+}
+.sc-seat {
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  background: rgba(22, 27, 38, 0.6);
+  transition: border-color var(--sc-dur-fast) ease, box-shadow var(--sc-dur-fast) ease;
+}
+.sc-seat.is-mine {
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 14px rgba(88, 230, 168, 0.12), var(--sc-hairline);
+}
+.sc-seat.is-offline {
+  border-color: rgba(255, 107, 94, 0.6);
+}
+.sc-seat.is-empty .sc-seat-status,
+.sc-seat.is-ai .sc-seat-status {
+  color: var(--sc-dim);
+}
+.sc-seat.is-offline .sc-seat-status {
+  color: #ffb0a8;
+}
+.sc-seat.is-online .sc-seat-status {
+  color: var(--sc-accent);
+}
+.sc-seat-name {
+  font-weight: 700;
+  font-size: var(--sc-fs-md);
+  color: var(--sc-dim);
+}
+.sc-seat-status {
+  font-size: 15px;
+}
+.sc-lan-host-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sc-lan-host-actions select {
+  background: var(--sc-panel-2);
+  color: var(--sc-text);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  padding: var(--sc-space-2) var(--sc-space-3);
+}
+.sc-lan-leave {
+  align-self: flex-start;
+}
+
+/* ————— 结算画面 ————— */
+.sc-result-headline {
+  font-size: var(--sc-fs-display);
+  margin: var(--sc-space-2) 0;
+  letter-spacing: 0.04em;
+}
+.sc-result.is-you .sc-result-headline {
+  color: var(--sc-accent);
+  text-shadow: 0 0 32px rgba(88, 230, 168, 0.35);
+}
+.sc-result.is-opponent .sc-result-headline {
+  color: var(--sc-danger);
+  text-shadow: 0 0 32px rgba(255, 107, 94, 0.3);
+}
+.sc-result.is-draw .sc-result-headline {
+  color: var(--sc-dim);
+}
+.sc-result-subline {
+  font-size: 18px;
+  color: var(--sc-text);
+}
+.sc-result-meta {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+}
+.sc-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sc-space-4);
+  margin-top: 28px;
+  max-width: 720px;
+}
+.sc-result-side {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-glass-bg);
+  backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
+  box-shadow: var(--sc-glass-shadow);
+  padding: 18px 20px;
+}
+.sc-result-side.is-winner {
+  border-color: color-mix(in srgb, var(--sc-accent) 65%, transparent);
+}
+.sc-result-side-label {
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+.sc-result-side-name {
+  font-size: var(--sc-fs-xl);
+}
+.sc-result-verdict {
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+.sc-result-side.is-winner .sc-result-verdict {
+  color: var(--sc-accent);
+}

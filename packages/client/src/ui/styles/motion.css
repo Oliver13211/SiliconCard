@@ -1,0 +1,431 @@
+/*
+ * 动效编排（UI 现代化）—— 全部优先 transform/opacity（合成器友好，不触发 layout）。
+ *
+ * 清单：
+ * - 屏幕切换：进场 fade+上浮（各屏根类挂载即播）；退场由 AppRoot 的 .sc-screen--leaving 包裹层负责；
+ * - 区块入场：配置/联机/规则 section 阶梯延迟滑入；结算面板入场 + 胜方面板辉光/扫光；
+ * - 抽牌入手：手牌从牌库方向（右侧）滑入 + rotateY 翻正，:nth-child 阶梯（初始手牌连续入手）；
+ * - 单位入场 pop、战报新条目滑入、数字变化脉冲（.sc-num，配合 AnimatedNumber 的 key 重挂载）；
+ * - 状态语义动效：功耗不足红脉冲（.is-starved）、低血警戒、回合指示呼吸、传说金呼吸（::before 辉光层，
+ *   不与 2.5D rim 的 box-shadow 各状态互相覆盖）、目标条危险脉冲、重连层/提示条入场。
+ *
+ * 动效偏好：.sc-app[data-motion] 三档 —— 'auto' 跟随系统 prefers-reduced-motion（默认）、
+ * 'on' 强制全开、'off' 强制关闭；由 uiPrefsStore 持久化、AppRoot 落到根节点。
+ */
+
+/* ————— 关键帧 ————— */
+@keyframes sc-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-screen-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes sc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sc-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* 带 translateX(-50%) 居中的元素专用（toast / 目标条 / 掉线横幅），动画期保持水平居中 */
+@keyframes sc-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+@keyframes sc-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+}
+@keyframes sc-target-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+@keyframes sc-banner-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+@keyframes sc-result-head {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-card-draw {
+  from {
+    opacity: 0;
+    transform: translate(90px, 30px) rotate(7deg) rotateY(90deg) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-unit-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72) translateY(10px);
+  }
+  70% {
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-log-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sc-num-pop {
+  from {
+    transform: scale(1.5);
+    filter: brightness(1.7);
+  }
+  to {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+@keyframes sc-starve-pulse {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+  }
+  50% {
+    border-color: rgba(255, 107, 94, 0.7);
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.55),
+      0 0 12px rgba(255, 107, 94, 0.55);
+  }
+}
+@keyframes sc-low-hp {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+}
+@keyframes sc-turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(88, 230, 168, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(88, 230, 168, 0.25);
+  }
+}
+@keyframes sc-target-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 107, 94, 0.18),
+      var(--sc-shadow-2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 107, 94, 0.45),
+      0 0 18px rgba(255, 107, 94, 0.3),
+      var(--sc-shadow-2);
+  }
+}
+@keyframes sc-gold-breath {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes sc-winner-glow {
+  0%,
+  100% {
+    box-shadow: var(--sc-glass-shadow);
+  }
+  50% {
+    box-shadow:
+      var(--sc-glass-shadow),
+      0 0 26px rgba(88, 230, 168, 0.2);
+  }
+}
+@keyframes sc-sheen {
+  to {
+    transform: translateX(360%) skewX(-18deg);
+  }
+}
+
+/* ————— 屏幕切换 ————— */
+.sc-menu,
+.sc-setup,
+.sc-battle,
+.sc-result,
+.sc-rules,
+.sc-lan {
+  animation: sc-screen-in var(--sc-dur-slow) var(--sc-ease-out) both;
+}
+/* 退场包裹层（AppRoot）：旧屏压平后整层淡出，内部屏根的进场动画作废 */
+.sc-screen--leaving {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  animation: sc-screen-out 0.22s ease both;
+}
+.sc-screen--leaving :where(.sc-menu, .sc-setup, .sc-battle, .sc-result, .sc-rules, .sc-lan) {
+  animation: none;
+}
+
+/* ————— 区块阶梯入场 ————— */
+.sc-setup-section,
+.sc-lan-section,
+.sc-rules-section {
+  animation: sc-rise-in var(--sc-dur-base) var(--sc-ease-out) both;
+}
+.sc-setup-section:nth-of-type(2),
+.sc-lan-section:nth-of-type(2),
+.sc-rules-section:nth-of-type(2) {
+  animation-delay: 70ms;
+}
+.sc-setup-section:nth-of-type(3),
+.sc-lan-section:nth-of-type(3),
+.sc-rules-section:nth-of-type(3) {
+  animation-delay: 140ms;
+}
+.sc-setup-section:nth-of-type(4),
+.sc-lan-section:nth-of-type(4),
+.sc-rules-section:nth-of-type(4) {
+  animation-delay: 210ms;
+}
+.sc-lan-section:nth-of-type(5),
+.sc-rules-section:nth-of-type(5) {
+  animation-delay: 280ms;
+}
+
+/* ————— 结算画面：标题弹入 + 双方面板阶梯 + 胜方辉光/扫光 ————— */
+.sc-result-headline {
+  animation: sc-result-head 0.5s var(--sc-ease-spring) 0.05s both;
+}
+.sc-result-side {
+  animation: sc-rise-in var(--sc-dur-slow) var(--sc-ease-out) both;
+}
+.sc-result-side:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.sc-result-side:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.sc-result-side.is-winner {
+  animation:
+    sc-rise-in var(--sc-dur-slow) var(--sc-ease-out) both,
+    sc-winner-glow 2.8s ease-in-out 0.6s infinite;
+}
+.sc-result-side.is-winner::after,
+.sc-net-overlay-card::after {
+  content: '';
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transform: translateX(-140%) skewX(-18deg);
+  animation: sc-sheen 1.4s var(--sc-ease-out) 0.45s both;
+  pointer-events: none;
+}
+
+/* ————— 对局 HUD 动效 ————— */
+/* 抽牌入手：从牌库方向滑入 + 翻正；初始手牌按座次阶梯（9 张以上不再加延迟） */
+.sc-hand-card {
+  animation: sc-card-draw 0.42s var(--sc-ease-out) backwards;
+}
+.sc-hand-card:nth-child(2) {
+  animation-delay: 50ms;
+}
+.sc-hand-card:nth-child(3) {
+  animation-delay: 100ms;
+}
+.sc-hand-card:nth-child(4) {
+  animation-delay: 150ms;
+}
+.sc-hand-card:nth-child(5) {
+  animation-delay: 200ms;
+}
+.sc-hand-card:nth-child(6) {
+  animation-delay: 250ms;
+}
+.sc-hand-card:nth-child(7) {
+  animation-delay: 300ms;
+}
+.sc-hand-card:nth-child(8) {
+  animation-delay: 350ms;
+}
+/* 单位入场 pop（召唤演出与 3D 层互补） */
+.sc-unit {
+  animation: sc-unit-pop 0.32s var(--sc-ease-spring) backwards;
+}
+/* 战报新条目滑入（最新在上） */
+.sc-log-item {
+  animation: sc-log-in var(--sc-dur-base) var(--sc-ease-out);
+}
+/* 数字变化脉冲（AnimatedNumber 以 key 重挂载触发） */
+.sc-num {
+  display: inline-block;
+  animation: sc-num-pop 0.32s var(--sc-ease-spring);
+}
+/* 功耗不足：功耗条红色脉冲 ×3（配合 legal 层"供电不够"语义） */
+.sc-mana-track.is-starved {
+  animation: sc-starve-pulse 0.9s ease-in-out 3;
+}
+/* 低血警戒：血条柔和明暗呼吸 */
+.sc-health-track.is-low .sc-health-fill {
+  animation: sc-low-hp 1.8s ease-in-out infinite;
+}
+/* 己方回合：回合胶囊呼吸辉光 */
+.sc-turn-pill.is-mine {
+  animation: sc-turn-pulse 2.6s ease-in-out infinite;
+}
+/* 目标选择条：入场 + 危险脉冲（进入目标选择即播一轮） */
+.sc-target-bar {
+  animation:
+    sc-target-in var(--sc-dur-base) var(--sc-ease-out) both,
+    sc-target-pulse 1.6s ease-in-out 0.2s 2;
+}
+/* 掉线横幅滑入 */
+.sc-net-banner {
+  animation: sc-banner-in var(--sc-dur-base) var(--sc-ease-out) both;
+}
+/* 重连层：遮罩淡入 + 卡片弹入 */
+.sc-net-overlay {
+  animation: sc-fade-in 0.2s ease both;
+}
+.sc-net-overlay-card {
+  animation: sc-pop-in 0.3s var(--sc-ease-spring) 0.05s both;
+}
+/* 错误提示条：入场弹入 + 4s 计时末尾淡出（与 ErrorToast 的 4s 定时器对齐） */
+.sc-toast {
+  animation:
+    sc-toast-in 0.28s var(--sc-ease-spring),
+    sc-toast-out 0.32s ease-in 3.68s forwards;
+}
+
+/* ————— 传说金色呼吸光：独立 ::before 辉光层，不覆盖 rim box-shadow 各交互态 ————— */
+.sc-hand-card.is-legendary::before,
+.sc-unit.is-legendary::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 16px 2px var(--rim-glow);
+  opacity: 0.35;
+  animation: sc-gold-breath 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ————— 动效偏好与系统减弱动效 —————
+   auto（默认）：跟随系统；off：强制关闭；on：强制全开（从选择器中豁免）。 */
+@media (prefers-reduced-motion: reduce) {
+  .sc-app[data-motion='auto'] *,
+  .sc-app[data-motion='off'] *,
+  .sc-app[data-motion='auto'] *::before,
+  .sc-app[data-motion='auto'] *::after,
+  .sc-app[data-motion='off'] *::before,
+  .sc-app[data-motion='off'] *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* 例外：提示条退场依赖 3.68s 延迟对齐 4s 卸载定时器——延迟若被清零，
+     forwads 终态会让提示条立即可见性归零。保留其退场延迟（仅压缩时长）。 */
+  .sc-app[data-motion='auto'] .sc-toast,
+  .sc-app[data-motion='off'] .sc-toast {
+    animation-duration: 0.01ms, 0.01ms !important;
+    animation-delay: 0ms, 3.68s !important;
+  }
+}
+.sc-app[data-motion='off'] *,
+.sc-app[data-motion='off'] *::before,
+.sc-app[data-motion='off'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+.sc-app[data-motion='off'] .sc-toast {
+  animation-duration: 0.01ms, 0.01ms !important;
+  animation-delay: 0ms, 3.68s !important;
+}

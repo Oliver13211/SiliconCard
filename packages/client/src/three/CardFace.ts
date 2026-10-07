@@ -1,22 +1,27 @@
 /**
- * 程序化卡面绘制器（M1-R3D2 建立，M4-R3D5 第一阶段升级为组合式图形系统）。
+ * 程序化卡面绘制器（M1-R3D2 建立；M4-R3D5 组合式图形系统；卡面大改版升格 SVG 主视觉）。
  *
  * 分层合成（同一 Canvas 纹理，自底向上）：
  * 1. 背景层（cardArt/background，纯代码）：按稀有度分级的派系底色对角渐变
  *    （cardArt/ground：common 素 → legendary 浓艳+金光）+ 电路走线/网格/噪声场
  *    按 cardId 确定性种子选配组合，按 art.palette 或派系色着色；
- * 2. SVG 图形层（cardArt/svg，纯函数组装）：type 形制骨架 × 派系图案母题 ×
- *    稀有度框饰 × 关键词角标，经 data URI → Image 内联渲染（禁外部资源/网络请求）；
- * 3. Canvas 底版与角标层：外框、art 窗口底板、名称/类型/flavor 文本、
- *    稀有度宝石、费用与攻/血圆徽。
+ * 2. 质感层（cardArt/texture，纯代码）：细颗粒纸纹/噪点、微线电路点缀、暗角、
+ *    内阴影、顶部光泽扫过高光条——与底色分级融合，稀有度越高质感越强；
+ * 3. 金属外框与底版层：派系色金属框（暗缘+渐变+顶部高光）、中央插画窗底板
+ *    （SVG 主视觉区，竖向占比 ≥40%）、名称/类型/flavor 边框信息带、稀有度宝石；
+ * 4. SVG 图形层（cardArt/svg，纯函数组装）：type 形制骨架主视觉 × 派系图案母题 ×
+ *    稀有度框饰与插画区稀有度环 × 关键词角标，经 data URI → Image 内联渲染
+ *    （禁外部资源/网络请求）；
+ * 5. 角标层：费用与攻/血圆徽压在插画窗两角/底部两角（框上层，保持可读性）。
  *
- * 同步/异步协议：drawCardFace 同步产出「背景层+底版+角标」的完整可渲染卡面；
+ * 同步/异步协议：drawCardFace 同步产出「背景+质感+底版+角标」的完整可渲染卡面；
  * SVG 图形层由 composeCardFaceArt 异步补绘（懒生成，不卡主线程），完成后调用方
  * 对纹理 flip needsUpdate 即可原地刷新（见 TableRenderer.getFace）。
  *
  * 数据来源：
  * - 美术参数 = CardDefinition.art（shape / palette / glow，content JSON 提供）；
  * - 图形组合参数 = cardArt/derive 派生（cardId FNV-1a 确定性哈希，禁 Math.random/Date）；
+ * - 布局锚点 = cardArt/layout（插画窗主视觉 + 边框信息带）；
  * - 数值 = cost（手牌为生效功耗）与 gpu 的 attack/health（场上单位可传当前值）；
  * - 派系色板：art.palette 为十六进制色时直接采用；否则查内置派系色表；
  *   未知名按字符串哈希确定性生成色相（数据驱动扩展：新增派系零改动）。
@@ -28,18 +33,33 @@
 import type { CardDefinition } from '@siliconcard/core'
 import * as THREE from 'three'
 import { drawFaceBackground } from './cardArt/background'
-import { deriveFaceArt } from './cardArt/derive'
+import { deriveFaceArt, rarityTierOf } from './cardArt/derive'
+import {
+  ART_WINDOW,
+  COST_BADGE,
+  FACE_H,
+  FACE_W,
+  FLAVOR_Y1,
+  FLAVOR_Y2,
+  GEM,
+  NAME_Y,
+  RARITY_GEM,
+  STAT_R,
+  STAT_X_IN,
+  STAT_X_OUT,
+  STAT_Y,
+  TYPE_Y,
+} from './cardArt/layout'
 import { buildFaceArtSvg, svgToDataUri } from './cardArt/svg'
+import { drawFaceTexture, faceTexture } from './cardArt/texture'
 
 // —— 共享纯函数原语（M4-R3D5 迁至 cardArt/color，此处再导出保持既有 API 与测试兼容） ——
 
 export { FACTION_COLORS, fnv1a, hslToHex, hueOf, resolvePalette, shade } from './cardArt/color'
 export type { Palette } from './cardArt/color'
+/** 画布尺寸常量移至 cardArt/layout（大改版布局锚点唯一事实源），再导出保持既有 API */
+export { FACE_W, FACE_H }
 import { fnv1a, resolvePalette, shade } from './cardArt/color'
-
-/** 卡面画布尺寸（约 5:7，与 layout.CARD_W/CARD_H 比例一致） */
-export const FACE_W = 512
-export const FACE_H = 718
 
 /** 已知几何形体；未知 shape 名确定性映射到一种（数据驱动扩展零改动） */
 export type ShapeKind = 'fan' | 'chip' | 'wave' | 'die' | 'connector' | 'mineral'
@@ -89,19 +109,15 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath()
 }
 
+/** 稀有度宝石色（与 layout.RARITY_GEM / 插画区稀有度环同源） */
 function rarityColor(rarity: string | undefined): string | null {
-  switch (rarity) {
-    case 'legendary':
-      return '#ff9d2e'
-    case 'epic':
-      return '#b45cff'
-    case 'rare':
-      return '#3f9dff'
-    default:
-      return null
-  }
+  return RARITY_GEM[rarityTierOf(rarity)]
 }
 
+/**
+ * 圆徽（费用/攻/血）：外暗缘 + 主体 + 点缀环 + 内亮环 + 左上高光弧 + 数字。
+ * 多位数字自动缩字，保证不出圆。
+ */
 function drawBadge(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -111,6 +127,12 @@ function drawBadge(
   bg: string,
   ring: string,
 ): void {
+  // 外暗缘（沉底）
+  ctx.beginPath()
+  ctx.arc(x, y, r + 3, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(4,6,9,0.72)'
+  ctx.fill()
+  // 主体
   ctx.beginPath()
   ctx.arc(x, y, r, 0, Math.PI * 2)
   ctx.fillStyle = bg
@@ -118,11 +140,28 @@ function drawBadge(
   ctx.lineWidth = 5
   ctx.strokeStyle = ring
   ctx.stroke()
+  // 内亮环
+  ctx.beginPath()
+  ctx.arc(x, y, r - 5, 0, Math.PI * 2)
+  ctx.lineWidth = 1.5
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'
+  ctx.stroke()
+  // 左上高光弧（金属「棱」感）
+  ctx.beginPath()
+  ctx.arc(x, y, r - 2.5, -2.5, -1.2)
+  ctx.lineWidth = 2.2
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)'
+  ctx.lineCap = 'round'
+  ctx.stroke()
+  ctx.lineCap = 'butt'
+  // 数字（按位数缩字）
+  const len = text.length
+  const fs = Math.round(r * (len <= 2 ? 1.05 : len === 3 ? 0.8 : 0.62))
   ctx.fillStyle = '#ffffff'
-  ctx.font = `900 ${Math.round(r * 1.25)}px "Segoe UI", "PingFang SC", sans-serif`
+  ctx.font = `900 ${fs}px "Segoe UI", "PingFang SC", sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, x, y + r * 0.08)
+  ctx.fillText(text, x, y + r * 0.06)
 }
 
 /** 单行截断（画布文本防溢出） */
@@ -133,9 +172,64 @@ function truncate(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return `${out}…`
 }
 
+/** flavor 两行折行（超出宽度在中位附近断开，第二行仍超宽则截断） */
+function wrapFlavor(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): [string, string] {
+  if (ctx.measureText(text).width <= maxWidth) return [text, '']
+  let cut = Math.ceil(text.length / 2)
+  while (cut > 1 && ctx.measureText(text.slice(0, cut)).width > maxWidth) cut -= 1
+  let rest = text.slice(cut)
+  if (ctx.measureText(rest).width > maxWidth) rest = truncate(ctx, rest, maxWidth)
+  return [text.slice(0, cut), rest]
+}
+
+/** 派系金属外框：暗缘 → 主金属渐变 → 顶部高光 → 内 hairline */
+function drawMetalFrame(
+  ctx: CanvasRenderingContext2D,
+  pal: { primary: string },
+  hiColor: string,
+  hiAlpha: number,
+  edgeColor: string,
+  edgeAlpha: number,
+): void {
+  const m = 10
+  // 暗缘（外圈压暗，金属「厚」感）
+  roundRect(ctx, m, m, FACE_W - m * 2, FACE_H - m * 2, 26)
+  ctx.lineWidth = 9
+  ctx.globalAlpha = edgeAlpha
+  ctx.strokeStyle = edgeColor
+  ctx.stroke()
+  ctx.globalAlpha = 1
+  // 主金属：纵向明→主色→暗渐变
+  const g = ctx.createLinearGradient(0, 0, 0, FACE_H)
+  g.addColorStop(0, shade(pal.primary, 1.3))
+  g.addColorStop(0.35, pal.primary)
+  g.addColorStop(1, shade(pal.primary, 0.62))
+  roundRect(ctx, m + 3, m + 3, FACE_W - (m + 3) * 2, FACE_H - (m + 3) * 2, 23)
+  ctx.lineWidth = 5
+  ctx.strokeStyle = g
+  ctx.stroke()
+  // 顶部高光（只画上半段：clip）
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(0, 0, FACE_W, FACE_H * 0.5)
+  ctx.clip()
+  roundRect(ctx, m + 4.5, m + 4.5, FACE_W - (m + 4.5) * 2, FACE_H - (m + 4.5) * 2, 22)
+  ctx.lineWidth = 1.6
+  ctx.globalAlpha = hiAlpha
+  ctx.strokeStyle = hiColor
+  ctx.stroke()
+  ctx.restore()
+  ctx.globalAlpha = 1
+  // 内 hairline
+  roundRect(ctx, m + 13, m + 13, FACE_W - (m + 13) * 2, FACE_H - (m + 13) * 2, 18)
+  ctx.lineWidth = 1.5
+  ctx.strokeStyle = shade(pal.primary, 0.55)
+  ctx.stroke()
+}
+
 /**
- * 底版层：背景层 + 外框 + art 窗口底板 + 名称/类型/flavor + 稀有度宝石。
- * （M4-R3D5：几何图形主体移交 SVG 图形层，关键词点阵移交 SVG 角标行；本层可重复调用。）
+ * 底版层：背景 + 质感层 + 金属外框 + 插画窗底板 + 边框信息带（名称/类型/flavor）
+ * + 稀有度宝石。（几何主体移交 SVG 图形层，关键词点阵移交 SVG 角标行；本层可重复调用。）
  */
 function drawFaceInto(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
   const { def } = p
@@ -145,84 +239,95 @@ function drawFaceInto(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
   // 1. 背景层（按稀有度分级的派系底色 + 走线/网格/噪声组合，确定性）
   drawFaceBackground(ctx, FACE_W, FACE_H, params.bg, pal, params.rarityTier)
 
-  // 2. 外框（派系色，保留 M1 双线规格）
-  const m = 10
-  roundRect(ctx, m, m, FACE_W - m * 2, FACE_H - m * 2, 26)
-  ctx.lineWidth = 8
-  ctx.strokeStyle = pal.primary
-  ctx.stroke()
-  roundRect(ctx, m + 10, m + 10, FACE_W - (m + 10) * 2, FACE_H - (m + 10) * 2, 20)
-  ctx.lineWidth = 2
-  ctx.strokeStyle = shade(pal.primary, 0.6)
-  ctx.stroke()
+  // 2. 质感层（纸纹/微走线/暗角/内阴影/顶部光泽，随稀有度分级）
+  const tex = faceTexture(pal, params.rarityTier, params.seed)
+  drawFaceTexture(ctx, FACE_W, FACE_H, tex)
 
-  // 3. art 几何窗底板（SVG 形制骨架 × 派系母题异步叠绘于此）
-  const artX = 44
-  const artY = 88
-  const artW = FACE_W - artX * 2
-  const artH = 268
+  // 3. 金属外框（派系色，暗缘 + 渐变 + 顶部高光）
+  drawMetalFrame(ctx, pal, tex.frameMetal.hiColor, tex.frameMetal.hiAlpha, tex.frameMetal.edgeColor, tex.frameMetal.edgeAlpha)
+
+  // 4. 插画窗底板（SVG 主视觉异步叠绘于此；竖向占比 ≥40%）
+  const { x: artX, y: artY, w: artW, h: artH, r: artR } = ART_WINDOW
   ctx.fillStyle = '#0a0e12'
-  roundRect(ctx, artX, artY, artW, artH, 14)
+  roundRect(ctx, artX, artY, artW, artH, artR)
   ctx.fill()
-  ctx.strokeStyle = shade(pal.primary, 0.8)
-  ctx.lineWidth = 2
-  roundRect(ctx, artX, artY, artW, artH, 14)
+  ctx.strokeStyle = shade(pal.primary, 0.55)
+  ctx.lineWidth = 3
+  roundRect(ctx, artX, artY, artW, artH, artR)
   ctx.stroke()
+  ctx.save()
+  ctx.globalAlpha = 0.5
+  ctx.strokeStyle = shade(pal.primary, 1.4)
+  ctx.lineWidth = 1
+  roundRect(ctx, artX + 3, artY + 3, artW - 6, artH - 6, Math.max(4, artR - 3))
+  ctx.stroke()
+  ctx.restore()
 
-  // 4. 稀有度宝石（右上；框饰档位由 SVG 层承担）
+  // 5. 稀有度宝石（右上，压在插画窗角上；插画区稀有度环由 SVG 层呼应）
   const rc = rarityColor(def.rarity)
   if (rc) {
     ctx.save()
     ctx.shadowColor = rc
-    ctx.shadowBlur = 10
+    ctx.shadowBlur = 12
     ctx.beginPath()
-    ctx.arc(FACE_W - 74, 74, 16, 0, Math.PI * 2)
+    ctx.arc(GEM.x, GEM.y, GEM.r, 0, Math.PI * 2)
     ctx.fillStyle = rc
     ctx.fill()
     ctx.restore()
+    ctx.beginPath()
+    ctx.arc(GEM.x, GEM.y, GEM.r, 0, Math.PI * 2)
+    ctx.lineWidth = 2
+    ctx.strokeStyle = shade(rc, 0.45)
+    ctx.stroke()
+    ctx.globalAlpha = 0.75
+    ctx.beginPath()
+    ctx.arc(GEM.x - GEM.r * 0.3, GEM.y - GEM.r * 0.3, GEM.r * 0.28, 0, Math.PI * 2)
+    ctx.fillStyle = '#ffffff'
+    ctx.fill()
+    ctx.globalAlpha = 1
   }
 
-  // 5. 名称
+  // 6. 边框信息带：名称 / 类型 / flavor（深色区白字，对比度安全）
   ctx.fillStyle = '#f2f5f7'
-  ctx.font = '800 40px "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
+  ctx.font = '800 38px "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(truncate(ctx, def.name, artW - 24), FACE_W / 2, artY + artH + 44)
+  ctx.fillText(truncate(ctx, def.name, artW - 12), FACE_W / 2, NAME_Y)
 
-  // 6. 类型行：类型 + 派系
   const typeName = def.type === 'gpu' ? '显卡' : def.type === 'driver' ? '驱动' : '外设'
   ctx.fillStyle = shade(pal.primary, 1.2)
-  ctx.font = '600 24px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(`${typeName} · ${def.faction.toUpperCase()}`, FACE_W / 2, artY + artH + 84)
+  ctx.font = '600 22px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(`${typeName} · ${def.faction.toUpperCase()}`, FACE_W / 2, TYPE_Y)
 
-  // 7. flavor（小字斜体，两行内截断）
   if (def.flavor) {
     ctx.fillStyle = '#8b98a5'
-    ctx.font = 'italic 400 21px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(truncate(ctx, def.flavor, artW), FACE_W / 2, FACE_H - 150)
+    ctx.font = 'italic 400 19px "Segoe UI", "PingFang SC", sans-serif'
+    const [l1, l2] = wrapFlavor(ctx, def.flavor, artW - 20)
+    ctx.fillText(l1, FACE_W / 2, FLAVOR_Y1)
+    if (l2 !== '') ctx.fillText(l2, FACE_W / 2, FLAVOR_Y2)
   }
 }
 
-/** 角标层：费用圆环 + 攻/血徽（压在 SVG 框饰之上，保持可读性） */
+/** 角标层：费用圆徽（压插画窗左上角）+ 攻/血徽（底部两角），压在 SVG 框饰之上保持可读性 */
 function drawFaceOverlay(ctx: CanvasRenderingContext2D, p: CardFaceParams): void {
   const { def } = p
   const isGpu = def.type === 'gpu'
   const cost = p.cost ?? def.cost
   const attack = p.attack ?? def.attack
   const health = p.health ?? def.health
-  drawBadge(ctx, 74, 74, 44, String(cost), '#0c2a33', '#35d0ff')
+  drawBadge(ctx, COST_BADGE.x, COST_BADGE.y, COST_BADGE.r, String(cost), '#0c2a33', '#35d0ff')
   if (isGpu && attack !== undefined) {
-    drawBadge(ctx, 78, FACE_H - 84, 40, String(attack), '#3a2a08', '#ffc53d')
+    drawBadge(ctx, STAT_X_IN, STAT_Y, STAT_R, String(attack), '#3a2a08', '#ffc53d')
   }
   if (isGpu && health !== undefined) {
-    drawBadge(ctx, FACE_W - 78, FACE_H - 84, 40, String(health), '#33110f', '#ff5d4d')
+    drawBadge(ctx, STAT_X_OUT, STAT_Y, STAT_R, String(health), '#33110f', '#ff5d4d')
   }
 }
 
 /**
  * 绘制整张卡面（同步部分，浏览器专用）。
- * 产出「背景层 + 底版 + 角标」的完整卡面；SVG 图形层（形制骨架×派系母题×
- * 稀有度框饰×关键词角标）由 composeCardFaceArt 异步补绘。
+ * 产出「背景 + 质感 + 底版 + 角标」的完整卡面；SVG 图形层（形制骨架主视觉×
+ * 派系母题×稀有度框饰/插画区环×关键词角标）由 composeCardFaceArt 异步补绘。
  */
 export function drawCardFace(p: CardFaceParams): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
