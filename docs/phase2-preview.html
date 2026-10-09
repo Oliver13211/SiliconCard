@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>硅牌 SiliconCard · 二期规划可视化</title>
+<style>
+  :root {
+    --bg: #070b12;
+    --panel: rgba(18, 26, 38, 0.72);
+    --panel-border: rgba(120, 160, 200, 0.14);
+    --ink: #dfe8f2;
+    --ink-dim: #8fa3b8;
+    --ink-faint: #5c7089;
+    --cyan: #35d0ff;
+    --green: #76b900;
+    --gold: #ffc53d;
+    --red: #ff6a4d;
+    --purple: #a78bfa;
+    --blue: #6f8bff;
+    --radius: 14px;
+    --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+  /* 背景氛围：电路网格 + 光晕 */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% -5%, rgba(53, 208, 255, 0.08), transparent),
+      radial-gradient(ellipse 50% 35% at 90% 10%, rgba(118, 185, 0, 0.06), transparent),
+      linear-gradient(rgba(120, 160, 200, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120, 160, 200, 0.04) 1px, transparent 1px);
+    background-size: auto, auto, 44px 44px, 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: 0 28px 90px; }
+
+  /* ===== Hero ===== */
+  header { padding: 84px 0 48px; text-align: center; }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; letter-spacing: 3px; color: var(--cyan);
+    border: 1px solid rgba(53, 208, 255, 0.3); border-radius: 999px;
+    padding: 5px 18px; margin-bottom: 26px;
+    background: rgba(53, 208, 255, 0.06);
+  }
+  .hero-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  h1 {
+    font-size: clamp(34px, 6vw, 56px); font-weight: 800; letter-spacing: 1px;
+    background: linear-gradient(100deg, #eef6ff 30%, #7fd8ff 60%, #9be15d 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-sub { margin-top: 14px; color: var(--ink-dim); font-size: 16px; }
+  .hero-sub b { color: var(--ink); font-weight: 600; }
+
+  /* KPI 条 */
+  .kpis { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 34px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 14px 26px; text-align: center; min-width: 130px;
+    backdrop-filter: blur(10px);
+  }
+  .kpi .num { font-size: 26px; font-weight: 800; }
+  .kpi .lbl { font-size: 12px; color: var(--ink-dim); letter-spacing: 1px; }
+  .kpi.c .num { color: var(--cyan); } .kpi.g .num { color: var(--green); }
+  .kpi.o .num { color: var(--gold); } .kpi.p .num { color: var(--purple); }
+
+  /* ===== 通用区块 ===== */
+  section { margin-top: 76px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-no { font-size: 13px; font-weight: 700; color: var(--cyan); letter-spacing: 2px; }
+  h2 { font-size: 26px; font-weight: 800; letter-spacing: 0.5px; }
+  .sec-desc { color: var(--ink-dim); font-size: 14.5px; margin-bottom: 26px; max-width: 760px; }
+
+  /* ===== 路线图 ===== */
+  .roadmap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .batch {
+    position: relative; background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: var(--radius); padding: 22px 22px 18px; backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+  .batch::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .batch.a::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .batch.b::before { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .batch.c::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .batch .phase { font-size: 12px; letter-spacing: 2px; font-weight: 700; }
+  .batch.a .phase { color: var(--green); } .batch.b .phase { color: var(--cyan); } .batch.c .phase { color: var(--purple); }
+  .batch h3 { font-size: 19px; margin: 4px 0 10px; }
+  .batch p { font-size: 13.5px; color: var(--ink-dim); }
+  .batch .tasks { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11.5px; font-family: ui-monospace, monospace;
+    border: 1px solid var(--panel-border); border-radius: 6px; padding: 2px 8px; color: var(--ink-dim);
+    background: rgba(255,255,255,0.03);
+  }
+  .arrow-row { display: flex; justify-content: center; margin-top: 14px; color: var(--ink-faint); font-size: 20px; letter-spacing: 18px; }
+
+  /* ===== 主题卡片 ===== */
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .theme {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 24px; backdrop-filter: blur(10px);
+    transition: transform .25s ease, border-color .25s ease;
+  }
+  .theme:hover { transform: translateY(-3px); border-color: rgba(53, 208, 255, 0.35); }
+  .theme .t-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .t-icon {
+    width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .theme h3 { font-size: 18px; }
+  .theme .t-id { font-size: 11.5px; color: var(--ink-faint); font-family: ui-monospace, monospace; }
+  .theme ul { list-style: none; margin-top: 6px; }
+  .theme li { font-size: 13.5px; color: var(--ink-dim); padding: 5px 0 5px 20px; position: relative; }
+  .theme li::before { content: "▸"; position: absolute; left: 2px; color: var(--cyan); font-size: 11px; top: 7px; }
+  .theme li b { color: var(--ink); font-weight: 600; }
+  .takeaway {
+    margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: 13px;
+    background: rgba(118, 185, 0, 0.07); border: 1px solid rgba(118, 185, 0, 0.22);
+  }
+  .takeaway b { color: var(--green); }
+  .effort-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11.5px; padding: 3px 10px; border-radius: 999px; letter-spacing: 0.5px;
+  }
+  .badge.s { background: rgba(118,185,0,.12); color: #9be15d; border: 1px solid rgba(118,185,0,.3); }
+  .badge.m { background: rgba(53,208,255,.1); color: var(--cyan); border: 1px solid rgba(53,208,255,.3); }
+  .badge.l { background: rgba(167,139,250,.12); color: var(--purple); border: 1px solid rgba(167,139,250,.32); }
+
+  /* ===== 先手平衡可视化 ===== */
+  .balance-panel {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 30px; backdrop-filter: blur(10px);
+  }
+  .balance-panel h3 { font-size: 17px; margin-bottom: 20px; }
+  .bar-block { margin-bottom: 18px; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-dim); margin-bottom: 7px; }
+  .bar-label b { color: var(--ink); font-family: ui-monospace, monospace; }
+  .bar-track { height: 26px; border-radius: 8px; background: rgba(255,255,255,0.05); position: relative; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 10px; font-size: 12px; font-weight: 700; font-family: ui-monospace, monospace;
+    transition: width 1.2s cubic-bezier(.2,.8,.2,1);
+  }
+  .bar-now { width: 59.4%; background: linear-gradient(90deg, #b3402a, var(--red)); }
+  .bar-target { width: 54%; background: linear-gradient(90deg, #3d7a00, var(--green)); }
+  .bar-line {
+    position: absolute; top: -6px; bottom: -6px; left: 50%; width: 2px;
+    background: var(--gold); box-shadow: 0 0 8px rgba(255,197,61,.6);
+  }
+  .bar-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--ink-faint); margin-top: 5px; font-family: ui-monospace, monospace; }
+  .balance-note { font-size: 13px; color: var(--ink-dim); margin-top: 16px; }
+  .balance-note b { color: var(--gold); }
+
+  /* 方案对比表 */
+  .opt-table { width: 100%; border-collapse: collapse; margin-top: 22px; font-size: 13.5px; }
+  .opt-table th, .opt-table td { padding: 11px 14px; text-align: left; border-bottom: 1px solid rgba(120,160,200,0.1); }
+  .opt-table th { color: var(--ink-faint); font-size: 12px; letter-spacing: 1px; font-weight: 600; }
+  .opt-table td:first-child { font-weight: 700; }
+  .opt-table .reco { background: rgba(118,185,0,0.06); }
+  .opt-table .reco td:first-child { color: var(--green); }
+  .reco-flag { display: inline-block; font-size: 10.5px; background: var(--green); color: #0a1000; border-radius: 4px; padding: 1px 7px; margin-left: 8px; font-weight: 800; }
+
+  /* ===== 回放时间轴 mock ===== */
+  .replay-mock {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 26px; backdrop-filter: blur(10px);
+  }
+  .rp-screen {
+    height: 150px; border-radius: 10px; position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 40%, rgba(53,208,255,.12), transparent),
+      linear-gradient(rgba(120,160,200,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,160,200,.05) 1px, transparent 1px);
+    background-size: auto, 30px 30px, 30px 30px;
+    border: 1px solid var(--panel-border);
+  }
+  .rp-card { position: absolute; width: 54px; height: 76px; border-radius: 7px; border: 1.5px solid; background: rgba(10,16,26,.9); display: grid; place-items: center; font-size: 10px; color: var(--ink-faint); }
+  .rp-card.ally { border-color: rgba(118,185,0,.5); bottom: 12px; }
+  .rp-card.foe { border-color: rgba(255,106,77,.5); top: 12px; }
+  .rp-card.leg { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,197,61,.35); }
+  .rp-timeline { margin-top: 18px; }
+  .rp-controls { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .rp-btn {
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--panel-border); color: var(--ink);
+    font-size: 14px; cursor: pointer;
+  }
+  .rp-btn.play { background: var(--cyan); color: #03141c; border: none; font-size: 16px; }
+  .rp-speed { font-size: 12px; color: var(--ink-dim); font-family: ui-monospace, monospace; }
+  .rp-speed span { padding: 3px 8px; border-radius: 6px; cursor: pointer; }
+  .rp-speed span.on { background: rgba(53,208,255,.15); color: var(--cyan); }
+  .tl-track { position: relative; height: 34px; background: rgba(255,255,255,0.04); border-radius: 8px; }
+  .tl-prog { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: linear-gradient(90deg, rgba(53,208,255,.25), rgba(53,208,255,.45)); border-radius: 8px 0 0 8px; }
+  .tl-mark { position: absolute; top: 6px; width: 3px; height: 22px; border-radius: 2px; }
+  .tl-mark.atk { background: var(--red); } .tl-mark.sum { background: var(--green); }
+  .tl-mark.leg { background: var(--gold); height: 30px; top: 2px; box-shadow: 0 0 6px rgba(255,197,61,.7); }
+  .tl-mark.burn { background: var(--blue); }
+  .tl-legend { display: flex; gap: 14px; margin-top: 10px; font-size: 11.5px; color: var(--ink-faint); flex-wrap: wrap; }
+  .tl-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+
+  /* ===== 教程流程 ===== */
+  .tutorial-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .tut {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 18px 15px; text-align: center; position: relative; backdrop-filter: blur(10px);
+  }
+  .tut .step {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 10px;
+    font-weight: 800; font-size: 14px; background: rgba(53,208,255,.12); color: var(--cyan);
+    border: 1px solid rgba(53,208,255,.35);
+  }
+  .tut h4 { font-size: 14.5px; margin-bottom: 6px; }
+  .tut p { font-size: 12px; color: var(--ink-dim); }
+  .tut:not(:last-child)::after {
+    content: "→"; position: absolute; right: -13px; top: 42%; color: var(--ink-faint); font-size: 15px; z-index: 2;
+  }
+  .tut-goal { margin-top: 9px; font-size: 11px; color: var(--green); }
+
+  /* ===== 快捷键 ===== */
+  .hotkeys { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: center; }
+  .hk { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--ink-dim); }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 9px;
+    background: linear-gradient(180deg, #223047, #16202f);
+    border: 1px solid rgba(140,180,220,.25); border-bottom-width: 3px; border-radius: 7px;
+    font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--ink);
+  }
+
+  /* ===== 依赖图 ===== */
+  .dep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .dep-col h4 { font-size: 13px; color: var(--ink-faint); letter-spacing: 1px; margin-bottom: 10px; font-weight: 600; }
+  .dep-node {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; margin-bottom: 8px;
+  }
+  .dep-node small { display: block; color: var(--ink-faint); font-size: 11px; }
+  .dep-node.hl { border-color: rgba(53,208,255,.4); }
+
+  /* ===== 不做清单 + 评审 ===== */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel-plain {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 24px; backdrop-filter: blur(10px);
+  }
+  .panel-plain h3 { font-size: 16px; margin-bottom: 12px; }
+  .panel-plain ul { list-style: none; }
+  .panel-plain li { font-size: 13.5px; color: var(--ink-dim); padding: 6px 0 6px 24px; position: relative; }
+  .panel-plain li::before { position: absolute; left: 0; font-size: 13px; }
+  .panel-plain.no li::before { content: "✕"; color: var(--red); }
+  .panel-plain.ask li::before { content: "?"; color: var(--gold); font-weight: 800; }
+  .panel-plain li b { color: var(--ink); }
+
+  footer { margin-top: 90px; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+  footer .div { width: 60px; height: 1px; background: var(--panel-border); margin: 0 auto 18px; }
+
+  @media (max-width: 880px) {
+    .roadmap, .themes, .two-col, .dep-grid { grid-template-columns: 1fr; }
+    .tutorial-flow { grid-template-columns: 1fr; }
+    .tut:not(:last-child)::after { content: "↓"; right: 46%; top: auto; bottom: -16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="hero-tag">PHASE 2 · 二期规划草案</div>
+    <h1>硅牌 · 二期：玩得深，留得住</h1>
+    <p class="hero-sub">一期解决了「<b>有得玩、玩得好</b>」——7 派系 90 卡已上线，胜率极差 5.9pp。<br>
+    二期解决「<b>玩得深、留得住</b>」：拟真观感 · 回放复盘 · 图鉴数据 · 体系教程 · 先手公平。</p>
+    <div class="kpis">
+      <div class="kpi c"><div class="num">6</div><div class="lbl">主题方向</div></div>
+      <div class="kpi g"><div class="num">12</div><div class="lbl">立项任务</div></div>
+      <div class="kpi o"><div class="num">3</div><div class="lbl">交付批次</div></div>
+      <div class="kpi p"><div class="num">59.4%</div><div class="lbl">先手胜率（待修）</div></div>
+    </div>
+  </header>
+
+  <!-- ============ 路线图 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">01</span><h2>三批次路线</h2></div>
+    <p class="sec-desc">排序逻辑：快赢先行（回放是确定性引擎白送的，几乎零成本）、观感紧随、深水区压轴（教程单体最大、先手平衡要动引擎并重录黄金基线，留足评审）。</p>
+    <div class="roadmap">
+      <div class="batch a">
+        <div class="phase">BATCH α · 快赢</div>
+        <h3>回放闭环 + 图鉴 + 快捷键</h3>
+        <p>确定性引擎的「免费午餐」：录制即复现。图鉴与快捷键同步铺开。</p>
+        <div class="tasks"><span class="chip">P2-INF1 回放存储</span><span class="chip">P2-UI3 播放器</span><span class="chip">P2-UI4 图鉴</span><span class="chip">P2-UI5 快捷键</span><span class="chip">P2-DATA1 数值面板</span></div>
+      </div>
+      <div class="batch b">
+        <div class="phase">BATCH β · 观感</div>
+        <h3>拟真材质 + 效果预览 + 可读性</h3>
+        <p>纯表现层，引擎零改动。法线/环境贴图让卡牌与牌桌「有料」。</p>
+        <div class="tasks"><span class="chip">P2-R3D1 卡牌材质</span><span class="chip">P2-R3D2 牌桌材质</span><span class="chip">P2-UI1 可读性</span><span class="chip">P2-UI2 效果预览</span></div>
+      </div>
+      <div class="batch c">
+        <div class="phase">BATCH γ · 深水</div>
+        <h3>体系教程 + 先手平衡</h3>
+        <p>五关教程把规则学习融进模拟对战；先手补偿动引擎、需拍板后一次收口。</p>
+        <div class="tasks"><span class="chip">P2-EDU1 教程</span><span class="chip">P2-ENG1 先手平衡</span><span class="chip">P2-QA1 AI 复盘</span></div>
+      </div>
+    </div>
+    <div class="arrow-row">→ → →</div>
+  </section>
+
+  <!-- ============ 六大主题 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">02</span><h2>六大主题拆解</h2></div>
+    <p class="sec-desc">每个任务都标注了方案要点、我的看法（绿框）与工作量（S/M/L）。完整验收标准见 <b>docs/phase2-plan.md</b>。</p>
+    <div class="themes">
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(53,208,255,.12)">✨</div>
+          <div><h3>拟真观感升级</h3><div class="t-id">P2-R3D1 · P2-R3D2 · P2-UI1</div></div>
+        </div>
+        <ul>
+          <li>卡牌升级 <b>MeshPhysicalMaterial</b>：卡面 Canvas 同步派生<b>法线贴图</b>（边框浮雕/插画下沉），程序化环境贴图给金属框真实反射</li>
+          <li>传说卡 clearcoat 全息闪层，随视角流动</li>
+          <li>牌桌绒布加织纹凹凸 + 粗糙度分层，光池边缘可见布纹起伏</li>
+          <li>React 界面：字号/对比度/信息密度按 WCAG AA 重排，事件日志按回合折叠</li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>材质共享五档（按稀有度）+ 法线贴图进既有 TextureCache，性能红线守得住；环境贴图卡牌/牌桌共用一张，串行做省一次搭建。</div>
+        <div class="effort-row"><span class="badge m">R3D1 · M</span><span class="badge m">R3D2 · M</span><span class="badge s">UI1 · S-M</span></div>
+      </div>
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(118,185,0,.12)">🎬</div>
+          <div><h3>卡牌效果预览</h3><div class="t-id">P2-UI2 · 本期亮点</div></div>
+        </div>
+        <ul>
+          <li>点卡出预览面板：<b>白话解释</b>——EffectSpec 步骤翻译成人话（"指定任意角色造成 3 点伤害"）</li>
+          <li><b>沙箱迷你演示</b>：initGame 起固定演示局面，脚本打出这张卡，事件流驱动演示动画循环播放</li>
+          <li>卡池扩充自动获得预览——<b>零逐卡内容成本</b></li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>这是无头引擎的杀手级应用。效果引擎算、动画引擎演、翻译规则化——三层全是既有资产的新组合，没有一处手工维护面。</div>
+        <div class="effort-row"><span class="badge m">UI2 · M-L</span></div>
+      </div>
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(255,197,61,.12)">⏪</div>
+          <div><h3>对战回放 + AI 复盘</h3><div class="t-id">P2-INF1 · P2-UI3 · P2-QA1</div></div>
+        </div>
+        <ul>
+          <li>复用 core 现成基建：<b>ReplayRecording + canonicalJson + FNV-1a stableHash</b>（黄金回放在用）</li>
+          <li>播放器：变速 / 逐事件步进 / 时间轴拖动 / 上帝视角双方手牌全开</li>
+          <li>AI 复盘：Hard AI 逐步对比评分 <b>S/A/B/C</b> + <b>漏斩检测</b> + Top3 失误跳转</li>
+          <li>IndexedDB 本地存最近 50 局，导入导出 JSON 分享</li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>全期 ROI 最高的一块——录制即复现是确定性引擎的天然特权，竞品要搭录制回放系统，我们只需要把已有序列化接上 UI。</div>
+        <div class="effort-row"><span class="badge s">INF1 · S-M</span><span class="badge m">UI3 · M</span><span class="badge l">QA1 · M-L</span></div>
+      </div>
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(111,139,255,.12)">📊</div>
+          <div><h3>数值面板 + 全卡图鉴</h3><div class="t-id">P2-DATA1 · P2-UI4</div></div>
+        </div>
+        <ul>
+          <li><b>全局模拟数据</b>：离线跑 bench 管线（7000 局/30 秒）产出派系胜率、卡牌出场率/打出胜率，JSON 随包发布</li>
+          <li><b>个人历史</b>：从回放库聚合本人胜负与使用习惯（仅存本地）</li>
+          <li>图鉴：90 卡瀑布网格，派系/稀有度/费用筛选，卡面复用 cardArt 管线同源渲染</li>
+          <li>详情页 = 大图 + 白话解释 + 沙箱演示 + 平衡数据四合一</li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>图鉴的隐形价值是「新卡零登记」——数据驱动架构下，图鉴只是 content JSON 的另一个视图，永远不会有不同步问题。</div>
+        <div class="effort-row"><span class="badge s">DATA1 · S-M</span><span class="badge m">UI4 · M</span></div>
+      </div>
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(167,139,250,.12)">🎓</div>
+          <div><h3>体系化教程</h3><div class="t-id">P2-EDU1 · 单体最大</div></div>
+        </div>
+        <ul>
+          <li>五关设计：<b>通电 → 上机 → 关键词七连 → 派系对决 → 自由实战</b></li>
+          <li>教程 = 受约束的对局：固定 seed + 脚本对手 + 教程控制器拦截 UI + 事件流过关判定</li>
+          <li>可配 6-8 张教学专用卡（不入对战卡池）</li>
+          <li>跳关/重玩/任意关卡直达</li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>引擎零改动是这关的底气——五关各自独立可发布，做完一关上一关，不存在烂尾卡壳点。验收标准定为「真人 15 分钟通关并独立开局」。</div>
+        <div class="effort-row"><span class="badge l">EDU1 · L</span></div>
+      </div>
+
+      <div class="theme">
+        <div class="t-head">
+          <div class="t-icon" style="background:rgba(255,106,77,.12)">⚖️</div>
+          <div><h3>先手优势平衡 + 杂项</h3><div class="t-id">P2-ENG1 · P2-UI5</div></div>
+        </div>
+        <ul>
+          <li>实测先手胜率 <b>59.4%（+9pp）</b>，四方案对比后动引擎补偿（见下方专题）</li>
+          <li>快捷键：<b>1-0</b> 出牌 · <b>空格</b> 结束回合 · <b>H</b> 英雄技能 · <b>Tab</b> 循环选目标 · <b>F</b> 快进 · <b>M</b> 静音</li>
+          <li>键位角标直接画在手牌槽上，全程可无鼠标对局</li>
+        </ul>
+        <div class="takeaway"><b>看法：</b>先手平衡是全期唯一动 core 的任务——补偿量先在 bench 沙箱跑参再动引擎，黄金基线重录一次到位，避免契约反复。</div>
+        <div class="effort-row"><span class="badge m">ENG1 · M</span><span class="badge s">UI5 · S-M</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ 先手平衡专题 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">03</span><h2>专题：先手优势怎么补</h2></div>
+    <p class="sec-desc">QA2 管线实测（对称双向统计已抵消先手偏差，这是体验层的真实差距）。目标：补偿后先手胜率回落至 52%~56%，派系极差保持 &lt;10pp。</p>
+    <div class="balance-panel">
+      <h3>先手胜率 · 现状 vs 目标</h3>
+      <div class="bar-block">
+        <div class="bar-label"><span>当前实测（后手每 100 局少赢约 19 局）</span><b>59.4%</b></div>
+        <div class="bar-track"><div class="bar-fill bar-now">59.4%</div><div class="bar-line" title="公平线 50%"></div></div>
+      </div>
+      <div class="bar-block">
+        <div class="bar-label"><span>补偿目标区间中值（电费抵扣券方案）</span><b>~54%</b></div>
+        <div class="bar-track"><div class="bar-fill bar-target">54%</div><div class="bar-line"></div></div>
+      </div>
+      <div class="bar-scale"><span>40%</span><span>45%</span><span>50%（公平线）</span><span>55%</span><span>60%</span></div>
+      <p class="balance-note">◀ 竖线为 50% 公平线。不追求 50.0%：卡牌游戏存在固有的「先手信息差」，<b>52-56%</b> 是炉石/影诗等成熟 TCG 的健康区间。</p>
+
+      <table class="opt-table">
+        <tr><th>方案</th><th>机制</th><th>补偿强度</th><th>主题梗</th><th>我的评估</th></tr>
+        <tr><td>A 错峰用电</td><td>后手首回合供电 +100W</td><td>★★☆</td><td>错峰电价</td><td>改动最小，但弱卡组可能仍不够翻身</td></tr>
+        <tr class="reco"><td>B 电费抵扣券<span class="reco-flag">推荐</span></td><td>后手起手附加一次性卡：本回合 +300W 可超上限</td><td>★★★</td><td>电费红包</td><td>炉石「硬币」的成熟范式，被全行业验证；留有"何时用券"的策略深度</td></tr>
+        <tr><td>C 先手禁足</td><td>先手首回合禁止出牌</td><td>★★★</td><td>开机自检</td><td>平衡有效但先手挫败感强，不推荐</td></tr>
+        <tr><td>D 后手多抽 1</td><td>后手起手 4 张</td><td>★☆☆</td><td>—</td><td>30 卡库抽牌边际收益太低，杯水车薪</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 回放 mock ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">04</span><h2>回放播放器 · 概念预览</h2></div>
+    <p class="sec-desc">上帝视角 + 事件级时间轴。引擎逐动作重放（确定性保证逐帧一致），点击时间轴标记直接跳到对应事件。</p>
+    <div class="replay-mock">
+      <div class="rp-screen">
+        <div class="rp-card foe" style="left:12%">敌方<br>RTX 5090</div>
+        <div class="rp-card foe" style="left:30%">敌方<br>火龙 888</div>
+        <div class="rp-card ally" style="left:20%">我方<br>M1 Ultra</div>
+        <div class="rp-card ally leg" style="left:40%">传说<br>X Elite</div>
+        <div style="position:absolute;right:14px;top:12px;font-size:11px;color:var(--gold);border:1px solid rgba(255,197,61,.4);border-radius:6px;padding:2px 9px;background:rgba(255,197,61,.08)">上帝视角 · 双方手牌可见</div>
+        <div style="position:absolute;left:14px;top:12px;font-size:11px;color:var(--ink-faint)">回合 6 · 先手方行动中</div>
+      </div>
+      <div class="rp-timeline">
+        <div class="tl-track">
+          <div class="tl-prog"></div>
+          <div class="tl-mark sum" style="left:6%"></div>
+          <div class="tl-mark atk" style="left:14%"></div>
+          <div class="tl-mark atk" style="left:22%"></div>
+          <div class="tl-mark sum" style="left:31%"></div>
+          <div class="tl-mark burn" style="left:38%"></div>
+          <div class="tl-mark leg" style="left:38%"></div>
+          <div class="tl-mark atk" style="left:52%"></div>
+          <div class="tl-mark sum" style="left:64%"></div>
+          <div class="tl-mark atk" style="left:73%"></div>
+          <div class="tl-mark leg" style="left:86%"></div>
+        </div>
+        <div class="tl-legend">
+          <span><i style="background:var(--green)"></i>召唤</span>
+          <span><i style="background:var(--red)"></i>攻击</span>
+          <span><i style="background:var(--blue)"></i>跳闸/法术</span>
+          <span><i style="background:var(--gold)"></i>传说入场</span>
+        </div>
+      </div>
+      <div class="rp-controls">
+        <div class="rp-btn">⏮</div>
+        <div class="rp-btn play">▶</div>
+        <div class="rp-btn">⏭</div>
+        <div class="rp-speed">速度：<span>0.5×</span><span class="on">1×</span><span>2×</span><span>4×</span>　·　逐事件步进 ⏸</div>
+        <div style="margin-left:auto;font-size:12px;color:var(--ink-faint)">第 23 / 61 事件 · stableHash 校验 ✓</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 教程流程 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">05</span><h2>体系化教程 · 五关闯营</h2></div>
+    <p class="sec-desc">规则学习融进模拟对战：每关都是一场受约束的真实对局（引擎零改动），过关判定消费真实事件流。验收线：真人 15 分钟通关并独立开局。</p>
+    <div class="tutorial-flow">
+      <div class="tut"><div class="step">1</div><h4>通电</h4><p>供电 / 回合 / 结束回合</p><div class="tut-goal">目标：一回合打出 3 张卡</div></div>
+      <div class="tut"><div class="step">2</div><h4>上机</h4><p>出牌 / 攻击 / 信仰充值</p><div class="tut-goal">目标：拆掉敌方一台显卡</div></div>
+      <div class="tut"><div class="step">3</div><h4>关键词七连</h4><p>七个关键词逐关必用</p><div class="tut-goal">目标：用质保挡一刀、用潜行骗一刀</div></div>
+      <div class="tut"><div class="step">4</div><h4>派系对决</h4><p>自选派系打一整局</p><div class="tut-goal">目标：善用 3 次派系技能</div></div>
+      <div class="tut"><div class="step">5</div><h4>自由实战</h4><p>进入真对局</p><div class="tut-goal">前 3 回合保留提示气泡</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 快捷键 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">06</span><h2>快捷键出牌</h2></div>
+    <p class="sec-desc">键位一期固定（可自定义列为后续），提示角标画在手牌槽位上、可关闭。</p>
+    <div class="hotkeys">
+      <div class="hk"><kbd>1</kbd><kbd>0</kbd> 打出手牌第 N 张</div>
+      <div class="hk"><kbd>Space</kbd> 结束回合</div>
+      <div class="hk"><kbd>H</kbd> 英雄技能</div>
+      <div class="hk"><kbd>Tab</kbd> 循环选目标</div>
+      <div class="hk"><kbd>Enter</kbd> 确认</div>
+      <div class="hk"><kbd>Esc</kbd> 取消</div>
+      <div class="hk"><kbd>F</kbd> 快进演出</div>
+      <div class="hk"><kbd>M</kbd> 静音</div>
+      <div class="hk"><kbd>?</kbd> 键位表</div>
+    </div>
+  </section>
+
+  <!-- ============ 依赖 + 评审 ============ -->
+  <section>
+    <div class="sec-head"><span class="sec-no">07</span><h2>依赖关系与评审清单</h2></div>
+    <div class="dep-grid">
+      <div class="dep-col">
+        <h4>回放主干</h4>
+        <div class="dep-node hl">P2-INF1 回放存储<small>确定性基建直通，S</small></div>
+        <div class="dep-node hl">P2-UI3 播放器<small>重驱引擎 + 时间轴</small></div>
+        <div class="dep-node">P2-QA1 AI 复盘<small>依赖回放定位失误</small></div>
+        <div class="dep-node">P2-DATA1 数值面板<small>聚合模拟 + 个人历史</small></div>
+      </div>
+      <div class="dep-col">
+        <h4>观感支线</h4>
+        <div class="dep-node">P2-UI2 效果预览<small>翻译器 + 沙箱演示</small></div>
+        <div class="dep-node">P2-UI4 全卡图鉴<small>复用预览翻译器</small></div>
+        <div class="dep-node">P2-R3D1 卡牌材质<small>环境贴图基建</small></div>
+        <div class="dep-node">P2-R3D2 牌桌材质<small>共用环境贴图</small></div>
+      </div>
+      <div class="dep-col">
+        <h4>独立 / 深水</h4>
+        <div class="dep-node">P2-UI1 可读性 / P2-UI5 快捷键<small>零依赖，随时插队</small></div>
+        <div class="dep-node">P2-EDU1 教程<small>单体 L，早启动</small></div>
+        <div class="dep-node">P2-ENG1 先手平衡<small>等你拍板 → WF-ENGINE → bench 复测收口</small></div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:18px">
+      <div class="panel-plain no">
+        <h3>明确不做（延续 YAGNI）</h3>
+        <ul>
+          <li>天梯 / 账号系统 / 排位分数</li>
+          <li>服务器持久化对战记录、云端回放分享站</li>
+          <li>移动端触控适配</li>
+          <li>卡池商业化 / 开包</li>
+        </ul>
+      </div>
+      <div class="panel-plain ask">
+        <h3>开工前需要你拍板的 5 件事</h3>
+        <ul>
+          <li><b>① 批次顺序</b>：α 回放快赢 → β 拟真观感 → γ 教程与平衡，可否</li>
+          <li><b>② 先手方案</b>：A 错峰 / B 抵扣券（推荐）/ C 禁足 / D 多抽</li>
+          <li><b>③ 回放存储</b>：本地最近 50 局 + 导出归档，可否</li>
+          <li><b>④ 教学专用卡</b>：允许加 6-8 张不入对战池的演示卡，可否</li>
+          <li><b>⑤ 快捷键</b>：一期固定键位，可否</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="div"></div>
+    硅牌 SiliconCard · 二期规划草案 · 完整文档见 docs/phase2-plan.md<br>
+    基建事实核对你的输入：黄金回放序列化已存在（回放成本 S）· bench 7000 局/30s（平衡复测即跑）· cardArt 确定性派生（图鉴同源渲染）
+  </footer>
+
+</div>
+</body>
+</html>
