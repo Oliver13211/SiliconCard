@@ -259,6 +259,9 @@
   .panel-plain li::before { position: absolute; left: 0; font-size: 13px; }
   .panel-plain.no li::before { content: "✕"; color: var(--red); }
   .panel-plain.ask li::before { content: "?"; color: var(--gold); font-weight: 800; }
+  .panel-plain.ok li::before { content: "✓"; color: var(--green); font-weight: 800; }
+  .panel-plain.ok li b { color: var(--ink); }
+  .panel-plain.ok li span { color: var(--ink-dim); }
   .panel-plain li b { color: var(--ink); }
 
   footer { margin-top: 90px; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
@@ -278,7 +281,7 @@
 <div class="wrap">
 
   <header>
-    <div class="hero-tag">PHASE 2 · 二期规划草案</div>
+    <div class="hero-tag">PHASE 2 · 二期规划 · 已拍板（2026-10-10）</div>
     <h1>硅牌 · 二期：玩得深，留得住</h1>
     <p class="hero-sub">一期解决了「<b>有得玩、玩得好</b>」——7 派系 90 卡已上线，胜率极差 5.9pp。<br>
     二期解决「<b>玩得深、留得住</b>」：拟真观感 · 回放复盘 · 图鉴数据 · 体系教程 · 先手公平。</p>
@@ -434,7 +437,7 @@
       <table class="opt-table">
         <tr><th>方案</th><th>机制</th><th>补偿强度</th><th>主题梗</th><th>我的评估</th></tr>
         <tr><td>A 错峰用电</td><td>后手首回合供电 +100W</td><td>★★☆</td><td>错峰电价</td><td>改动最小，但弱卡组可能仍不够翻身</td></tr>
-        <tr class="reco"><td>B 电费抵扣券<span class="reco-flag">推荐</span></td><td>后手起手附加一次性卡：本回合 +300W 可超上限</td><td>★★★</td><td>电费红包</td><td>炉石「硬币」的成熟范式，被全行业验证；留有"何时用券"的策略深度</td></tr>
+        <tr class="reco"><td>B 电费抵扣券<span class="reco-flag">已拍板 ✓</span></td><td>后手起手附加一次性卡：本回合 +300W 可超上限</td><td>★★★</td><td>电费红包</td><td>炉石「硬币」的成熟范式，被全行业验证；留有"何时用券"的策略深度</td></tr>
         <tr><td>C 先手禁足</td><td>先手首回合禁止出牌</td><td>★★★</td><td>开机自检</td><td>平衡有效但先手挫败感强，不推荐</td></tr>
         <tr><td>D 后手多抽 1</td><td>后手起手 4 张</td><td>★☆☆</td><td>—</td><td>30 卡库抽牌边际收益太低，杯水车薪</td></tr>
       </table>
@@ -488,7 +491,7 @@
   <!-- ============ 教程流程 ============ -->
   <section>
     <div class="sec-head"><span class="sec-no">05</span><h2>体系化教程 · 五关闯营</h2></div>
-    <p class="sec-desc">规则学习融进模拟对战：每关都是一场受约束的真实对局（引擎零改动），过关判定消费真实事件流。验收线：真人 15 分钟通关并独立开局。</p>
+    <p class="sec-desc">规则学习融进模拟对战：每关都是一场受约束的真实对局（引擎零改动），过关判定消费真实事件流。<b>零教学专用卡</b>——教学卡组全部从现有 90 卡池组装，关键词素材现成（质保=AppleCare+、双芯=M1 Ultra、潜行=MacBook Air M2…）。验收线：真人 15 分钟通关并独立开局。</p>
     <div class="tutorial-flow">
       <div class="tut"><div class="step">1</div><h4>通电</h4><p>供电 / 回合 / 结束回合</p><div class="tut-goal">目标：一回合打出 3 张卡</div></div>
       <div class="tut"><div class="step">2</div><h4>上机</h4><p>出牌 / 攻击 / 信仰充值</p><div class="tut-goal">目标：拆掉敌方一台显卡</div></div>
@@ -551,14 +554,14 @@
           <li>卡池商业化 / 开包</li>
         </ul>
       </div>
-      <div class="panel-plain ask">
-        <h3>开工前需要你拍板的 5 件事</h3>
+      <div class="panel-plain ok">
+        <h3>五项决议（2026-10-10 拍板）</h3>
         <ul>
-          <li><b>① 批次顺序</b>：α 回放快赢 → β 拟真观感 → γ 教程与平衡，可否</li>
-          <li><b>② 先手方案</b>：A 错峰 / B 抵扣券（推荐）/ C 禁足 / D 多抽</li>
-          <li><b>③ 回放存储</b>：本地最近 50 局 + 导出归档，可否</li>
-          <li><b>④ 教学专用卡</b>：允许加 6-8 张不入对战池的演示卡，可否</li>
-          <li><b>⑤ 快捷键</b>：一期固定键位，可否</li>
+          <li><b>① 批次顺序</b><span>：按原案 α 回放快赢 → β 拟真观感 → γ 教程与平衡</span></li>
+          <li><b>② 先手方案</b><span>：B 电费抵扣券（后手一次性 +300W 可超上限）</span></li>
+          <li><b>③ 回放存储</b><span>：浏览器本地存储（IndexedDB），JSON 格式化导入导出为一等公民</span></li>
+          <li><b>④ 教学卡</b><span>：不新增教学专用卡，全部使用现有 90 卡池</span></li>
+          <li><b>⑤ 快捷键</b><span>：一期即做自定义键位（本地持久化，含默认键位与冲突检测）</span></li>
         </ul>
       </div>
     </div>
@@ -566,7 +569,7 @@
 
   <footer>
     <div class="div"></div>
-    硅牌 SiliconCard · 二期规划草案 · 完整文档见 docs/phase2-plan.md<br>
+    硅牌 SiliconCard · 二期规划（已拍板）· 完整文档见 docs/phase2-plan.md<br>
     基建事实核对你的输入：黄金回放序列化已存在（回放成本 S）· bench 7000 局/30s（平衡复测即跑）· cardArt 确定性派生（图鉴同源渲染）
   </footer>
 
