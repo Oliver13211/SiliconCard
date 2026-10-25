@@ -33,9 +33,17 @@ interface ReplayStore {
   loaded: boolean
   dateFilter: string | null
   status: ReplayStatus
+  /**
+   * 播放器挂载点（P2-UI3）：非 null 时 AppRoot 渲染 ReplayPlayerScreen
+   * （优先级高于本库屏）。openPlayer 从库屏行内「播放」进入，closePlayer 退出。
+   */
+  player: { meta: ReplayMeta; body: ReplayRecording } | null
 
   openLibrary: () => void
   closeLibrary: () => void
+  /** 进播放器：取回放体并挂载（异步装载，体缺失即报错不挂载） */
+  openPlayer: (id: string) => Promise<void>
+  closePlayer: () => void
   refresh: () => Promise<void>
   setDateFilter: (date: string | null) => void
   removeReplay: (id: string) => Promise<void>
@@ -50,6 +58,7 @@ export const useReplayStore = create<ReplayStore>()((set, get) => ({
   loaded: false,
   dateFilter: null,
   status: { kind: 'idle' },
+  player: null,
 
   openLibrary: () => {
     set({ open: true, status: { kind: 'idle' } })
@@ -57,6 +66,27 @@ export const useReplayStore = create<ReplayStore>()((set, get) => ({
   },
 
   closeLibrary: () => set({ open: false, status: { kind: 'idle' } }),
+
+  openPlayer: async (id) => {
+    const meta = get().entries.find((entry) => entry.id === id)
+    if (!meta) {
+      set({ status: { kind: 'error', message: '找不到这条回放（可能刚被淘汰或删除）' } })
+      return
+    }
+    set({ status: { kind: 'busy', message: '装载回放…' } })
+    try {
+      const body = await replayBackend().getBody(id)
+      if (!body) {
+        set({ status: { kind: 'error', message: '回放体缺失（元数据在但录制体丢了），无法播放' } })
+        return
+      }
+      set({ player: { meta, body }, status: { kind: 'idle' } })
+    } catch (error) {
+      set({ status: { kind: 'error', message: `回放装载失败：${error instanceof Error ? error.message : String(error)}` } })
+    }
+  },
+
+  closePlayer: () => set({ player: null, status: { kind: 'idle' } }),
 
   refresh: async () => {
     try {

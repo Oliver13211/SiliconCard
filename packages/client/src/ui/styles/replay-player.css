@@ -1,0 +1,338 @@
+/*
+ * 回放播放器样式（P2-UI3）——只服务 ui/replay 播放器组件，不复用不修改 battle/hud 样式。
+ * 取值一律走 tokens.css 设计令牌（玻璃拟态 + 派系点缀），保持与全站同一视觉语言。
+ */
+
+.sc-rplayer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--sc-bg);
+  color: var(--sc-text);
+}
+
+.sc-rplayer-loading {
+  margin: auto;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-lg);
+}
+
+/* 版本不符横幅（只读开放提示） */
+.sc-rplayer-banner {
+  margin: 0;
+  padding: var(--sc-space-2) var(--sc-space-4);
+  background: rgba(255, 200, 87, 0.12);
+  border-bottom: 1px solid rgba(255, 200, 87, 0.4);
+  color: var(--sc-gold);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-rplayer-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  min-height: 0;
+}
+
+.sc-rplayer-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--sc-space-3) var(--sc-space-4);
+  gap: var(--sc-space-2);
+}
+
+/* —— 上下半区（对面 / 己方） —— */
+
+.sc-rplayer-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-3);
+}
+
+.sc-rplayer-hero {
+  flex: 1;
+  max-width: 460px;
+}
+
+.sc-rplayer-turn {
+  padding: var(--sc-space-1) var(--sc-space-3);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-pill);
+  background: var(--sc-glass-bg-soft);
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-god-hint {
+  margin: 0;
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+/* 上帝视角手牌行：全量只读展示 */
+.sc-rplayer-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sc-space-2);
+  align-items: center;
+  min-height: 64px;
+  padding: var(--sc-space-2);
+  border: 1px dashed var(--sc-line);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-glass-bg-soft);
+}
+
+.sc-rplayer-hand.is-enemy {
+  border-color: rgba(255, 107, 94, 0.35);
+}
+
+.sc-rplayer-hand.is-self {
+  border-color: rgba(88, 230, 168, 0.3);
+}
+
+.sc-rplayer-hand-empty {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+/* —— 中部 3D 舞台 + DOM 棋盘覆盖 —— */
+
+.sc-rplayer-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--sc-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--sc-line);
+}
+
+.sc-rplayer-stage3d {
+  position: absolute;
+  inset: 0;
+}
+
+.sc-rplayer-board {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sc-space-3);
+  pointer-events: none;
+}
+
+.sc-rplayer-board-row {
+  display: flex;
+  gap: var(--sc-space-2);
+  pointer-events: auto;
+  min-height: 96px;
+  align-items: center;
+}
+
+.sc-rplayer-board-divider {
+  width: 40%;
+  height: 1px;
+  background: var(--sc-line);
+}
+
+.sc-rplayer-board-empty {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+  pointer-events: none;
+}
+
+/* —— 控制条 —— */
+
+.sc-rplayer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+  padding: var(--sc-space-2) 0 0;
+  border-top: 1px solid var(--sc-line);
+}
+
+.sc-rplayer-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  flex-wrap: wrap;
+}
+
+.sc-rplayer-speeds {
+  display: inline-flex;
+  gap: var(--sc-space-1);
+}
+
+.sc-rplayer-speeds .is-active {
+  outline: 1px solid var(--sc-accent);
+}
+
+.sc-rplayer-progress {
+  margin-left: auto;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-rplayer-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+}
+
+.sc-rplayer-timeline input[type='range'] {
+  width: 100%;
+  accent-color: var(--sc-accent);
+  cursor: pointer;
+}
+
+.sc-rplayer-markers {
+  position: relative;
+  height: 12px;
+}
+
+.sc-rplayer-marker {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: var(--sc-radius-pill);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  padding: 0;
+}
+
+.sc-rplayer-marker.is-attack {
+  background: var(--sc-danger);
+}
+
+.sc-rplayer-marker.is-summon {
+  background: var(--sc-accent);
+}
+
+.sc-rplayer-marker.is-legendary {
+  background: var(--sc-gold);
+}
+
+.sc-rplayer-marker.is-trip {
+  background: #ffa94d;
+}
+
+.sc-rplayer-marker.is-end {
+  background: #b48cff;
+}
+
+.sc-rplayer-legend {
+  display: flex;
+  gap: var(--sc-space-3);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: var(--sc-radius-pill);
+  vertical-align: baseline;
+}
+
+.sc-rplayer-legend-item.is-attack::before {
+  background: var(--sc-danger);
+}
+
+.sc-rplayer-legend-item.is-summon::before {
+  background: var(--sc-accent);
+}
+
+.sc-rplayer-legend-item.is-legendary::before {
+  background: var(--sc-gold);
+}
+
+.sc-rplayer-legend-item.is-trip::before {
+  background: #ffa94d;
+}
+
+.sc-rplayer-legend-item.is-end::before {
+  background: #b48cff;
+}
+
+/* —— 事件日志侧栏（与时间轴双向联动） —— */
+
+.sc-rplayer-log {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--sc-line);
+  background: var(--sc-glass-bg-soft);
+}
+
+.sc-rplayer-log-title {
+  margin: 0;
+  padding: var(--sc-space-2) var(--sc-space-3);
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  border-bottom: 1px solid var(--sc-line);
+}
+
+.sc-rplayer-log-list {
+  flex: 1;
+  margin: 0;
+  padding: var(--sc-space-2);
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+}
+
+.sc-rplayer-log-item {
+  display: flex;
+  gap: var(--sc-space-2);
+  padding: var(--sc-space-1) var(--sc-space-2);
+  border-radius: var(--sc-radius-sm);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+  cursor: pointer;
+}
+
+.sc-rplayer-log-item:hover {
+  background: rgba(150, 166, 197, 0.12);
+}
+
+.sc-rplayer-log-item.is-combat {
+  color: var(--sc-danger);
+}
+
+.sc-rplayer-log-item.is-system {
+  color: var(--sc-mana);
+}
+
+.sc-rplayer-log-item.is-end {
+  color: var(--sc-gold);
+}
+
+.sc-rplayer-log-item.is-played {
+  color: var(--sc-text);
+}
+
+.sc-rplayer-log-item.is-current {
+  background: rgba(88, 230, 168, 0.14);
+  outline: 1px solid rgba(88, 230, 168, 0.4);
+}
+
+.sc-rplayer-log-index {
+  flex: none;
+  min-width: 2.2em;
+  font-variant-numeric: tabular-nums;
+  color: var(--sc-dim);
+}

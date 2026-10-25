@@ -13,7 +13,7 @@ import { deckOf } from '../../__tests__/fixtures'
 import { metaFromMatch, recordFinishedMatch, setReplayBackendForTests } from '../replayStore'
 import { buildReplayExportText, parseReplayImport } from '../exportImport'
 import { createMemoryBackend, replayBackend, replayIdOf } from '../storage'
-import { formatDuration, hasEndInfo, replayDateLabel } from '../types'
+import { hasEndInfo, replayDateLabel } from '../types'
 
 beforeEach(() => {
   // demo 卡池注册（隔离真实 content 落地进度）+ 干净的 sink / 后端 / store

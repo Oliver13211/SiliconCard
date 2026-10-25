@@ -6,6 +6,7 @@
 import { useGameStore } from '../store/gameStore'
 import { useUiPrefs, type MotionPref } from '../store/uiPrefsStore'
 import { useReplayStore } from '../replay/replayStore'
+import { useCodexStore } from '../codex/codexStore'
 
 const MOTION_LABEL: Record<MotionPref, string> = {
   auto: '动效：跟随系统',
@@ -21,6 +22,7 @@ export function MainMenu() {
   const goto = useGameStore((s) => s.goto)
   const openRules = useGameStore((s) => s.openRules)
   const openLibrary = useReplayStore((s) => s.openLibrary)
+  const openCodex = useCodexStore((s) => s.openCodex)
   const motion = useUiPrefs((s) => s.motion)
   const setMotion = useUiPrefs((s) => s.setMotion)
   return (
@@ -42,6 +44,12 @@ export function MainMenu() {
           onClick={() => openLibrary()}
         >
           对局回放
+        </button>
+        <button type="button" className="sc-btn" onClick={() => openCodex()}>
+          卡牌图鉴
+        </button>
+        <button type="button" className="sc-btn" onClick={() => goto('stats')}>
+          数值面板
         </button>
         <button type="button" className="sc-btn" onClick={() => openRules()}>
           规则书（5 分钟上手）

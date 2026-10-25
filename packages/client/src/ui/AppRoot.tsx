@@ -32,6 +32,9 @@ import { LanScreen } from './screens/LanScreen'
 import { setMatchRecordingSink } from './game/battleDriver'
 import { recordFinishedMatch, useReplayStore } from './replay/replayStore'
 import { ReplayScreen } from './replay/ReplayScreen'
+import { ReplayPlayerScreen } from './replay/ReplayPlayerScreen'
+import { CodexScreen, useCodexStore } from './codex'
+import { StatsScreen } from './stats/StatsScreen'
 
 /** 退场淡出时长（需 ≥ motion.css 的 sc-screen-out 0.22s） */
 const SCREEN_EXIT_MS = 240
@@ -51,6 +54,15 @@ function ScreenOutlet({ screen }: { screen: Screen }) {
       return <ResultScreen />
     case 'rules':
       return <RulesScreen />
+    case 'stats':
+      return (
+        <StatsScreen
+          onClose={() => useGameStore.getState().goto('menu')}
+          onOpenReplay={(id) => {
+            void useReplayStore.getState().openPlayer(id)
+          }}
+        />
+      )
   }
 }
 
@@ -90,10 +102,18 @@ export function SiliconCardApp() {
   }, [])
 
   const replayOpen = useReplayStore((s) => s.open)
+  // 挂载优先级：回放播放器（全屏覆盖，可从回放库或数值面板历史进入）
+  // > 图鉴 > 回放库 > 常规屏（P2-UI3/P2-UI4/P2-DATA1 接线约定）
+  const player = useReplayStore((s) => s.player)
+  const codexOpen = useCodexStore((s) => s.open)
 
   return (
     <div className="sc-app" data-motion={motion}>
-      {replayOpen ? (
+      {player ? (
+        <ReplayPlayerScreen />
+      ) : codexOpen ? (
+        <CodexScreen />
+      ) : replayOpen ? (
         <ReplayScreen />
       ) : (
         <>

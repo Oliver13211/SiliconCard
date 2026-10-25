@@ -1,0 +1,470 @@
+/*
+ * 数值面板样式（P2-DATA1）——ui/stats 专属（任务边界：styles/stats.css 独占）。
+ *
+ * 全部取值走 tokens.css 设计令牌；派系条形图为纯 CSS 自绘（禁引图表库）：
+ * 条宽 = 胜率百分比，50% 基准线用绝对定位虚线压在轨道上。
+ * 派系点缀色沿用 tokens.css 已有四派系，Apple/高通/ARM 补提亮版（同暗底可读原则）。
+ */
+
+/* —— 屏壳 —— */
+
+.sc-stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-5);
+  width: min(960px, 94vw);
+  margin: 0 auto;
+  padding: var(--sc-space-6) 0 var(--sc-space-5);
+}
+
+.sc-stats-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sc-space-4);
+}
+
+/* —— 两层切换页签 —— */
+
+.sc-stats-tabs {
+  display: flex;
+  gap: var(--sc-space-1);
+  padding: var(--sc-space-1);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-pill);
+  background: var(--sc-glass-bg-soft);
+}
+
+.sc-stats-tab {
+  border: none;
+  background: transparent;
+  color: var(--sc-dim);
+  border-radius: var(--sc-radius-pill);
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: color var(--sc-dur-fast) ease, background var(--sc-dur-fast) ease;
+}
+
+.sc-stats-tab:hover {
+  color: var(--sc-text);
+}
+
+.sc-stats-tab.is-active {
+  color: var(--sc-text);
+  background: linear-gradient(180deg, rgba(88, 230, 168, 0.2), rgba(88, 230, 168, 0.08));
+  font-weight: 700;
+}
+
+.sc-stats-tab:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+/* —— 玻璃面板（与回放库/图鉴同语言） —— */
+
+.sc-stats-panel {
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  padding: var(--sc-space-5);
+  animation: sc-stats-in var(--sc-dur-base) var(--sc-ease-out);
+}
+
+@keyframes sc-stats-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sc-stats-panel-title {
+  margin: 0 0 var(--sc-space-4);
+  font-size: var(--sc-fs-lg);
+}
+
+/* —— 派系条形图（纯 CSS，条宽按内联 style 注入） —— */
+
+.sc-stats-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-3);
+}
+
+.sc-stats-bar-row {
+  display: grid;
+  grid-template-columns: 9.5em 1fr auto;
+  align-items: center;
+  gap: var(--sc-space-3);
+}
+
+.sc-stats-bar-name {
+  font-size: var(--sc-fs-base);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-stats-bar-track {
+  position: relative;
+  height: 22px;
+  border-radius: var(--sc-radius-sm);
+  background: rgba(10, 13, 20, 0.55);
+  border: 1px solid var(--sc-line);
+  overflow: hidden;
+}
+
+.sc-stats-bar-fill {
+  position: absolute;
+  inset: 2px auto 2px 2px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--stats-faction-color, var(--sc-accent)) 0%, rgba(255, 255, 255, 0.18) 130%);
+  transition: width var(--sc-dur-slow) var(--sc-ease-out);
+}
+
+/* 50% 均衡基准线（仅全局层显示） */
+.sc-stats-bar-baseline {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  border-left: 1px dashed rgba(255, 200, 87, 0.55);
+}
+
+.sc-stats-bar-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sc-space-3);
+  font-size: var(--sc-fs-base);
+  font-variant-numeric: tabular-nums;
+  min-width: 9.5em;
+}
+
+.sc-stats-bar-games {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+/* —— 派系点缀色（条形染色；沿用 tokens 四派系 + 补三派系提亮版） —— */
+
+.sc-stats-bar-row[data-faction='nvidia'] {
+  --stats-faction-color: var(--sc-faction-nvidia);
+}
+.sc-stats-bar-row[data-faction='amd'] {
+  --stats-faction-color: var(--sc-faction-amd);
+}
+.sc-stats-bar-row[data-faction='intel'] {
+  --stats-faction-color: var(--sc-faction-intel);
+}
+.sc-stats-bar-row[data-faction='neutral'] {
+  --stats-faction-color: var(--sc-faction-neutral);
+}
+.sc-stats-bar-row[data-faction='apple'] {
+  --stats-faction-color: #c9d4e4;
+}
+.sc-stats-bar-row[data-faction='qualcomm'] {
+  --stats-faction-color: #46c8ff;
+}
+.sc-stats-bar-row[data-faction='arm'] {
+  --stats-faction-color: #ffb454;
+}
+
+/* —— 口径 hover 提示 —— */
+
+.sc-stats-tip {
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted var(--sc-line-strong);
+}
+
+.sc-stats-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px);
+  width: max-content;
+  max-width: 300px;
+  padding: 8px 12px;
+  border-radius: var(--sc-radius-sm);
+  border: 1px solid var(--sc-line-strong);
+  background: var(--sc-panel-solid);
+  color: var(--sc-text);
+  font-size: var(--sc-fs-sm);
+  line-height: 1.5;
+  box-shadow: var(--sc-shadow-2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--sc-dur-fast) ease, transform var(--sc-dur-fast) var(--sc-ease-out);
+  z-index: 10;
+}
+
+.sc-stats-tip:hover::after,
+.sc-stats-tip:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* —— 口径标注行 / 空态 / 错误态 —— */
+
+.sc-stats-annotation {
+  margin: var(--sc-space-4) 0 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-stats-empty {
+  padding: var(--sc-space-6) var(--sc-space-5);
+  border: 1px dashed var(--sc-line-strong);
+  border-radius: var(--sc-radius-lg);
+  color: var(--sc-dim);
+  text-align: center;
+  background: var(--sc-glass-bg-soft);
+}
+
+.sc-stats-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sc-space-4);
+  padding: var(--sc-space-6) var(--sc-space-5);
+  border: 1px solid rgba(255, 107, 94, 0.4);
+  border-radius: var(--sc-radius-lg);
+  color: #ffb0a8;
+  background: var(--sc-glass-bg-soft);
+  text-align: center;
+}
+.sc-stats-error p {
+  margin: 0;
+}
+
+/* —— 卡牌表 —— */
+
+.sc-stats-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-4);
+  margin-bottom: var(--sc-space-3);
+}
+
+.sc-stats-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-stats-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 166, 197, 0.28) transparent;
+}
+
+.sc-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-stats-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--sc-panel-solid);
+  border-bottom: 1px solid var(--sc-line-strong);
+  padding: var(--sc-space-2) var(--sc-space-3);
+  text-align: left;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+
+.sc-stats-table td {
+  padding: var(--sc-space-2) var(--sc-space-3);
+  border-bottom: 1px solid var(--sc-line);
+}
+
+.sc-stats-table tbody tr:hover {
+  background: rgba(88, 230, 168, 0.05);
+}
+
+.sc-stats-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--sc-radius-sm);
+}
+
+.sc-stats-sort:hover {
+  color: var(--sc-text);
+}
+
+.sc-stats-sort.is-active {
+  color: var(--sc-accent);
+}
+
+.sc-stats-sort:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.sc-stats-sort-arrow {
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+.sc-stats-card-name {
+  display: block;
+}
+
+.sc-stats-card-faction {
+  display: block;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+/* —— 个人历史：汇总卡 —— */
+
+.sc-stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sc-space-4);
+}
+
+.sc-stats-summary-card {
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  padding: var(--sc-space-4) var(--sc-space-5);
+  text-align: center;
+}
+
+.sc-stats-summary-card.is-win {
+  border-color: rgba(88, 230, 168, 0.35);
+}
+.sc-stats-summary-card.is-loss {
+  border-color: rgba(255, 107, 94, 0.35);
+}
+
+.sc-stats-summary-num {
+  display: block;
+  font-size: var(--sc-fs-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sc-stats-summary-card.is-win .sc-stats-summary-num {
+  color: var(--sc-accent);
+}
+.sc-stats-summary-card.is-loss .sc-stats-summary-num {
+  color: var(--sc-danger);
+}
+
+.sc-stats-summary-label {
+  display: block;
+  margin-top: var(--sc-space-1);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+/* —— 个人历史：最近 10 局列表 —— */
+
+.sc-stats-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-stats-recent-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sc-space-3);
+  padding: var(--sc-space-2) var(--sc-space-1);
+  border-bottom: 1px solid var(--sc-line);
+}
+
+.sc-stats-recent-row:last-child {
+  border-bottom: none;
+}
+
+.sc-stats-recent-when {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+  font-variant-numeric: tabular-nums;
+  min-width: 11em;
+}
+
+.sc-stats-recent-versus {
+  flex: 1;
+  min-width: 12em;
+}
+.sc-stats-recent-versus em {
+  font-style: normal;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-stats-outcome {
+  min-width: 2em;
+  text-align: center;
+  font-weight: 700;
+}
+.sc-stats-outcome.is-win {
+  color: var(--sc-accent);
+}
+.sc-stats-outcome.is-loss {
+  color: var(--sc-danger);
+}
+.sc-stats-outcome.is-draw {
+  color: var(--sc-gold);
+}
+
+.sc-stats-recent-detail {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+/* —— 屏脚 —— */
+
+.sc-stats-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sc-space-4);
+}
+
+/* —— 窄屏降级：条形图改两行布局，表格横滚 —— */
+
+@media (max-width: 720px) {
+  .sc-stats-bar-row {
+    grid-template-columns: 7em 1fr auto;
+  }
+  .sc-stats-bar-name {
+    font-size: var(--sc-fs-sm);
+  }
+  .sc-stats-bar-value {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 5em;
+  }
+}

@@ -1,9 +1,10 @@
 /**
- * ReplayScreen —— 回放库屏（P2-INF1）：列表 / 按日期筛选 / 看对阵胜负 / 删除 / 导出 / 导入。
+ * ReplayScreen —— 回放库屏（P2-INF1）：列表 / 按日期筛选 / 看对阵胜负 / 删除 / 导出 / 导入 / 播放。
  *
  * 只从主菜单进入（openLibrary / closeLibrary，AppRoot 按 open 分流渲染），
  * 不占用 gameStore 的 screen 路由（避免与对局屏互相踩状态）。
- * 播放器（P2-UI3）落地后，列表行将挂「播放」入口——本屏结构预留。
+ * 播放（P2-UI3）：行内「播放」→ openPlayer 写入 replayStore.player，
+ * AppRoot 按 player 分流渲染 ReplayPlayerScreen（挂载约定见 replayStore）。
  *
  * 交互细节：
  * - 导入：文件选择 + 整屏拖拽 .json 双路径；校验失败不库存、原因直显（role=alert）；
@@ -47,6 +48,7 @@ function StatusBanner() {
 function ReplayRow({ meta }: { meta: ReplayMeta }) {
   const removeReplay = useReplayStore((s) => s.removeReplay)
   const exportReplay = useReplayStore((s) => s.exportReplay)
+  const openPlayer = useReplayStore((s) => s.openPlayer)
   const status = useReplayStore((s) => s.status)
   const [confirming, setConfirming] = useState(false)
   const busy = status.kind === 'busy'
@@ -74,6 +76,14 @@ function ReplayRow({ meta }: { meta: ReplayMeta }) {
         </span>
       </div>
       <div className="sc-replay-row-actions">
+        <button
+          type="button"
+          className="sc-btn sc-btn--small sc-btn--primary"
+          disabled={busy}
+          onClick={() => void openPlayer(meta.id)}
+        >
+          播放
+        </button>
         <button type="button" className="sc-btn sc-btn--small" disabled={busy} onClick={() => void exportReplay(meta.id)}>
           导出 JSON
         </button>

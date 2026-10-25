@@ -1,0 +1,270 @@
+/*
+ * 全卡图鉴样式（P2-UI4）—— 独立文件，由 CodexScreen 自行引入（不碰 hud.css）。
+ * 复用 tokens.css 设计变量与 screens.css 的 sc-screen-title / sc-btn 基类。
+ * 响应式列数：卡面 3:4.2 纵横比，auto-fill + minmax 随视口自动增减列。
+ */
+
+.sc-codex {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-4);
+  width: min(1280px, 96vw);
+  margin: 0 auto;
+  padding: var(--sc-space-6) 0;
+  min-height: 100vh;
+}
+
+.sc-codex-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+}
+
+.sc-codex-sub {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-base);
+}
+
+.sc-codex-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* —— 筛选与排序控制条 —— */
+
+.sc-codex-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sc-space-3) var(--sc-space-4);
+  padding: var(--sc-space-3) var(--sc-space-4);
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-md);
+  backdrop-filter: blur(var(--sc-glass-blur));
+}
+
+.sc-codex-control {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-codex-control select {
+  background: var(--sc-panel-2);
+  color: var(--sc-text);
+  border: 1px solid var(--sc-line-strong);
+  border-radius: var(--sc-radius-sm);
+  padding: var(--sc-space-1) var(--sc-space-2);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-codex-control button[aria-pressed='true'] {
+  outline: 1px solid var(--sc-accent);
+  color: var(--sc-accent);
+}
+
+/* —— 卡面瀑布网格（响应式列数） —— */
+
+.sc-codex-body {
+  display: flex;
+  gap: var(--sc-space-5);
+  align-items: flex-start;
+}
+
+.sc-codex-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--sc-space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sc-codex-cell {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--sc-radius-md);
+  cursor: pointer;
+  transition: transform var(--sc-dur-fast, 120ms) var(--sc-ease, ease);
+}
+
+.sc-codex-cell:hover,
+.sc-codex-cell:focus-visible {
+  transform: translateY(-3px);
+}
+
+.sc-codex-cell[aria-pressed='true'] {
+  outline: 2px solid var(--sc-accent);
+}
+
+.sc-codex-cell canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--sc-radius-md);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* —— 详情面板（大图 + 白话解释 + 数值 + 平衡数据） —— */
+
+.sc-codex-detail {
+  position: sticky;
+  top: var(--sc-space-4);
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-4);
+  max-height: calc(100vh - var(--sc-space-6) * 2);
+  overflow-y: auto;
+  padding: var(--sc-space-4);
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  backdrop-filter: blur(var(--sc-glass-blur));
+}
+
+.sc-codex-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-3);
+}
+
+.sc-codex-detail-name {
+  margin: 0;
+  font-size: var(--sc-fs-lg, 18px);
+}
+
+.sc-codex-face--large {
+  width: 100%;
+  height: auto;
+  border-radius: var(--sc-radius-md);
+  align-self: center;
+}
+
+.sc-codex-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sc-space-2);
+}
+
+.sc-codex-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sc-space-2);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+}
+
+.sc-codex-stat-label {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-codex-stat-value {
+  font-size: var(--sc-fs-base);
+  font-weight: 700;
+}
+
+.sc-codex-tags {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-codex-tag {
+  display: inline-block;
+  margin-left: var(--sc-space-1);
+  padding: 0 var(--sc-space-2);
+  border: 1px solid var(--sc-line-strong);
+  border-radius: var(--sc-radius-pill);
+}
+
+.sc-codex-detail h3 {
+  margin: 0 0 var(--sc-space-2);
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  text-transform: none;
+  letter-spacing: 0.08em;
+}
+
+.sc-codex-detail section {
+  padding-top: var(--sc-space-3);
+  border-top: 1px solid var(--sc-line);
+}
+
+.sc-codex-explain-trigger {
+  margin: 0 0 var(--sc-space-1);
+  font-weight: 800;
+  color: var(--sc-accent);
+}
+
+.sc-codex-explain ul,
+.sc-codex-keywords ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  font-size: var(--sc-fs-sm);
+  line-height: 1.65;
+}
+
+.sc-codex-explain-missing {
+  margin: var(--sc-space-2) 0 0;
+  color: var(--sc-danger);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-codex-flavor {
+  margin: 0;
+  color: var(--sc-dim);
+  font-style: italic;
+  font-size: var(--sc-fs-sm);
+  line-height: 1.6;
+}
+
+.sc-codex-balance p {
+  margin: 0;
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-codex-balance-empty {
+  color: var(--sc-dim);
+}
+
+.sc-codex-demo {
+  margin-top: auto;
+}
+
+/* —— 窄屏：详情改为全宽下方面板 —— */
+
+@media (max-width: 900px) {
+  .sc-codex-body {
+    flex-direction: column-reverse;
+  }
+
+  .sc-codex-detail {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+
+  .sc-codex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}

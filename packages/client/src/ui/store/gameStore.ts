@@ -43,7 +43,7 @@ import { buildResult, type ResultData } from '../game/result'
 import { synthesizeOpeningEvents } from '../game/opening'
 import { FACTION_DISPLAY } from '../game/fallbackContent'
 
-export type Screen = 'menu' | 'setup' | 'battle' | 'result' | 'rules' | 'lan'
+export type Screen = 'menu' | 'setup' | 'battle' | 'result' | 'rules' | 'lan' | 'stats'
 
 export interface TargetingState {
   kind: 'play' | 'attack' | 'heroPower'
