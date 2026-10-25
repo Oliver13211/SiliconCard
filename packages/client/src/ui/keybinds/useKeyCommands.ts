@@ -57,6 +57,5 @@ export function useKeyCommands(handlers: KeyCommandHandlers, scope?: KeyScope): 
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope])
 }

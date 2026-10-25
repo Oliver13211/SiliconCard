@@ -12,7 +12,6 @@ import {
   REPLAY_COMMANDS,
   commandDefOf,
   isCommandId,
-  type CommandId,
 } from '../commands'
 import { comboFromEvent, formatCombo, isReservedCombo, parseCombo } from '../combo'
 import {
