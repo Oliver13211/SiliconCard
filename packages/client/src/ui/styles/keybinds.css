@@ -1,0 +1,199 @@
+/**
+ * keybinds.css —— P2-UI5 快捷键体系专属样式（编辑器 / 键位表浮层 / 手牌角标 /
+ * 键盘循环选目标高亮）。只进自己的类名，不覆盖既有文件的规则。
+ */
+
+/* ————— 手牌槽位键位角标（HandCardView，可开关） ————— */
+.sc-key-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  font-size: var(--sc-fs-xs);
+  font-weight: 800;
+  color: var(--sc-dim);
+  background: rgba(141, 151, 173, 0.14);
+  border: 1px solid var(--sc-line);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transform: translateZ(1px);
+}
+
+/* ————— 键盘循环选目标高亮（BattleScreen 包裹层 + 英雄命中区） ————— */
+.sc-key-target {
+  position: relative;
+  display: flex;
+  border-radius: var(--sc-radius-md);
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sc-accent) 45%, transparent);
+}
+.sc-hero-hitbox.is-key-target {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sc-accent) 45%, transparent);
+}
+
+/* ————— 键位表浮层（`?` 速查） ————— */
+.sc-key-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 8, 14, 0.66);
+  backdrop-filter: blur(6px);
+}
+.sc-key-overlay-card {
+  width: min(560px, calc(100vw - 48px));
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+  padding: var(--sc-space-5);
+  border-radius: var(--sc-radius-lg);
+  border: 1px solid var(--sc-line-strong);
+  background: var(--sc-glass-bg);
+  box-shadow: var(--sc-glass-shadow), var(--sc-shadow-3);
+}
+.sc-key-overlay-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sc-space-3);
+}
+.sc-key-overlay-head h3 {
+  margin: 0;
+  font-size: var(--sc-fs-xl);
+}
+.sc-key-overlay-group h4 {
+  margin: var(--sc-space-3) 0 var(--sc-space-2);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  font-weight: 700;
+}
+.sc-key-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sc-key-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--sc-text);
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--sc-line);
+}
+.sc-key-table td {
+  text-align: right;
+  padding: 5px 0 5px 8px;
+  border-bottom: 1px solid var(--sc-line);
+}
+.sc-key-table kbd {
+  font-family: inherit;
+  font-size: var(--sc-fs-sm);
+  font-weight: 700;
+  color: var(--sc-accent);
+  background: color-mix(in srgb, var(--sc-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc-accent) 35%, transparent);
+  border-radius: 6px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.sc-key-overlay-foot {
+  margin: var(--sc-space-4) 0 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+/* ————— 键位编辑器（开局配置屏） ————— */
+.sc-key-editor-bar {
+  display: flex;
+  gap: var(--sc-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--sc-space-2);
+}
+.sc-key-editor-note {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  margin: 0 0 var(--sc-space-3);
+}
+.sc-key-editor-group h4 {
+  margin: var(--sc-space-3) 0 var(--sc-space-2);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  font-weight: 700;
+}
+.sc-key-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-3);
+  max-width: 480px;
+  padding: 4px 8px;
+  border-radius: var(--sc-radius-sm);
+}
+.sc-key-row.is-capturing {
+  background: color-mix(in srgb, var(--sc-accent) 8%, transparent);
+}
+.sc-key-label {
+  flex: 1;
+  font-size: var(--sc-fs-base);
+}
+.sc-key-keybtn {
+  min-width: 150px;
+  padding: 5px 12px;
+  text-align: center;
+  font-size: var(--sc-fs-md);
+  font-weight: 700;
+  color: var(--sc-text);
+  background: var(--sc-panel-2);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  cursor: pointer;
+  transition: border-color var(--sc-dur-fast) ease;
+}
+.sc-key-keybtn:hover {
+  border-color: var(--sc-accent);
+}
+.sc-key-keybtn.is-custom {
+  color: var(--sc-gold);
+  border-color: color-mix(in srgb, var(--sc-gold) 40%, transparent);
+}
+.sc-key-reset {
+  padding: 5px 10px;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+  background: transparent;
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  cursor: pointer;
+}
+.sc-key-reset:hover:not(:disabled) {
+  color: var(--sc-text);
+  border-color: var(--sc-line-strong);
+}
+.sc-key-reset:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.sc-key-conflict {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-3);
+  flex-wrap: wrap;
+  max-width: 480px;
+  margin: var(--sc-space-1) 0 var(--sc-space-2) 8px;
+  padding: 8px 12px;
+  font-size: var(--sc-fs-md);
+  color: var(--sc-gold);
+  background: color-mix(in srgb, var(--sc-gold) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc-gold) 35%, transparent);
+  border-radius: var(--sc-radius-sm);
+}
+.sc-key-notice {
+  margin: var(--sc-space-2) 0 0 8px;
+  color: var(--sc-danger);
+  font-size: var(--sc-fs-md);
+}

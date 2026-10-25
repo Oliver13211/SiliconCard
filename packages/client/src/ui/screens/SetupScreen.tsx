@@ -2,12 +2,15 @@
  * 开局配置（M1-UI3）：选派系 → 选卡组 → 对手派系 → 上电开打。
  * 派系可用性以 core 技能注册表为准（getFactionSkill）；卡组来自 content/decks，
  * 未就位时优雅降级为随机 demo 牌组（deckLoader）。
+ * P2-UI5：§4 键位设置（KeybindEditor）——点命令按新键、冲突交换/改选、
+ * 恢复默认、`?` 键位表浮层。
  */
 
 import type { CSSProperties } from 'react'
 import { getFactionSkill } from '@siliconcard/core'
 import { useGameStore } from '../store/gameStore'
 import { FACTION_DISPLAY } from '../game/fallbackContent'
+import { KeybindEditor } from '../keybinds/components/KeybindEditor'
 
 export function SetupScreen() {
   const draftFaction = useGameStore((s) => s.draftFaction)
@@ -89,6 +92,11 @@ export function SetupScreen() {
             对面由「简易托管」代打（占位，正式内置人机为 M1-AI1）：只走引擎公开接口，能出就出、能打就打。
           </p>
         </div>
+      </section>
+
+      <section className="sc-setup-section">
+        <h2>4 · 键位设置</h2>
+        <KeybindEditor />
       </section>
 
       <div className="sc-setup-actions">

@@ -5,6 +5,7 @@
 
 import { useGameStore } from '../store/gameStore'
 import { useUiPrefs, type MotionPref } from '../store/uiPrefsStore'
+import { useReplayStore } from '../replay/replayStore'
 
 const MOTION_LABEL: Record<MotionPref, string> = {
   auto: '动效：跟随系统',
@@ -19,6 +20,7 @@ function nextMotionPref(current: MotionPref): MotionPref {
 export function MainMenu() {
   const goto = useGameStore((s) => s.goto)
   const openRules = useGameStore((s) => s.openRules)
+  const openLibrary = useReplayStore((s) => s.openLibrary)
   const motion = useUiPrefs((s) => s.motion)
   const setMotion = useUiPrefs((s) => s.setMotion)
   return (
@@ -32,6 +34,14 @@ export function MainMenu() {
         </button>
         <button type="button" className="sc-btn" onClick={() => goto('lan')}>
           局域网对战
+        </button>
+        <button
+          type="button"
+          className="sc-btn"
+          title="本地最近 50 局的确定性回放（可导出 JSON / 导入存档）"
+          onClick={() => openLibrary()}
+        >
+          对局回放
         </button>
         <button type="button" className="sc-btn" onClick={() => openRules()}>
           规则书（5 分钟上手）

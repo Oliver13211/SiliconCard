@@ -5,18 +5,23 @@
  * 覆盖其上）→ 己方面板 + 手牌 + 技能/回合按钮。
  *
  * 交互语义（全部由 getLegalActions 驱动）：
- * - 手牌点击：无需目标的牌直接打出；需要目标则进入 target 模式（高亮候选）；
+ * - 手牌点击/槽位键：无需目标的牌直接打出；需要目标则进入 target 模式（高亮候选）；
  * - 己方单位点击：宣告攻击（进入目标选择）；候选目标点击：确认；
- * - ESC / 取消按钮退出目标选择；非法操作按钮禁用并标注梗化原因；
+ * - 键盘（P2-UI5，键位表见 useKeyCommands）：槽位键出牌 / 空格结束回合 / H 技能 /
+ *   Tab 循环候选目标（accent 高亮）+ Enter 确认 / Esc 取消——全部走与点击相同的
+ *   store 动作入口，键鼠同一路径；M 静音 / K 角标开关 / ? 键位表浮层；
+ * - 非法操作按钮禁用并标注梗化原因；
  * - 单机：对面回合由「简易托管」按节拍自动推进（botTick）；
  * - 联机（remoteMode）：动作经服务端结算、事件由 events 帧推送——botTick 停用，
  *   断线时盖重连提示层（服务端宽限期内 resume 无缝续局），对手掉线时挂提示横幅。
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getFactionSkill, type BoardUnit, type PlayerId } from '@siliconcard/core'
 import { useGameStore, type TargetingState } from '../store/gameStore'
 import { useLanStore } from '../store/lanStore'
+import { useAudioStore } from '../store/audioStore'
+import '../styles/keybinds.css'
 import { BattleLog } from '../components/BattleLog'
 import { ErrorToast } from '../components/ErrorToast'
 import { PlayerPanel } from '../components/PlayerPanel'
@@ -32,6 +37,11 @@ import {
   targetKey,
   type Interactivity,
 } from '../game/legal'
+import { PLAY_SLOT_COMMANDS, type CommandId } from '../keybinds/commands'
+import { formatCombo } from '../keybinds/combo'
+import { useKeyCommands, type KeyCommandHandlers } from '../keybinds/useKeyCommands'
+import { useKeybinds } from '../keybinds/keybindsStore'
+import { KeyHintsOverlay } from '../keybinds/components/KeyHintsOverlay'
 import type { PlayerView, TargetRef } from '@siliconcard/core'
 
 export function BattleScreen() {
@@ -59,14 +69,7 @@ export function BattleScreen() {
     return () => clearTimeout(timer)
   }, [view, remoteMode])
 
-  // ESC 取消目标选择
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') cancelTargeting()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [cancelTargeting])
+  // 取消目标选择 / 关浮层由 BattleInner 的 useKeyCommands cancel 命令接管（键鼠同路径）
 
   if (!view || !interactivity) return null
   return (
@@ -126,6 +129,59 @@ function BattleInner(props: BattleInnerProps) {
   const enemyUnits = view.board.filter((u) => u.ownerId !== view.viewer)
   const ownSlots = `${ownUnits.length}/7`
 
+  // —— 键盘命令流（P2-UI5）：按键翻译成命令后全部走本组件既有的 store 动作入口 ——
+  const [showHelp, setShowHelp] = useState(false)
+  const [cycleIndex, setCycleIndex] = useState(0)
+  const targetingTargets = targeting?.targets ?? []
+  const binds = useKeybinds((s) => s.binds)
+  const hintsVisible = useKeybinds((s) => s.hintsVisible)
+  const toggleHints = useKeybinds((s) => s.toggleHints)
+
+  // 目标候选变化（进入/换牌/取消）时循环游标归零
+  useEffect(() => {
+    setCycleIndex(0)
+  }, [targeting])
+
+  // 手牌前 10 张映射槽位命令（点击逻辑复用：tryPlayCard 自带合法性反馈）
+  const hand = view.you.hand
+  const slotHandlers: KeyCommandHandlers = {}
+  PLAY_SLOT_COMMANDS.forEach((id, index) => {
+    const card = hand[index]
+    if (!card) return
+    slotHandlers[id as CommandId] = () => tryPlayCard(card.uid)
+  })
+
+  useKeyCommands(
+    {
+      ...slotHandlers,
+      end_turn: () => endTurn(),
+      hero_power: () => tryHeroPower(),
+      cycle_target: () => {
+        if (targetingTargets.length > 0) setCycleIndex((i) => (i + 1) % targetingTargets.length)
+      },
+      confirm: () => {
+        if (targetingTargets.length === 0) return
+        confirmTarget(targetingTargets[cycleIndex % targetingTargets.length] as TargetRef)
+      },
+      cancel: () => {
+        if (showHelp) {
+          setShowHelp(false)
+          return
+        }
+        cancelTargeting()
+      },
+      mute: () => useAudioStore.getState().toggleMuted(),
+      toggle_key_hints: () => toggleHints(),
+      help: () => setShowHelp((v) => !v),
+    },
+    'battle',
+  )
+
+  // 键盘循环光标当前指向的目标（Tab 切换、Enter 确认；与点击确认同一 confirmTarget）
+  const cycledTarget =
+    targeting && targetingTargets.length > 0 ? targetingTargets[cycleIndex % targetingTargets.length] : null
+  const cycledKey = cycledTarget ? targetKey(cycledTarget) : null
+
   // 手牌可打性一次性推导（展示用）：功耗不足（"供电不够"）时让功耗条红脉冲提醒
   const handEntries = view.you.hand.map((card) => ({
     card,
@@ -172,13 +228,14 @@ function BattleInner(props: BattleInnerProps) {
       const status =
         unit.ownerId === view.viewer ? attackStatusOf(view, interactivity, unit) : { available: false as const }
       return (
-        <UnitCardView
-          key={unit.instanceId}
-          unit={unit}
-          targetable={targetKeys.has(key)}
-          selectable={!targeting && unit.ownerId === view.viewer && status.available}
-          onClick={() => onUnitClick(unit)}
-        />
+        <div key={unit.instanceId} className={cycledKey === key ? 'sc-key-target' : undefined}>
+          <UnitCardView
+            unit={unit}
+            targetable={targetKeys.has(key)}
+            selectable={!targeting && unit.ownerId === view.viewer && status.available}
+            onClick={() => onUnitClick(unit)}
+          />
+        </div>
       )
     })
   }
@@ -189,7 +246,7 @@ function BattleInner(props: BattleInnerProps) {
       <main className="sc-arena">
         <header className="sc-zone sc-zone--opponent">
           <div
-            className={`sc-hero-hitbox${targetKeys.has(targetKey({ kind: 'hero', playerId: view.opponent.id })) ? ' is-targetable' : ''}`}
+            className={`sc-hero-hitbox${targetKeys.has(targetKey({ kind: 'hero', playerId: view.opponent.id })) ? ' is-targetable' : ''}${cycledKey === targetKey({ kind: 'hero', playerId: view.opponent.id }) ? ' is-key-target' : ''}`}
             onClick={() => onHeroClick(view.opponent.id)}
           >
             <PlayerPanel player={view.opponent} side="opponent" />
@@ -216,7 +273,7 @@ function BattleInner(props: BattleInnerProps) {
             <div className="sc-target-bar" role="status">
               <span>
                 {targeting.kind === 'play' ? '为目标选一个对象' : targeting.kind === 'attack' ? '选攻击目标' : '为技能选目标'}
-                （{targeting.targets.length} 个候选）
+                （{targeting.targets.length} 个候选 · {formatCombo(binds.cycle_target)} 切 · {formatCombo(binds.confirm)} 定 · {formatCombo(binds.cancel)} 溜）
               </span>
               <button type="button" className="sc-btn sc-btn--small" onClick={cancelTargeting}>
                 取消（ESC）
@@ -228,7 +285,7 @@ function BattleInner(props: BattleInnerProps) {
         <footer className="sc-zone sc-zone--self">
           <div className="sc-self-row">
             <div
-              className={`sc-hero-hitbox${targetKeys.has(targetKey({ kind: 'hero', playerId: view.viewer })) ? ' is-targetable' : ''}`}
+              className={`sc-hero-hitbox${targetKeys.has(targetKey({ kind: 'hero', playerId: view.viewer })) ? ' is-targetable' : ''}${cycledKey === targetKey({ kind: 'hero', playerId: view.viewer }) ? ' is-key-target' : ''}`}
               onClick={() => onHeroClick(view.viewer)}
             >
               <PlayerPanel player={view.you} side="self" slotUsage={ownSlots} starved={powerStarved} />
@@ -272,12 +329,13 @@ function BattleInner(props: BattleInnerProps) {
             {view.you.hand.length === 0 ? (
               <span className="sc-board-empty">手牌空了——等下回合抽卡</span>
             ) : (
-              handEntries.map(({ card, status }) => (
+              handEntries.map(({ card, status }, index) => (
                 <HandCardView
                   key={card.uid}
                   card={card}
                   status={status}
                   selected={selectedUid === card.uid}
+                  keyHint={hintsVisible && index < 10 ? formatCombo(binds[PLAY_SLOT_COMMANDS[index] as CommandId]) : undefined}
                   onClick={() => tryPlayCard(card.uid)}
                 />
               ))
@@ -300,6 +358,7 @@ function BattleInner(props: BattleInnerProps) {
           </div>
         </div>
       ) : null}
+      {showHelp ? <KeyHintsOverlay scope="battle" onClose={() => setShowHelp(false)} /> : null}
       <ErrorToast />
     </div>
   )

@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "triggers": {
+    "battlecry": "出战吼",
+    "deathrattle": "蓝屏传家宝（阵亡时）",
+    "onPlay": "打出时",
+    "aura": "光环",
+    "turnStart": "回合开始时",
+    "turnEnd": "回合结束时",
+    "onAttack": "攻击时",
+    "onDamaged": "受到伤害时"
+  },
+  "selectors": {
+    "chosen|ownUnits": "你指定的一台己方显卡",
+    "chosen|enemyUnits": "你指定的一台敌方显卡",
+    "chosen|allUnits": "你指定的场上任意一台显卡",
+    "chosen|anyCharacter": "你指定的任意一个角色（场上显卡或任一方的 CPU）",
+    "chosen|ownHero": "你自己的 CPU",
+    "chosen|enemyHero": "对手的 CPU",
+    "chosen|self": "这张卡自己",
+    "chosen|sourceOwner": "你自己的 CPU",
+    "chosen|opposingPlayer": "对手的 CPU",
+    "random|ownUnits": "随机一台己方显卡（引擎种子说了算，同 seed 必复现）",
+    "random|enemyUnits": "随机一台敌方显卡（引擎种子说了算）",
+    "random|allUnits": "随机一台场上显卡（引擎种子说了算）",
+    "random|anyCharacter": "随机一个角色（场上显卡或任一方的 CPU）",
+    "random|ownHero": "你自己的 CPU（池里就它，随机了个寂寞）",
+    "random|enemyHero": "对手的 CPU（池里就它）",
+    "random|self": "这张卡自己（独苗）",
+    "random|sourceOwner": "你自己的 CPU",
+    "random|opposingPlayer": "对手的 CPU",
+    "all|ownUnits": "己方全部显卡",
+    "all|enemyUnits": "敌方全部显卡",
+    "all|allUnits": "场上全部显卡（双方通吃）",
+    "all|anyCharacter": "场上所有角色（显卡和 CPU 一个不留全挨一遍）",
+    "all|ownHero": "你自己的 CPU",
+    "all|enemyHero": "对手的 CPU",
+    "all|self": "这张卡自己",
+    "all|sourceOwner": "你自己的 CPU",
+    "all|opposingPlayer": "对手的 CPU",
+    "all|enemyUnits|miner": "敌方场上全部带「矿卡」标签的显卡（矿难受害者名单）"
+  },
+  "ops": {
+    "damage": {
+      "template": "对{target}造成{amount}点伤害"
+    },
+    "heal": {
+      "template": "为{target}回复{amount}点血量"
+    },
+    "buff": {
+      "template": "使{target}的攻击{attack}、血量{health}（正数增强负数削弱，没写明的维度不动）"
+    },
+    "grantKeyword": {
+      "template": "让{target}获得关键词「{keyword}」"
+    },
+    "removeKeyword": {
+      "template": "拆掉{target}的关键词「{keyword}」"
+    },
+    "draw": {
+      "template": "为{player}抽{count}张牌（牌库见底时改为吃疲劳）",
+      "params": {
+        "player": {
+          "sourceOwner": "自己",
+          "opposingPlayer": "对手"
+        }
+      }
+    },
+    "summon": {
+      "template": "召唤{count}台「{cardId}」入场（场上满 7 台时，多出来的静默消失）"
+    },
+    "destroy": {
+      "template": "直接拆掉{target}（不造成伤害，三年质保也拦不住；蓝屏传家宝照样触发）"
+    },
+    "revive": {
+      "template": "把{pick}召回{to}，共{count}张（坟场没卡或场满则少召的部分无事发生）",
+      "params": {
+        "pick": {
+          "lastOwnedGpu": "你坟场里最近阵亡的一张显卡",
+          "random": "坟场里随机一张显卡"
+        },
+        "to": {
+          "sourceOwnerBoard": "拥有者的场上（坟场没卡或场满了就无事发生）"
+        }
+      }
+    },
+    "gainArmor": {
+      "template": "给{player}的 CPU 叠{amount}点护甲（挨打先掉护甲再掉血）",
+      "params": {
+        "player": {
+          "sourceOwner": "自己",
+          "opposingPlayer": "对手"
+        }
+      }
+    },
+    "lockMana": {
+      "template": "给{player}拉电闸：下回合锁定{amount}W 功耗（跳闸一天，后天来电）",
+      "params": {
+        "player": {
+          "sourceOwner": "自己",
+          "opposingPlayer": "对手"
+        }
+      }
+    },
+    "handler": {
+      "template": "{handler}"
+    }
+  },
+  "keywords": {
+    "taunt": "信仰充值（嘲讽）：只要它站场上，敌人必须先攻击它——为信仰氪金的人，理应第一个挨揍",
+    "divine_shield": "三年质保（圣盾）：完全抵挡下一次受到的任何伤害，挡完即失效；重复获得不叠层；直接拆除类效果不给质保面子",
+    "charge": "超频（冲锋）：入场当回合就能立刻攻击，不用等散热",
+    "windfury": "双芯 GPU（风怒）：每回合可以攻击两次，一张卡干两个人的活",
+    "deathrattle": "蓝屏传家宝（亡语）：死亡时触发卡面写明的遗言，一次死亡只触发一次；被直接拆除也算死亡，遗产照样到账",
+    "stealth": "无输出亮机（潜行）：现身前不可被敌方指定为攻击或效果目标；一旦动手攻击立刻暴露；它没现身时自己的嘲讽也不生效",
+    "overload": "跳闸（过载）：这张卡打出后，下回合你的可用功耗会被锁定一部分（锁多少由卡面效果里的拉闸步骤给出，没写就默认 100W）"
+  },
+  "handlers": {
+    "ray_tracing_try": "开光追试试：70% 概率对指定目标造成 1 点伤害；剩下 30% 概率开不起来，只弹一条「光追失败」战报且无事发生（功耗已经付了）",
+    "double_attack": "帧生成：指定显卡的攻击力翻倍——AI 连攻击力都给你插帧了。按当前面板计算（含光环贡献），永久生效；0 攻翻倍无事发生"
+  },
+  "special": {
+    "aura|attack|ownUnits": "光环：己方全体显卡攻击 +{delta}（这卡在场才生效，离场即回收）",
+    "aura|attack|enemyUnits": "光环：敌方全体显卡攻击 +{delta}（通敌电波，离场即回收）",
+    "aura|attack|allUnits": "光环：场上全体显卡攻击 +{delta}（无差别火力，离场即回收）",
+    "aura|health|ownUnits": "光环：己方全体显卡血量 +{delta}（全员堆料，离场即回收）",
+    "aura|health|enemyUnits": "光环：敌方全体显卡血量 +{delta}（给对面镀膜，离场即回收）",
+    "aura|health|allUnits": "光环：场上全体显卡血量 +{delta}（集体加装马甲，离场即回收）",
+    "aura|cost|ownUnits": "光环：你手牌全部卡的功耗{delta}W（负数=降价促销，白送也是合法价格）",
+    "aura|cost|enemyUnits": "光环：对手手牌全部卡的功耗{delta}W（正数=给对面加关税）",
+    "aura|cost|allUnits": "光环：双方手牌全部卡的功耗{delta}W（物价局在线营业）",
+    "revive|lastOwnedGpu": "把你坟场里最近阵亡的{count}张显卡召回场上（重生为新实例：攻血与关键词按卡牌定义重置，之前的增益不带走；只捞显卡，配件复活不了；坟场没卡或场上满 7 台则少召的部分无事发生）",
+    "revive|random": "从拥有者的坟场随机捞{count}张显卡回场上（同样重生为新实例；配件复活不了；池空或场满则少召的部分无事发生）",
+    "damage|all|sourceOwner": "反噬：你自己的 CPU 直接吃{amount}点伤害（高功耗的信仰税，先扣护甲）",
+    "lockMana|sourceOwner": "拉电闸：下回合你被锁定{amount}W 功耗（跳闸一天，后天来电）"
+  }
+}

@@ -1,0 +1,231 @@
+/**
+ * 回放库屏样式（P2-INF1）——独立文件，由 ReplayScreen 自行引入（不碰 hud.css）。
+ * 复用 tokens.css 设计变量与 screens.css 的 sc-screen-title / sc-btn 基类。
+ */
+
+.sc-replay {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-4);
+  width: min(960px, 94vw);
+  margin: 0 auto;
+  padding: var(--sc-space-6) 0;
+  min-height: 100vh;
+}
+
+.sc-replay-sub {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-base);
+  line-height: 1.6;
+}
+
+/* —— 状态横幅 —— */
+
+.sc-replay-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-3);
+  margin: 0;
+  padding: var(--sc-space-3) var(--sc-space-4);
+  border-radius: var(--sc-radius-md);
+  font-size: var(--sc-fs-md);
+  line-height: 1.5;
+}
+
+.sc-replay-banner.is-error {
+  background: rgba(255, 107, 94, 0.12);
+  border: 1px solid rgba(255, 107, 94, 0.45);
+  color: var(--sc-danger);
+}
+
+.sc-replay-banner.is-notice {
+  background: rgba(88, 230, 168, 0.1);
+  border: 1px solid rgba(88, 230, 168, 0.35);
+  color: var(--sc-accent);
+}
+
+.sc-replay-banner.is-busy {
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-line);
+  color: var(--sc-dim);
+}
+
+/* —— 工具条 —— */
+
+.sc-replay-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-3);
+  flex-wrap: wrap;
+}
+
+.sc-replay-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+}
+
+.sc-replay-filter select {
+  color: var(--sc-text);
+  background: var(--sc-panel-2);
+  border: 1px solid var(--sc-line-strong);
+  border-radius: var(--sc-radius-sm);
+  padding: 6px 10px;
+  font-size: var(--sc-fs-md);
+}
+
+.sc-replay-file-input {
+  display: none;
+}
+
+.sc-replay-drop-hint {
+  margin: 0;
+  padding: var(--sc-space-3) var(--sc-space-4);
+  border: 1px dashed var(--sc-accent);
+  border-radius: var(--sc-radius-md);
+  color: var(--sc-accent);
+  text-align: center;
+  font-size: var(--sc-fs-md);
+}
+
+/* —— 列表 —— */
+
+.sc-replay-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+}
+
+.sc-replay-row {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  align-items: center;
+  gap: var(--sc-space-4);
+  padding: var(--sc-space-3) var(--sc-space-4);
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-md);
+}
+
+.sc-replay-row:hover {
+  border-color: var(--sc-line-strong);
+}
+
+.sc-replay-row-when {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sc-replay-row-date {
+  color: var(--sc-text);
+  font-size: var(--sc-fs-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-replay-row-time {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-replay-row-match {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sc-replay-row-versus {
+  color: var(--sc-text);
+  font-size: var(--sc-fs-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-replay-row-versus em {
+  font-style: normal;
+  color: var(--sc-dim);
+  font-weight: 400;
+  padding: 0 4px;
+}
+
+.sc-replay-row-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-3);
+  flex-wrap: wrap;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-replay-row-seed {
+  opacity: 0.75;
+}
+
+.sc-replay-outcome {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--sc-radius-pill);
+  border: 1px solid var(--sc-line-strong);
+  color: var(--sc-dim);
+  font-weight: 700;
+}
+
+.sc-replay-outcome.is-win {
+  border-color: rgba(88, 230, 168, 0.55);
+  color: var(--sc-accent);
+  background: rgba(88, 230, 168, 0.1);
+}
+
+.sc-replay-outcome.is-loss {
+  border-color: rgba(255, 107, 94, 0.55);
+  color: var(--sc-danger);
+  background: rgba(255, 107, 94, 0.1);
+}
+
+.sc-replay-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* —— 空态 / 页脚 —— */
+
+.sc-replay-empty {
+  margin: var(--sc-space-5) 0;
+  padding: var(--sc-space-6) var(--sc-space-4);
+  border: 1px dashed var(--sc-line-strong);
+  border-radius: var(--sc-radius-lg);
+  color: var(--sc-dim);
+  text-align: center;
+  line-height: 1.7;
+}
+
+.sc-replay-footer {
+  margin-top: auto;
+  padding-top: var(--sc-space-4);
+}
+
+/* —— 拖拽导入反馈：整屏描边提示 —— */
+
+.sc-replay.is-dragover {
+  outline: 2px dashed var(--sc-accent);
+  outline-offset: -10px;
+  border-radius: var(--sc-radius-lg);
+}

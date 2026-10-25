@@ -13,7 +13,9 @@
  *   退场保留上一屏 240ms 淡出（.sc-screen--leaving 包裹层，pointer-events 已隔离）——
  *   battle 屏退出时不保留（重挂 3D 渲染线只为淡出不划算，见 scScreenExitSkip）；
  * - 动效偏好：uiPrefsStore.motion 落到 .sc-app[data-motion]（auto/on/off 三档，
- *   motion.css 统一接管 prefers-reduced-motion 与强制开关）。
+ *   motion.css 统一接管 prefers-reduced-motion 与强制开关）；
+ * - 回放录制线（P2-INF1）：挂载即向 battleDriver 注入录制 sink，GAME_END 静默落
+ *   IndexedDB；回放库屏（ReplayScreen）按 replayStore.open 分流渲染，只从主菜单进出。
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -27,6 +29,9 @@ import { BattleScreen } from './screens/BattleScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { RulesScreen } from './screens/RulesScreen'
 import { LanScreen } from './screens/LanScreen'
+import { setMatchRecordingSink } from './game/battleDriver'
+import { recordFinishedMatch, useReplayStore } from './replay/replayStore'
+import { ReplayScreen } from './replay/ReplayScreen'
 
 /** 退场淡出时长（需 ≥ motion.css 的 sc-screen-out 0.22s） */
 const SCREEN_EXIT_MS = 240
@@ -75,14 +80,31 @@ export function SiliconCardApp() {
     [],
   )
 
+  // 回放录制线（P2-INF1）：battleDriver 在 GAME_END 交付录制体，这里静默落
+  // IndexedDB（recordFinishedMatch 内部吞错，对局与结算零感知）。
+  useEffect(() => {
+    setMatchRecordingSink((match) => {
+      void recordFinishedMatch(match)
+    })
+    return () => setMatchRecordingSink(null)
+  }, [])
+
+  const replayOpen = useReplayStore((s) => s.open)
+
   return (
     <div className="sc-app" data-motion={motion}>
-      {leaving && leaving !== 'battle' ? (
-        <div className="sc-screen--leaving" key={`leaving-${leaving}`} aria-hidden="true">
-          <ScreenOutlet screen={leaving} />
-        </div>
-      ) : null}
-      <ScreenOutlet screen={screen} />
+      {replayOpen ? (
+        <ReplayScreen />
+      ) : (
+        <>
+          {leaving && leaving !== 'battle' ? (
+            <div className="sc-screen--leaving" key={`leaving-${leaving}`} aria-hidden="true">
+              <ScreenOutlet screen={leaving} />
+            </div>
+          ) : null}
+          <ScreenOutlet screen={screen} />
+        </>
+      )}
     </div>
   )
 }

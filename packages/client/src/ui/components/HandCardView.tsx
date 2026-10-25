@@ -5,6 +5,7 @@
  * （perspective/rotateY/backface-visibility 见 hud.css；正面结构原样保留）。
  * 演出修正阶段二：按稀有度挂 2.5D 描边档位类（is-rare/is-epic/is-legendary），
  * 与 3D 场景描边（cardOutline）观感统一——hover/选中加亮、传说金边。
+ * P2-UI5：可选槽位键位角标（keyHint，由键位表 + 角标开关决定显示与否）。
  */
 
 import type { HandCard } from '@siliconcard/core'
@@ -16,11 +17,14 @@ export function HandCardView({
   status,
   selected,
   onClick,
+  keyHint,
 }: {
   card: HandCard
   status: Availability
   selected: boolean
   onClick: () => void
+  /** 槽位键位角标文案（如 "1"、"Shift+2"）；缺省不渲染 */
+  keyHint?: string
 }) {
   const def = cardDef(card.cardId)
   const playable = status.available
@@ -33,6 +37,11 @@ export function HandCardView({
       title={playable ? (def?.flavor ?? card.cardId) : (status.reason ?? '现在打不出')}
       data-uid={card.uid}
     >
+      {keyHint ? (
+        <span className="sc-key-badge" aria-hidden="true">
+          {keyHint}
+        </span>
+      ) : null}
       <span className="sc-hand-face">
         <span className="sc-hand-cost">{card.cost}W</span>
         <span className="sc-hand-name">{def?.name ?? card.cardId}</span>
