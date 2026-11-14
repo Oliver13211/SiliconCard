@@ -9,7 +9,7 @@
  * 重连 = resume(lastSeq) 续传 + 恒定一次全量对齐（sync）。
  */
 
-import type { Action, GameEvent, PlayerView } from '@siliconcard/core'
+import type { Action, GameEvent, PlayerView, ReplayRecording } from '@siliconcard/core'
 
 /** 协议版本：消息形状/语义不兼容变更时 +1（按服务端 welcome.protocol 校验） */
 export const PROTOCOL_VERSION = 1
@@ -42,6 +42,7 @@ export type RoomOp =
   | { name: 'add_ai'; difficulty?: AiDifficulty; faction?: string }
   | { name: 'leave' }
   | { name: 'resume'; code: string; token: string; lastSeq: number | null }
+  | { name: 'replay_fetch' }
 
 /** 对局上行仅 action 一种 */
 export interface ActionFrame {
@@ -86,6 +87,26 @@ export interface GameSnapshot {
   legalActions: readonly Action[]
 }
 
+/**
+ * LAN 对局完赛录制载荷（P2-α 回放入柜）：形状与 MatchRecording 契约同构
+ * （ui/game/battleDriver.ts），可径直交 recordFinishedMatch 落本地回放库。
+ * server 侧 protocol.ts 是同一契约的双胞胎（WF-NET）。
+ */
+export interface ReplayMatchPayload {
+  /** 黄金回放录制体：seed + 双方卡组 + 动作序列（含 AI 席动作） */
+  recording: ReplayRecording
+  /** 录制视角 = replay_fetch 请求席位的 playerId（胜负归属参照） */
+  viewer: ProtocolSeat
+  winner: ProtocolSeat | null
+  reason: 'health_zero' | 'concede' | null
+  /** 终局回合数（引擎 state.turn） */
+  turns: number
+  startedAt: number
+  endedAt: number
+  /** 对局来源恒为 lan */
+  source: 'lan'
+}
+
 /** 房间控制回执（seq 计入席位日志，可随重连回放） */
 export type RoomResult =
   | { name: 'created'; code: string; token: string; seat: ProtocolSeat; seats: SeatMap; phase: RoomPhase }
@@ -95,6 +116,7 @@ export type RoomResult =
   | { name: 'resumed'; seat: ProtocolSeat; replayed: number }
   | { name: 'left' }
   | { name: 'seat_update'; seats: SeatMap; phase: RoomPhase }
+  | { name: 'replay_data'; match: ReplayMatchPayload | null }
 
 export type SeatFrame =
   | { v: number; seq: number; type: 'sync'; snapshot: GameSnapshot }

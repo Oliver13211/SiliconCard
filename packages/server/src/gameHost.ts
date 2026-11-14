@@ -17,9 +17,11 @@ import {
   type Action,
   type Engine,
   type GameEvent,
+  type GameSetup,
   type GameState,
   type PlayerSetup,
   type PlayerView,
+  type ReplayRecording,
 } from '@siliconcard/core'
 import { createAiPlayer, deriveAiSeed, type AiPlayer } from '@siliconcard/ai'
 import type {
@@ -56,6 +58,25 @@ export interface ActionAppliedInfo {
   stateHash: string
 }
 
+/**
+ * 服务端完赛录制（P2-α 回放入柜）：对局中逐动作静默累积（与客户端
+ * battleDriver.observeRecording 同口径——仅成功结算的动作入列），GAME_END
+ * （§9：最后一条且恰好一次）定格终局元数据。viewer 不在录制时填——
+ * replay_fetch 应答时由房间层按请求席位补（双端各存一份本视角录制）。
+ */
+export interface FinishedMatchRecording {
+  /** 黄金回放录制体：重驱引擎唯一输入（seed + 双方卡组 + 动作序列，含 AI 席动作） */
+  recording: ReplayRecording
+  winner: ProtocolSeat | null
+  reason: 'health_zero' | 'concede' | null
+  /** 终局回合数（引擎 state.turn） */
+  turns: number
+  /** 本局开始时刻（epoch ms） */
+  startedAt: number
+  /** GAME_END 时刻（epoch ms） */
+  endedAt: number
+}
+
 export interface GameSessionOptions {
   seed: number
   roomCode: string
@@ -67,6 +88,8 @@ export interface GameSessionOptions {
   onSeatFrame: (seat: ProtocolSeat, frame: SeatFrameDraft) => void
   /** 调试/验收钩子（100 局零漂移测试用它对账服务端真相；生产不传） */
   onActionApplied?: (info: ActionAppliedInfo) => void
+  /** 时钟源（回放录制 startedAt/endedAt 用；缺省 Date.now，测试可注入） */
+  now?: () => number
 }
 
 export class GameSession {
@@ -79,6 +102,12 @@ export class GameSession {
   private readonly aiPlayers: Partial<Record<ProtocolSeat, AiPlayer>> = {}
   private readonly onSeatFrame: (seat: ProtocolSeat, frame: SeatFrameDraft) => void
   private readonly onActionApplied?: (info: ActionAppliedInfo) => void
+  private readonly now: () => number
+  // —— 回放录制（P2-α）：本局开始定格 + 逐动作累积 + GAME_END 定格终局 ——
+  private readonly startedAt: number
+  private readonly recordedPlayers: GameSetup['players']
+  private readonly recordedActions: Action[] = []
+  private finished: FinishedMatchRecording | null = null
 
   constructor(options: GameSessionOptions) {
     this.engine = createEngine()
@@ -88,6 +117,12 @@ export class GameSession {
     this.aiSeats = options.aiSeats
     this.onSeatFrame = options.onSeatFrame
     this.onActionApplied = options.onActionApplied
+    this.now = options.now ?? Date.now
+    this.startedAt = this.now()
+    this.recordedPlayers = [
+      copySetupForRecording(options.players[0]),
+      copySetupForRecording(options.players[1]),
+    ]
     this.state = this.engine.initGame({
       seed: options.seed,
       players: options.players,
@@ -111,6 +146,11 @@ export class GameSession {
 
   get ended(): boolean {
     return this.state.phase === 'ended'
+  }
+
+  /** 完赛录制（GAME_END 后定格；对局进行中/未开为 null）——viewer 由房间层按请求席位补 */
+  get finishedMatch(): FinishedMatchRecording | null {
+    return this.finished
   }
 
   phase(): RoomPhase {
@@ -199,6 +239,7 @@ export class GameSession {
       }
     }
     this.state = result.state
+    this.observeRecording(action, result.events)
 
     const views: Record<ProtocolSeat, PlayerView> = {
       P1: this.engine.viewFor(this.state, 'P1'),
@@ -230,6 +271,29 @@ export class GameSession {
     this.runAiTurns()
     return null
   }
+
+  /**
+   * 录制观察（P2-α，静默）：人类与 AI 席位动作同经 applyInternal，故此处天然
+   * 全量入列；GAME_END（§9：最后一条且恰好一次）定格终局元数据并封盘。
+   * 纯内存操作，绝不抛出——回放录制是副业，绝不影响对局本身。
+   */
+  private observeRecording(action: Action, events: readonly GameEvent[]): void {
+    this.recordedActions.push(action)
+    const end = events.find((event): event is Extract<GameEvent, { type: 'GAME_END' }> => event.type === 'GAME_END')
+    if (!end || this.finished !== null) return
+    this.finished = {
+      recording: {
+        seed: this.seed,
+        players: this.recordedPlayers,
+        actions: [...this.recordedActions],
+      },
+      winner: end.winner,
+      reason: end.reason,
+      turns: this.state.turn,
+      startedAt: this.startedAt,
+      endedAt: this.now(),
+    }
+  }
 }
 
 /** 房间/对局上下文错误：房间层捕获后向发起席位发 error 帧（连接不断开） */
@@ -248,4 +312,9 @@ export function buildErrorFrame(code: ProtocolErrorCode, message: string, ruleCo
   return ruleCode === undefined
     ? { v: PROTOCOL_VERSION, seq: null, type: 'error', code, message }
     : { v: PROTOCOL_VERSION, seq: null, type: 'error', code, message, ruleCode }
+}
+
+/** 录制体卡组深拷贝：与引擎入参解耦（initGame 后房间卡组对象不再被录制侧引用共享） */
+function copySetupForRecording(setup: PlayerSetup): PlayerSetup {
+  return { ...setup, deck: { cards: setup.deck.cards.map((entry) => ({ ...entry })) } }
 }

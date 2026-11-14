@@ -180,6 +180,9 @@ export function createGameServer(options: GameServerOptions = {}): Promise<GameS
           case 'leave':
             rooms.leave(socket as unknown as ServerSocket)
             return
+          case 'replay_fetch':
+            rooms.fetchReplay(socket as unknown as ServerSocket)
+            return
           default: {
             const exhaustive: never = op
             throw new ProtocolFault('PROTOCOL_ERROR', `未支持的房间操作：${String((exhaustive as { name: string }).name)}`)

@@ -6,7 +6,7 @@
  *   元数据全部派生自 GAME_END 事件与录制体本身；
  * - 对局录制链路：battleDriver 在 GAME_END 交付 MatchRecording →
  *   recordFinishedMatch（AppRoot 注入的 sink）静默落 IndexedDB——全程不抛、
- *   不阻塞对局、不发通知轰炸（失败仅控制台留痕）；
+ *   不阻塞对局（失败仅控制台留痕 + saveState 置位给 toast，对局/结算零感知）；
  * - 本 store 同时承载回放库屏（ReplayScreen）的开关：独立于 gameStore 的
  *   screen 路由（回放库只从主菜单进入，不与对局屏争抢页面状态）。
  */
@@ -26,6 +26,17 @@ import { distinctDates, outcomeOf, replayDateLabel, type ReplayMeta } from './ty
 
 export type ReplayStatus = { kind: 'idle' } | { kind: 'busy'; message: string } | { kind: 'notice'; message: string } | { kind: 'error'; message: string }
 
+/**
+ * 本局回放入柜的保存状态（P2-α 落库反馈）：recordFinishedMatch 成功/失败置位，
+ * ReplaySaveToast（AppRoot 全局层）据此渲染轻提示。idle 即无 toast；
+ * saved 携带最近一条 meta（toast 的摘要数据源），failed 携带原因短语。
+ * 注意：这是「落库结果」的展示态，不是对局事实——对局与结算对它零感知。
+ */
+export type ReplaySaveState =
+  | { kind: 'idle' }
+  | { kind: 'saved'; meta: ReplayMeta; at: number }
+  | { kind: 'failed'; reason: string; at: number }
+
 interface ReplayStore {
   /** 回放库屏开关（只从主菜单进出） */
   open: boolean
@@ -33,6 +44,8 @@ interface ReplayStore {
   loaded: boolean
   dateFilter: string | null
   status: ReplayStatus
+  /** 本局回放入柜反馈（P2-α）：saveState 状态机 + 消散口（toast 用） */
+  saveState: ReplaySaveState
   /**
    * 播放器挂载点（P2-UI3）：非 null 时 AppRoot 渲染 ReplayPlayerScreen
    * （优先级高于本库屏）。openPlayer 从库屏行内「播放」进入，closePlayer 退出。
@@ -50,6 +63,8 @@ interface ReplayStore {
   exportReplay: (id: string) => Promise<void>
   importReplayFile: (file: File) => Promise<void>
   clearStatus: () => void
+  /** 清掉入柜 toast（ReplaySaveToast 定时器到期调用；新落库会覆盖旧状态） */
+  clearSaveToast: () => void
 }
 
 export const useReplayStore = create<ReplayStore>()((set, get) => ({
@@ -58,6 +73,7 @@ export const useReplayStore = create<ReplayStore>()((set, get) => ({
   loaded: false,
   dateFilter: null,
   status: { kind: 'idle' },
+  saveState: { kind: 'idle' },
   player: null,
 
   openLibrary: () => {
@@ -155,6 +171,8 @@ export const useReplayStore = create<ReplayStore>()((set, get) => ({
   },
 
   clearStatus: () => set({ status: { kind: 'idle' } }),
+
+  clearSaveToast: () => set({ saveState: { kind: 'idle' } }),
 }))
 
 // —— 录制落库链路（battleDriver sink 交付物 → IndexedDB，静默） ——
@@ -162,7 +180,13 @@ export const useReplayStore = create<ReplayStore>()((set, get) => ({
 /** 测试注入点：换掉存储后端（内存实现）；传 null 恢复默认 */
 export function setReplayBackendForTests(backend: ReplayStorageBackend | null): void {
   configureReplayBackend(backend)
-  useReplayStore.setState({ entries: [], loaded: false, dateFilter: null, status: { kind: 'idle' } })
+  useReplayStore.setState({
+    entries: [],
+    loaded: false,
+    dateFilter: null,
+    status: { kind: 'idle' },
+    saveState: { kind: 'idle' },
+  })
 }
 
 /** MatchRecording → 落库对（meta 含内容寻址 id / body）——纯函数，单测直测 */
@@ -192,15 +216,24 @@ export function metaFromMatch(match: MatchRecording, savedAt = Date.now()): { me
 
 /**
  * 对局结束的静默落库入口（AppRoot 注入给 battleDriver 的 sink 实现）。
- * 铁律：绝不抛出——回放落库失败只控制台留痕，对局与结算零感知。
+ * 铁律：绝不抛出——回放落库失败只控制台留痕，对局与结算零感知；
+ * 成功/失败置位 saveState（轻 toast 反馈「本局回放已入柜」，不阻塞、不抢焦点）。
  */
 export async function recordFinishedMatch(match: MatchRecording): Promise<void> {
   try {
     const { meta, body } = metaFromMatch(match)
     await saveReplayWithCap(replayBackend(), meta, body)
     if (useReplayStore.getState().loaded) await useReplayStore.getState().refresh()
+    useReplayStore.setState({ saveState: { kind: 'saved', meta, at: Date.now() } })
   } catch (error) {
     console.warn('[siliconcard-replay] 本局回放未能落库（静默处理）', error)
+    useReplayStore.setState({
+      saveState: {
+        kind: 'failed',
+        reason: error instanceof Error && error.message ? error.message : '存储不可用',
+        at: Date.now(),
+      },
+    })
   }
 }
 

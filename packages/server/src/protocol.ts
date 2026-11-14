@@ -12,7 +12,7 @@
  *   断线重连按 lastSeq 续传，并始终追加一次全量对齐（sync）。
  */
 
-import type { Action, GameEvent, PlayerView } from '@siliconcard/core'
+import type { Action, GameEvent, PlayerView, ReplayRecording } from '@siliconcard/core'
 
 /** 协议版本：消息形状/语义不兼容变更时 +1（客户端按 welcome.protocol 校验） */
 export const PROTOCOL_VERSION = 1
@@ -60,6 +60,7 @@ export type RoomOp =
   | { name: 'add_ai'; difficulty?: AiDifficulty; faction?: string }
   | { name: 'leave' }
   | { name: 'resume'; code: string; token: string; lastSeq: number | null }
+  | { name: 'replay_fetch' }
 
 /** 对局上行仅 action 一种；action 形状由引擎校验（未知形状 → 引擎 RuleError 转协议错误帧） */
 export interface ActionFrame {
@@ -106,6 +107,29 @@ export interface GameSnapshot {
   legalActions: readonly Action[]
 }
 
+/**
+ * LAN 对局完赛录制载荷（P2-α 回放入柜）：形状与客户端 MatchRecording 契约同构
+ * （ui/game/battleDriver.ts），字段语义一致——replay_fetch 应答专用，viewer 由
+ * 服务端按请求席位填入（双端各存一份本视角录制，内容寻址 id 天然去重）。
+ */
+export interface ReplayMatchPayload {
+  /** 黄金回放录制体：seed + 双方卡组 + 动作序列（含 AI 席动作），重驱引擎唯一输入 */
+  recording: ReplayRecording
+  /** 录制视角 = replay_fetch 请求席位的 playerId（胜负归属参照） */
+  viewer: ProtocolSeat
+  /** 终局信息（来自服务端权威 GAME_END 事件） */
+  winner: ProtocolSeat | null
+  reason: 'health_zero' | 'concede' | null
+  /** 终局回合数（引擎 state.turn） */
+  turns: number
+  /** 本局开始时刻（epoch ms，服务端 startGame 定格） */
+  startedAt: number
+  /** GAME_END 时刻（epoch ms） */
+  endedAt: number
+  /** 对局来源恒为 lan（客户端 metaFromMatch 据此写回放库 meta.source） */
+  source: 'lan'
+}
+
 /** 房间控制回执（seq 计入席位日志，可随重连回放） */
 export type RoomResult =
   | { name: 'created'; code: string; token: string; seat: ProtocolSeat; seats: SeatMap; phase: RoomPhase }
@@ -115,6 +139,7 @@ export type RoomResult =
   | { name: 'resumed'; seat: ProtocolSeat; replayed: number }
   | { name: 'left' }
   | { name: 'seat_update'; seats: SeatMap; phase: RoomPhase }
+  | { name: 'replay_data'; match: ReplayMatchPayload | null }
 
 /** seq 非 null 的帧属于该席位可回放日志（按 lastSeq 续传）；seq null 的帧只发当次 */
 export type SeatFrame =
@@ -249,6 +274,8 @@ export function parseClientFrame(raw: string): ParsedClientFrame | null {
       }
       case 'leave':
         return { v, kind: 'room', op: { name: 'leave' } }
+      case 'replay_fetch':
+        return { v, kind: 'room', op: { name: 'replay_fetch' } }
       case 'resume': {
         if (typeof op['code'] !== 'string' || typeof op['token'] !== 'string') return null
         const lastSeq = op['lastSeq']

@@ -1,9 +1,10 @@
 /**
- * 回放库浏览器本地存储（P2-INF1）——IndexedDB `siliconcard-replays` v1。
+ * 回放库浏览器本地存储（P2-INF1）——IndexedDB `siliconcard-replays` v2。
  *
  * 双 store 契约（plan 定稿）：
  * - `meta`：ReplayMeta 元数据索引（keyPath 'id'，附 savedAt 索引）——列表页零回放体扫描；
- * - `body`：ReplayRecording 回放体（seed + 卡组 + 动作序列，keyPath 'id' 同键关联）。
+ * - `body`：ReplayRecording 回放体（seed + 卡组 + 动作序列；无 keyPath 行外键，
+ *   以 meta.id 为显式键同键关联）。
  *
  * 可测试性：存储经 ReplayStorageBackend 抽象接口注入——无头单测用内存实现，
  * 浏览器默认走 IndexedDB；环境不可用时静默降级内存实现（回放是副业，
@@ -17,7 +18,8 @@ import { stableHash, type ReplayRecording } from '@siliconcard/core'
 import type { ReplayMeta } from './types'
 
 export const REPLAY_DB_NAME = 'siliconcard-replays'
-export const REPLAY_DB_VERSION = 1
+/** v2：body store 重建为行外键（v1 schema 的落库写入互斥 bug，见 onupgradeneeded 注释） */
+export const REPLAY_DB_VERSION = 2
 export const REPLAY_META_STORE = 'meta'
 export const REPLAY_BODY_STORE = 'body'
 /** 本地回放容量上限（第 51 局完成时最旧一局被淘汰） */
@@ -88,8 +90,13 @@ export function createIndexedDbBackend(factory: IDBFactory | undefined): ReplayS
         if (!db.objectStoreNames.contains(REPLAY_META_STORE)) {
           db.createObjectStore(REPLAY_META_STORE, { keyPath: 'id' }).createIndex('savedAt', 'savedAt')
         }
+        // v1 → v2 迁移：v1 的 body store 是 keyPath 'id'，与写入侧 put(body, 显式键) 互斥
+        // （IDB 规范禁止，Chrome 直接 DataError）→ 落库从未成功、store 必为空，可安全重建。
+        if (db.objectStoreNames.contains(REPLAY_BODY_STORE) && request.transaction?.objectStore(REPLAY_BODY_STORE).keyPath !== null) {
+          db.deleteObjectStore(REPLAY_BODY_STORE)
+        }
         if (!db.objectStoreNames.contains(REPLAY_BODY_STORE)) {
-          db.createObjectStore(REPLAY_BODY_STORE, { keyPath: 'id' })
+          db.createObjectStore(REPLAY_BODY_STORE)
         }
       }
       request.onsuccess = () => resolve(request.result)

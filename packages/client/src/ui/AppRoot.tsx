@@ -33,6 +33,7 @@ import { setMatchRecordingSink } from './game/battleDriver'
 import { recordFinishedMatch, useReplayStore } from './replay/replayStore'
 import { ReplayScreen } from './replay/ReplayScreen'
 import { ReplayPlayerScreen } from './replay/ReplayPlayerScreen'
+import { ReplaySaveToast } from './replay/ReplaySaveToast'
 import { CodexScreen, useCodexStore } from './codex'
 import { StatsScreen } from './stats/StatsScreen'
 
@@ -109,6 +110,7 @@ export function SiliconCardApp() {
 
   return (
     <div className="sc-app" data-motion={motion}>
+      <ReplaySaveToast />
       {player ? (
         <ReplayPlayerScreen />
       ) : codexOpen ? (

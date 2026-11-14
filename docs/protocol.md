@@ -73,8 +73,29 @@
 | `add_ai` | `difficulty?`、`faction?` | `ai_added` + 双方 `sync` | `NOT_HOST` `AI_SEAT_TAKEN` `GAME_ALREADY_STARTED` |
 | `resume` | `code`、`token`、`lastSeq` | `resumed`（含 `seat`/`replayed`）→ 回放帧 → `sync` | `ROOM_NOT_FOUND` `INVALID_TOKEN` `ALREADY_SEATED` |
 | `leave` | 无 | `left`（随后断开连接） | `PROTOCOL_ERROR`(未就座) |
+| `replay_fetch` | 无 | `replay_data`（见 §3.1） | `PROTOCOL_ERROR`(未就座) |
 
-回执与广播（`started` / `ai_added` / `seat_update` / `resumed`）均走席位日志（seq 编号），重连时随之回放。
+回执与广播（`started` / `ai_added` / `seat_update` / `resumed` / `replay_data`）均走席位日志（seq 编号），重连时随之回放。
+
+### 3.1 回放入柜（P2-α，additive）
+
+局域网对局的录制在**服务端**（客户端看不到对手的原始动作）：`GameSession` 从开局起逐动作累积（`startedAt`/`seed`/双方 `DeckSpec`，人类与 AI 托管席动作同管线入列），`GAME_END` 定格 `winner`/`reason`/`turns`/`endedAt`。每房间内存保存**最近一局完赛录制**，随房间 GC 销毁。
+
+- 客户端检测到对局结束（`events` 帧 `view.phase === 'ended'`，含重连后 sync 直达终局）即发 `replay_fetch`（每连接实例一次，自动）；
+- 服务端应答 `{ name: 'replay_data', match }`，`match` 形状与客户端 `MatchRecording` 契约同构：
+
+```jsonc
+{ "name": "replay_data", "match": {
+    "recording": { "seed": 424242, "players": [ { "id": "P1", "faction": "nvidia", "deck": { "cards": [/*…*/] } }, /*…*/ ], "actions": [/*…*/] },
+    "viewer": "P1",                    // 填 replay_fetch 请求席位的 playerId（胜负归属参照）
+    "winner": "P2", "reason": "health_zero", "turns": 9,
+    "startedAt": 1763000000000, "endedAt": 1763000030000,
+    "source": "lan" } }
+```
+
+- **无完赛可给**（房间刚建/大厅/对局进行中）回 `{ name: 'replay_data', match: null }`，客户端静默不提示（仅 console 留痕）；
+- 客户端收到非 null `match` 后交本地回放库落盘（内容寻址 id = `stableHash(recording)`，同录制重复交付天然去重；AI 席动作已含在 `recording.actions` 中）；
+- 未就座连接发 `replay_fetch` → `PROTOCOL_ERROR`；兼容性：`replay_data` 仅应答 `replay_fetch`，旧客户端从不发送也不会收到，无需升协议版本（§9 additive）。
 
 **断线语义**：socket 断开不等于弃权——席位保留，服务端向其余人类席位广播 `seat_update`（`connected:false`，联机 UI 重连提示的数据源）。全部人类席位断开超过宽限期（默认 60s，`--grace-ms` 可调）房间才销毁；销毁即撤销 mDNS 广播。注意：**create/join 回执若丢失（连接过早断开），客户端没有 token，只能重新 join**——resume 只服务于「已拿到凭据」的连接。
 
@@ -139,7 +160,7 @@ yarn workspace @siliconcard/server sim:join --resume CODE TOKEN LASTSEQ --seed 4
 ```
 
 协议级验收测试（全部在 `packages/server`，`yarn workspace @siliconcard/server test`）：
-`drift100.test.ts`（双客户端真实 ws 对跑 **100 局**：双方 viewFor / 事件流 / 独立引擎逐动作重放三重对账零漂移 + seq 连续性）、`rooms.test.ts`（房间生命周期/HTTP 列表/GC）、`protocol.test.ts`（垃圾帧/版本/越权动作/非法动作不改状态）、`reconnect.test.ts`（杀连接 30s 内恢复、seq 回放保真、lastSeq=null、伪造 token、双人局对手断线）、`aiSeat.test.ts`（AI 托管）、`discovery.test.ts`（mDNS 广播/浏览 + 关闭 mDNS 的直连回退）。
+`drift100.test.ts`（双客户端真实 ws 对跑 **100 局**：双方 viewFor / 事件流 / 独立引擎逐动作重放三重对账零漂移 + seq 连续性）、`rooms.test.ts`（房间生命周期/HTTP 列表/GC）、`protocol.test.ts`（垃圾帧/版本/越权动作/非法动作不改状态）、`reconnect.test.ts`（杀连接 30s 内恢复、seq 回放保真、lastSeq=null、伪造 token、双人局对手断线）、`aiSeat.test.ts`（AI 托管）、`replayRecord.test.ts`（P2-α 回放录制：录制体镜像重放零漂移/AI 席动作入列/无完赛 null/replay_fetch 协议回环/重连续传含 replay_data）、`discovery.test.ts`（mDNS 广播/浏览 + 关闭 mDNS 的直连回退）。
 
 ## 8. 关闭码与错误码
 
@@ -154,5 +175,5 @@ yarn workspace @siliconcard/server sim:join --resume CODE TOKEN LASTSEQ --seed 4
 
 1. 消息形状/语义的任何改动：**server 与 client 两侧 `protocol.ts` 同一提交**，本文档同步更新；
 2. 不兼容变更（旧客户端无法互通）必须 `PROTOCOL_VERSION + 1`，客户端按 `welcome.protocol` 校验并提示刷新；
-3. additive 扩容（新增错误码 / op 字段）可保持版本号不变，但必须在本文档登记且旧客户端不得因未知字段崩溃（解析宽容：未知 op → `PROTOCOL_ERROR` 断开，未知字段忽略）；
+3. additive 扩容（新增错误码 / op 字段）可保持版本号不变，但必须在本文档登记且旧客户端不得因未知字段崩溃（解析宽容：未知 op → `PROTOCOL_ERROR` 断开，未知字段忽略）——P2-α 回放入柜即按此办理：新增 `replay_fetch` op 与 `replay_data` 回执，版本号保持 1；
 4. 每次协议变更必须重跑双客户端 100 局零漂移测试与重连场景（WF-NET 第 3 步）。

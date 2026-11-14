@@ -37,6 +37,7 @@ export type {
   GameSnapshot,
   ProtocolErrorCode,
   ProtocolSeat,
+  ReplayMatchPayload,
   RoomFrame,
   RoomOp,
   RoomPhase,
@@ -50,4 +51,9 @@ export type {
 
 export { LanConnection, httpRoomsUrl, type LanConnectionHandlers } from './connection'
 export { RoomApi, fetchLanRooms, type CreatedResult, type JoinedResult, type SeatCredentials } from './rooms'
-export { RemoteBattleDriver, type RemoteBattleState } from './remoteDriver'
+export {
+  RemoteBattleDriver,
+  setRemoteReplaySink,
+  type RemoteBattleState,
+  type RemoteReplaySink,
+} from './remoteDriver'

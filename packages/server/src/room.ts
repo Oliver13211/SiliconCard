@@ -22,6 +22,7 @@ import type {
   DeckDto,
   GameSnapshot,
   ProtocolSeat,
+  ReplayMatchPayload,
   RoomPhase,
   RoomResult,
   SeatFrame,
@@ -295,12 +296,24 @@ export class Room {
       aiSeats,
       onSeatFrame: (seatId, draft) => this.deliverSeatFrame(seatId, draft),
       onActionApplied: this.options.onActionApplied,
+      now: this.now, // 录制 startedAt/endedAt 与房间 GC 共用时钟源（测试可注入）
     })
     this.broadcastRoomResult({ name: 'started', seats: this.seatsInfo(), phase: this.phase() })
     for (const seatId of ['P1', 'P2'] as const) {
       if (this.participants[seatId]?.kind === 'human') this.game.sendSyncFrame(seatId, this.humanConnected())
     }
     this.game.runAiTurns() // AI 先手时先走完第一回合
+  }
+
+  /**
+   * 回放入柜（P2-α）：本房间最近一局完赛录制按请求席位的 viewer 语义打包。
+   * 录制本体在 GameSession（内存，房间 GC 时随房销毁）；无完赛（大厅/对局进行中/
+   * 房间刚建）返回 null——客户端静默不提示。
+   */
+  replayMatchFor(seatId: ProtocolSeat): ReplayMatchPayload | null {
+    const finished = this.game?.finishedMatch
+    if (!finished) return null
+    return { ...finished, viewer: seatId, source: 'lan' }
   }
 
   resumeSeat(seatId: ProtocolSeat, lastSeq: number | null): number {
@@ -469,6 +482,12 @@ export class RoomManager {
     if (binding.seat !== 'P1') throw new ProtocolFault('NOT_HOST', '只有房主可以开始对局')
     room.startGame(seed)
     return room
+  }
+
+  /** 回放取回（P2-α）：replay_fetch → replay_data（match 可为 null；走席位日志可随重连回放） */
+  fetchReplay(socket: ServerSocket): void {
+    const binding = this.requireBinding(socket)
+    binding.room.sendRoomResult(binding.seat, { name: 'replay_data', match: binding.room.replayMatchFor(binding.seat) })
   }
 
   leave(socket: ServerSocket): void {

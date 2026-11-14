@@ -11,12 +11,15 @@
   flex-direction: column;
   background: var(--sc-bg);
   color: var(--sc-text);
+  /* 全屏覆盖层进场：轻淡入（3D 舞台挂载较重，不用位移类进场） */
+  animation: sc-fade-in var(--sc-dur-base) ease both;
 }
 
 .sc-rplayer-loading {
   margin: auto;
   color: var(--sc-dim);
   font-size: var(--sc-fs-lg);
+  animation: sc-fade-in var(--sc-dur-base) ease both;
 }
 
 /* 版本不符横幅（只读开放提示） */
@@ -153,8 +156,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--sc-space-2);
-  padding: var(--sc-space-2) 0 0;
-  border-top: 1px solid var(--sc-line);
+  margin-top: var(--sc-space-2);
+  padding: var(--sc-space-3) var(--sc-space-4);
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-hairline);
 }
 
 .sc-rplayer-buttons {
@@ -169,8 +176,13 @@
   gap: var(--sc-space-1);
 }
 
+/* 变速档位选中态：与 sc-btn--primary 同语言（accent 描边 + 同款渐变玻璃面） */
 .sc-rplayer-speeds .is-active {
-  outline: 1px solid var(--sc-accent);
+  background:
+    linear-gradient(180deg, rgba(88, 230, 168, 0.22), rgba(88, 230, 168, 0.08)),
+    var(--sc-panel-2);
+  border-color: var(--sc-accent);
+  font-weight: 700;
 }
 
 .sc-rplayer-progress {
@@ -207,6 +219,17 @@
   border: 1px solid rgba(0, 0, 0, 0.5);
   cursor: pointer;
   padding: 0;
+  transition: transform var(--sc-dur-fast) var(--sc-ease-out);
+}
+
+.sc-rplayer-marker:hover {
+  transform: scale(1.35);
+}
+
+/* 时间轴标记可点跳转：焦点环与全站 sc-btn 一致（accent 描边） */
+.sc-rplayer-marker:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
 }
 
 .sc-rplayer-marker.is-attack {
@@ -303,6 +326,7 @@
   font-size: var(--sc-fs-xs);
   color: var(--sc-dim);
   cursor: pointer;
+  transition: background var(--sc-dur-fast) ease, color var(--sc-dur-fast) ease;
 }
 
 .sc-rplayer-log-item:hover {

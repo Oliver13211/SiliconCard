@@ -17,6 +17,7 @@ import type { DragEvent } from 'react'
 import { factionDisplayName } from '../game/fallbackContent'
 import { useReplayStore, availableDates, filteredEntries } from './replayStore'
 import { formatDuration, hasEndInfo, replayDateLabel, replayTimeLabel, type ReplayMeta } from './types'
+import '../styles/replay.css'
 
 const OUTCOME_LABEL: Record<ReplayMeta['outcome'], string> = {
   win: '胜',
@@ -193,7 +194,17 @@ export function ReplayScreen() {
           回放库读取中…
         </p>
       ) : shown.length === 0 ? (
-        <p className="sc-replay-empty">{entries.length === 0 ? '回放库还空着——打完一局会自动入柜；也可以从上面把 JSON 存档拖进来。' : '这个日期没有对局，换个日期看看。'}</p>
+        entries.length === 0 ? (
+          <div className="sc-replay-empty is-empty">
+            <span className="sc-replay-empty-title">还没有对局存档</span>
+            <span className="sc-replay-empty-hint">打完一局就会出现在这里；也可以把 JSON 存档拖进页面，或用上方按钮选文件导入。</span>
+          </div>
+        ) : (
+          <div className="sc-replay-empty is-empty">
+            <span className="sc-replay-empty-title">这个日期没有对局存档</span>
+            <span className="sc-replay-empty-hint">换个日期看看，或者切回「全部」。</span>
+          </div>
+        )
       ) : (
         <ul className="sc-replay-list">
           {shown.map((meta) => (

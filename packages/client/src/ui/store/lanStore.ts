@@ -14,6 +14,7 @@ import { create } from 'zustand'
 import type { Action, FactionId } from '@siliconcard/core'
 import {
   fetchLanRooms,
+  setRemoteReplaySink,
   type AiDifficulty,
   type DeckDto,
   type ProtocolSeat,
@@ -30,6 +31,7 @@ import {
   type LanStorage,
   type SavedLanSession,
 } from '../net/lanClient'
+import { recordFinishedMatch } from '../replay/replayStore'
 import { bindRemoteDispatch, useGameStore } from './gameStore'
 import { deckOptions, ensureContentRegistered, resolveDeckChoice, RANDOM_DECK_ID } from '../game/deckLoader'
 import { FACTION_DISPLAY } from '../game/fallbackContent'
@@ -102,6 +104,14 @@ let initialDeckId = deckOptions().find((d) => !d.degraded)?.id ?? RANDOM_DECK_ID
 /** 对局上行口绑定：gameStore.remoteMode 下动作经此发往服务端（一次即可） */
 bindRemoteDispatch((action: Action) => {
   if (client) client.dispatch(action)
+})
+
+// 联机对局回放入柜（P2-α）：driver 检测到对局结束自动 replay_fetch，服务端
+// replay_data 交付 MatchRecording 形载荷 → 复用本地落库链路（IndexedDB，
+// 内容寻址 id 天然去重；recordFinishedMatch 内部吞错，失败仅控制台留痕）。
+// 模块级注册与 bindRemoteDispatch 同款（AppRoot 不感知，生命周期 = 页面）。
+setRemoteReplaySink((match) => {
+  void recordFinishedMatch(match)
 })
 
 function ensureClient(): LanClient {

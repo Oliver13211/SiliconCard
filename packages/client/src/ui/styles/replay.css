@@ -11,6 +11,8 @@
   margin: 0 auto;
   padding: var(--sc-space-6) 0;
   min-height: 100vh;
+  /* 进场与全站屏级切换同语言（复用 motion.css 既有关键帧） */
+  animation: sc-screen-in var(--sc-dur-slow) var(--sc-ease-out) both;
 }
 
 .sc-replay-sub {
@@ -32,6 +34,7 @@
   border-radius: var(--sc-radius-md);
   font-size: var(--sc-fs-md);
   line-height: 1.5;
+  animation: sc-rise-in var(--sc-dur-base) var(--sc-ease-out) both;
 }
 
 .sc-replay-banner.is-error {
@@ -59,6 +62,12 @@
   align-items: center;
   gap: var(--sc-space-3);
   flex-wrap: wrap;
+  padding: var(--sc-space-3) var(--sc-space-4);
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-hairline);
+  animation: sc-rise-in var(--sc-dur-base) var(--sc-ease-out) 60ms both;
 }
 
 .sc-replay-filter {
@@ -112,10 +121,19 @@
   background: var(--sc-glass-bg-soft);
   border: 1px solid var(--sc-glass-border);
   border-radius: var(--sc-radius-md);
+  /* 卡片 hover：与 sc-btn 同拍（抬升 + 提边 + 层次阴影） */
+  transition:
+    border-color var(--sc-dur-fast) ease,
+    transform var(--sc-dur-fast) var(--sc-ease-out),
+    background var(--sc-dur-fast) ease,
+    box-shadow var(--sc-dur-base) ease;
 }
 
 .sc-replay-row:hover {
   border-color: var(--sc-line-strong);
+  transform: translateY(-2px);
+  background: var(--sc-glass-bg);
+  box-shadow: var(--sc-hairline), var(--sc-shadow-2);
 }
 
 .sc-replay-row-when {
@@ -217,6 +235,27 @@
   line-height: 1.7;
 }
 
+/* 友好空态：主句 + 补充提示两层结构（打完一局就会出现在这里） */
+.sc-replay-empty.is-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sc-space-2);
+  background: var(--sc-glass-bg-soft);
+}
+
+.sc-replay-empty-title {
+  color: var(--sc-text);
+  font-size: var(--sc-fs-lg);
+  font-weight: 600;
+}
+
+.sc-replay-empty-hint {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  max-width: 34em;
+}
+
 .sc-replay-footer {
   margin-top: auto;
   padding-top: var(--sc-space-4);
@@ -228,4 +267,21 @@
   outline: 2px dashed var(--sc-accent);
   outline-offset: -10px;
   border-radius: var(--sc-radius-lg);
+}
+
+/* —— 回放入柜 toast（ReplaySaveToast，AppRoot 全局层挂载，屏幕无关） ——
+   定位与进出场动画复用 battle.css 的 .sc-toast 基类 + motion.css 的
+   sc-toast-in/out 关键帧（与 ErrorToast 同拍：0.28s 弹入 / 3.68s 后淡出）；
+   此处只按语义换色：入柜成功走 accent 绿，失败沿用基类红。 */
+
+/* aria-live 承载层：不参与布局（toast 本体是 fixed 定位） */
+.sc-replay-toast-layer {
+  display: contents;
+}
+
+.sc-replay-save-toast.is-saved {
+  background: rgba(13, 26, 20, 0.88);
+  border-color: var(--sc-accent);
+  color: #c9f4de;
+  box-shadow: 0 0 0 1px rgba(88, 230, 168, 0.18), var(--sc-shadow-2);
 }
