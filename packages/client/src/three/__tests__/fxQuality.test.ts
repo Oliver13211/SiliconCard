@@ -15,6 +15,7 @@ const ALL_FEATURES: readonly FxFeature[] = [
   'theme',
   'trails',
   'audioExtras',
+  'materials', // P2-R3D1/R3D2：拟真材质层（箔层/物理卡背/环境贴图/台面法线·粗糙度）
 ]
 
 afterEach(() => {

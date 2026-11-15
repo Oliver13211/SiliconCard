@@ -14,7 +14,20 @@
  */
 
 import { mulberry32 } from '../cardArt/color'
-import { SKIN_SEED, SKIN_TEXTURE_SIZE, backdropLayoutFor, pileMarksFor, playAreaFor, slotMarksFor, traceLayoutFor } from './params'
+import { normalTiltColor, NORMAL_FLAT, paintRidgeCircle, paintRidgeHexagon, paintRidgeRectPath } from '../cardMaterial/normalPaint'
+import {
+  EMBLEM_HEX_R,
+  SKIN_SEED,
+  SKIN_TEXTURE_SIZE,
+  backdropLayoutFor,
+  feltEmbossSpecFor,
+  feltRoughnessSpecFor,
+  pileMarksFor,
+  playAreaFor,
+  screwPointsFor,
+  slotMarksFor,
+  traceLayoutFor,
+} from './params'
 
 type Ctx = CanvasRenderingContext2D
 
@@ -143,14 +156,10 @@ export function getTableTopCanvas(): HTMLCanvasElement | null {
   roundRectPath(ctx, play.x, play.y, play.w, play.h, 26)
   ctx.clip('evenodd')
   paintTraces(ctx, SKIN_SEED.tableTop, w, h, 110, 6, 'rgba(66,112,132,0.17)', 'rgba(118,188,208,0.22)')
-  // 边框角落的机箱螺丝
-  const screws: [number, number][] = [
-    [play.x * 0.45, play.y * 0.5],
-    [w - play.x * 0.45, play.y * 0.5],
-    [play.x * 0.45, h - play.y * 0.5],
-    [w - play.x * 0.45, h - play.y * 0.5],
-  ]
-  for (const [sx, sy] of screws) {
+  // 边框角落的机箱螺丝（几何源 = params.screwPointsFor，与凹凸贴图共用）
+  for (const s of screwPointsFor(w, h)) {
+    const sx = s.x
+    const sy = s.y
     ctx.beginPath()
     ctx.arc(sx, sy, 9, 0, Math.PI * 2)
     ctx.fillStyle = 'rgba(26,32,40,0.9)'
@@ -225,10 +234,10 @@ export function getTableTopCanvas(): HTMLCanvasElement | null {
   }
   ctx.strokeStyle = 'rgba(53,208,255,0.15)'
   ctx.lineWidth = 3
-  hex(30)
+  hex(EMBLEM_HEX_R.outer)
   ctx.strokeStyle = 'rgba(53,208,255,0.10)'
   ctx.lineWidth = 2
-  hex(19)
+  hex(EMBLEM_HEX_R.inner)
 
   // 7. 牌堆区：四角对称虚线框 + 角标括号
   const piles = pileMarksFor(w, h)
@@ -452,4 +461,129 @@ export function getSlotGlowCanvas(): HTMLCanvasElement | null {
 
   slotGlowCache = canvas
   return slotGlowCache
+}
+
+// —— 台面绒布法线贴图（P2-R3D2） ——
+
+let feltNormalCache: HTMLCanvasElement | null = null
+
+/**
+ * 台面绒布法线：织纹细脊（两组对角线脊对）+ 槽位格线凸棱 + 牌堆区浅槽 +
+ * 中央六角螺母徽记环 + PCB 边框螺丝凸点。几何源全部来自 params 纯函数层
+ * （feltEmbossSpecFor），与台面 albedo 标记同源不变形。
+ * 同法线绘制纪律：均匀倾色带直接编码（无像素回读），一次性生成 + 模块级缓存。
+ */
+export function getFeltNormalCanvas(): HTMLCanvasElement | null {
+  if (feltNormalCache) return feltNormalCache
+  const w = SKIN_TEXTURE_SIZE.tableTopW
+  const h = SKIN_TEXTURE_SIZE.tableTopH
+  const made = makeCanvas(w, h)
+  if (!made) return null
+  const { canvas, ctx } = made
+  ctx.fillStyle = NORMAL_FLAT
+  ctx.fillRect(0, 0, w, h)
+  ctx.lineCap = 'butt'
+  const spec = feltEmbossSpecFor(w, h)
+
+  // 1. 绒布织纹：对角细脊（每条脊 = 相邻 1px 两线，倾色互反，凑近看有经纬起伏）
+  const step = spec.weaveStep
+  const sWeave = 0.16
+  const d = Math.SQRT1_2
+  ctx.lineWidth = 1
+  for (let o = -h; o < w + h; o += step) {
+    // 族 A：走向 (1,1)，法向 ±(1,-1)/√2
+    ctx.strokeStyle = normalTiltColor(d, -d, sWeave)
+    ctx.beginPath()
+    ctx.moveTo(o, 0)
+    ctx.lineTo(o + h, h)
+    ctx.stroke()
+    ctx.strokeStyle = normalTiltColor(-d, d, sWeave)
+    ctx.beginPath()
+    ctx.moveTo(o + 1, 0)
+    ctx.lineTo(o + 1 + h, h)
+    ctx.stroke()
+    // 族 B：走向 (1,-1)，法向 ±(1,1)/√2
+    ctx.strokeStyle = normalTiltColor(d, d, sWeave)
+    ctx.beginPath()
+    ctx.moveTo(o + h, 0)
+    ctx.lineTo(o, h)
+    ctx.stroke()
+    ctx.strokeStyle = normalTiltColor(-d, -d, sWeave)
+    ctx.beginPath()
+    ctx.moveTo(o + h - 1, 0)
+    ctx.lineTo(o - 1, h)
+    ctx.stroke()
+  }
+
+  // 2. 槽位格线凸棱（四角亮角标所在的格线框，浮起于绒布）
+  for (const s of spec.slots) {
+    paintRidgeRectPath(ctx, s.x + 1, s.y + 1, s.w - 2, s.h - 2, 7, 2.5, 2.5, 0.35, 0.3)
+  }
+
+  // 3. 牌堆区浅槽（负强度 = groove，牌堆「嵌」进台面）
+  for (const p of spec.piles) {
+    paintRidgeRectPath(ctx, p.x + 2, p.y + 2, p.w - 4, p.h - 4, 9, 2, 2, -0.18, -0.18)
+  }
+
+  // 4. 中央六角螺母徽记环（外内半径带 = 凸脊）
+  paintRidgeHexagon(
+    ctx,
+    spec.emblem.cx,
+    spec.emblem.cy,
+    (spec.emblem.rOuter + spec.emblem.rInner) / 2,
+    spec.emblem.rOuter - spec.emblem.rInner,
+    0.3,
+  )
+
+  // 5. PCB 边框四角螺丝凸点
+  for (const s of spec.screws) {
+    paintRidgeCircle(ctx, s.x, s.y, 9, 2.2, 0, 0.4, 0)
+  }
+
+  feltNormalCache = canvas
+  return feltNormalCache
+}
+
+// —— 台面粗糙度贴图（P2-R3D2） ——
+
+let feltRoughCache: HTMLCanvasElement | null = null
+
+/**
+ * 台面粗糙度：绒布基底 0.92 → 顶灯光池 0.55（更光滑，中心镜面感）→
+ * 槽位内部 0.75。灰度直写（roughnessMap 采样 G 通道），几何与 albedo
+ * 光池/槽位同源。一次性生成 + 模块级缓存。
+ */
+export function getFeltRoughnessCanvas(): HTMLCanvasElement | null {
+  if (feltRoughCache) return feltRoughCache
+  const w = SKIN_TEXTURE_SIZE.tableTopW
+  const h = SKIN_TEXTURE_SIZE.tableTopH
+  const made = makeCanvas(w, h)
+  if (!made) return null
+  const { canvas, ctx } = made
+  const spec = feltRoughnessSpecFor(w, h)
+  const gray = (v: number): string => {
+    const g = Math.round(Math.max(0, Math.min(1, v)) * 255)
+    return `rgb(${g},${g},${g})`
+  }
+
+  // 1. 基底绒布
+  ctx.fillStyle = gray(spec.felt)
+  ctx.fillRect(0, 0, w, h)
+
+  // 2. 槽位内部略光滑
+  for (const s of feltEmbossSpecFor(w, h).slots) {
+    roundRectPath(ctx, s.x, s.y, s.w, s.h, 7)
+    ctx.fillStyle = gray(spec.slot)
+    ctx.fill()
+  }
+
+  // 3. 顶灯光池（中心最光滑 → 边缘回到基底，与台面 albedo 光池同几何）
+  const pool = ctx.createRadialGradient(spec.cx, spec.cy, spec.r0, spec.cx, spec.cy, spec.r1)
+  pool.addColorStop(0, gray(spec.pool))
+  pool.addColorStop(1, gray(spec.felt))
+  ctx.fillStyle = pool
+  ctx.fillRect(0, 0, w, h)
+
+  feltRoughCache = canvas
+  return feltRoughCache
 }

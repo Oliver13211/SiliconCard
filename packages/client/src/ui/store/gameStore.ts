@@ -325,7 +325,7 @@ export const useGameStore = create<GameStore>()((set, get) => {
           view: opening.view,
           legalActions: opening.legalActions,
           interactivity: deriveInteractivity(opening.view, opening.legalActions),
-          log: eventsToLogEntries(opening.view, opening.openingEvents),
+          log: [...eventsToLogEntries(opening.view, opening.openingEvents)].reverse(),
           targeting: null,
           result: null,
           lastError: null,

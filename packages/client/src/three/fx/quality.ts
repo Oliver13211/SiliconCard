@@ -25,6 +25,7 @@ export type FxFeature =
   | 'theme' // 牌桌派系染色
   | 'trails' // 帧插值拖影（DLSS）
   | 'audioExtras' // 音效装饰层（M4-SND1：low 档关闭次要泛音/BGM 节拍，关键事件音保留）
+  | 'materials' // 拟真材质层（P2-R3D1/R3D2：low 档直通旧扁平材质——卡面箔层/物理卡背/程序化环境贴图/台面法线·粗糙度贴图全部关闭，几何不重建）
 
 let quality: EffectQuality = 'high'
 

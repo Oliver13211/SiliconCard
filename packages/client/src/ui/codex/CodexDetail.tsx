@@ -1,7 +1,7 @@
 /**
  * 图鉴详情面板（P2-UI4 交付 3）：大图 + 白话解释（glossary 渲染器，与 matchStep
- * 同语义）+ 关键词解释 + flavor + 数值 + 平衡数据 + 预留「演示」入口
- * （P2-UI2-2 演示基建落地后由主控点亮，此处先占位禁用）。
+ * 同语义）+ 关键词解释 + flavor + 数值 + 平衡数据 + 「效果演示」入口
+ * （P2-UI2-2：PreviewTrigger 展开 PreviewPanel 沙箱演示，key=def.id 换卡自动收起）。
  */
 
 import type { CardDefinition } from '@siliconcard/core'
@@ -10,6 +10,7 @@ import { RARITY_LABELS } from './filters'
 import { explainEffectSpec, explainKeyword, type CardNameResolver } from './glossaryRender'
 import { playedRateLabel, winRateLabel, type CardBalanceStat } from './balanceStats'
 import { CodexCardFace } from './CodexCardFace'
+import { PreviewTrigger } from '../preview/PreviewPanel'
 
 const TYPE_LABELS: Record<CardDefinition['type'], string> = {
   gpu: '显卡',
@@ -119,9 +120,7 @@ export function CodexDetail({
         )}
       </section>
 
-      <button type="button" className="sc-btn sc-codex-demo" disabled title="演示模式将随 P2-UI2-2 上线后点亮">
-        演示（即将上线）
-      </button>
+      <PreviewTrigger key={def.id} def={def} resolveCardName={resolveCardName} className="sc-codex-demo" label="效果演示" />
     </aside>
   )
 }

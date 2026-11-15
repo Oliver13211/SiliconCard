@@ -1,0 +1,140 @@
+/*
+ * 沙箱效果预览样式（P2-UI2-2）—— 独立文件，由 PreviewPanel 自行引入（不碰 hud.css）。
+ * 只消费 tokens.css 既有令牌（只读），玻璃拟态与图鉴详情面板同语言。
+ */
+
+.sc-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-3);
+  padding: var(--sc-space-3);
+  background: var(--sc-glass-bg-soft);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-md);
+  backdrop-filter: blur(var(--sc-glass-blur));
+}
+
+.sc-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-2);
+}
+
+.sc-preview-title {
+  margin: 0;
+  font-size: var(--sc-fs-base);
+  font-weight: 700;
+  color: var(--sc-accent);
+}
+
+.sc-preview .sc-codex-face--large {
+  max-width: 220px;
+  align-self: center;
+}
+
+/* —— 演示画布 —— */
+
+.sc-preview-canvas-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+}
+
+.sc-preview-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-sm);
+  box-shadow: var(--sc-shadow-1);
+}
+
+.sc-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+}
+
+.sc-preview-controls-note {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-preview-steps {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+}
+
+/* —— 降级与说明 —— */
+
+.sc-preview-unplayable {
+  padding: var(--sc-space-3);
+  border: 1px dashed var(--sc-line-strong);
+  border-radius: var(--sc-radius-sm);
+  color: var(--sc-gold);
+  font-size: var(--sc-fs-sm);
+  line-height: 1.6;
+}
+
+.sc-preview-unplayable p {
+  margin: 0;
+}
+
+.sc-preview-unplayable-title {
+  font-weight: 700;
+  margin-bottom: var(--sc-space-1) !important;
+}
+
+.sc-preview-note {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+  line-height: 1.6;
+}
+
+/* —— 白话解释 / 关键词 / flavor（与图鉴详情同语言） —— */
+
+.sc-preview-explain {
+  padding-top: var(--sc-space-3);
+  border-top: 1px solid var(--sc-line);
+}
+
+.sc-preview-explain ul,
+.sc-preview-keywords ul {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  font-size: var(--sc-fs-sm);
+  line-height: 1.65;
+}
+
+.sc-preview-keywords {
+  padding-top: var(--sc-space-3);
+  border-top: 1px solid var(--sc-line);
+}
+
+.sc-preview-keywords li {
+  color: var(--sc-dim);
+}
+
+.sc-preview-flavor {
+  margin: 0;
+  color: var(--sc-dim);
+  font-style: italic;
+  font-size: var(--sc-fs-sm);
+  line-height: 1.6;
+}
+
+/* —— 独立触发按钮默认落位（宿主可用 className 覆盖） —— */
+
+.sc-preview-trigger {
+  margin-top: auto;
+}

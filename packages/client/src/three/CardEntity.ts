@@ -18,6 +18,15 @@
  *   材质全局共享注册表（≤16 实例），杜绝每张卡独立材质。
  *   描边盒（1.05×1.04）小于拾取面与迟滞外圈，不影响任何射线命中语义。
  *
+ * P2-R3D1 拟真材质增补：
+ * - 箔层（foil coat）：卡面上方一张共享 MeshPhysicalMaterial 加色平面
+ *   （漫反射黑 + AdditiveBlending，只贡献法线浮雕高光/环境反射/传说
+ *   clearcoat 全息闪层）。材质按稀有度全局共享（cardMaterial/materials，
+ *   4 档 + 1 卡背 = ≤5 实例，禁 per-card 克隆），setCoat 换共享引用。
+ * - 卡背升级共享 MeshPhysicalMaterial（带 map 的真共享物理材质）；
+ *   low 档（fxEnabled('materials') 关）直通旧 MeshBasicMaterial 引用路径，
+ *   切换只换材质引用/可见性，不重建几何、不重复烘焙纹理。
+ *
  * 池化（性能预算，design-report §3.4）：CardEntityPool.acquire/release 复用
  * Group 与材质，避免每张牌进出场都新建 mesh 造成 GC 抖动。
  */
@@ -25,6 +34,9 @@
 import * as THREE from 'three'
 import { CARD_H, CARD_W, HAND_HOVER_LIFT } from './layout'
 import { OUTLINE_NEUTRAL, isSharedOutlineMaterial, outlineMaterial } from './cardOutline'
+import type { RarityTier } from './cardArt/derive'
+import { backPhysicalMaterialFor, coatMaterialFor, isSharedCardMaterial } from './cardMaterial/materials'
+import { fxEnabled } from './fx/quality'
 
 /** 拾取信息（raycasting 命中后由 SceneManager 回传给交互层） */
 export type PickInfo =
@@ -75,10 +87,24 @@ export class CardEntity {
    * 整体切换；几何每实体一份，随池复用。
    */
   readonly outlineMesh: THREE.Mesh
+  /**
+   * 正面箔层（P2-R3D1）：与牌面同几何的加色物理平面，材质为按稀有度全局
+   * 共享的 MeshPhysicalMaterial（cardMaterial/materials，≤5 实例）。
+   * setCoat 换共享引用；low 档或未设置档位时保持不可见。
+   */
+  readonly coatMesh: THREE.Mesh
 
   private frontMat: THREE.MeshBasicMaterial
   private backMat: THREE.MeshBasicMaterial
+  /** 卡背共享物理材质（P2-R3D1，cardMaterial 注册表唯一实例；low 档不挂用） */
+  private readonly backPhysMat: THREE.MeshPhysicalMaterial
   private frameMat: THREE.MeshBasicMaterial
+  /** 背面网格（P2-R3D1 quality 门切换材质用；公开只读供渲染线/测试观察） */
+  readonly backMesh: THREE.Mesh
+  /** 当前箔层材质（共享实例引用；null = 未设置档位） */
+  private coatMat: THREE.MeshPhysicalMaterial | null = null
+  /** 材质门缓存（update 仅在翻转时换引用，渲染循环零分配） */
+  private matHigh: boolean
   /** 描边色（hex，由渲染线按卡牌派系/稀有度设置；共享材质注册表的键源） */
   private outlineHex: string = OUTLINE_NEUTRAL
   /** 已套用的 (hex, bright) 材质状态；update 仅在翻转时查询共享注册表（渲染循环零分配） */
@@ -124,9 +150,25 @@ export class CardEntity {
     })
     const front = new THREE.Mesh(geo, this.frontMat)
     front.position.z = 0.012
-    const back = new THREE.Mesh(geo, this.backMat)
+    // back/coat 的材质在 quality 门与稀有度档之间切换（Basic ↔ Physical），
+    // 显式放宽材质类型（Mesh<geo, Material>），避免推断收窄成 Basic
+    const back = new THREE.Mesh(geo, this.backMat as THREE.MeshBasicMaterial | THREE.MeshPhysicalMaterial)
     back.rotation.y = Math.PI
     back.position.z = -0.012
+    this.backMesh = back
+
+    // 拟真材质门（P2-R3D1）：构造时评估，卡背按门挂共享物理材质或旧扁平材质
+    this.matHigh = fxEnabled('materials')
+    this.backPhysMat = backPhysicalMaterialFor(cardBackTexture)
+    if (this.matHigh) back.material = this.backPhysMat
+
+    // 箔层（P2-R3D1）：与牌面同几何，位于牌面上方、拾取面之下；
+    // renderOrder 置 1 保证在牌面（0）之后、描边（2）之前绘制；
+    // 未 setCoat（ghost/对手手牌/low 档）时保持不可见且不进共享注册表。
+    this.coatMesh = new THREE.Mesh(geo, this.frontMat as THREE.MeshBasicMaterial | THREE.MeshPhysicalMaterial)
+    this.coatMesh.position.z = 0.014
+    this.coatMesh.renderOrder = 1
+    this.coatMesh.visible = false
 
     // 选中/悬停描边框：略大于牌面的加色平面
     const frameGeo = new THREE.PlaneGeometry(CARD_W * 1.12, CARD_H * 1.09)
@@ -161,7 +203,7 @@ export class CardEntity {
     this.hoverGuard.position.z = 0.01
     this.hoverGuard.userData.hoverGuard = true
 
-    this.group.add(this.outlineMesh, frame, front, back, this.pickMesh, this.hoverGuard)
+    this.group.add(this.outlineMesh, frame, front, back, this.coatMesh, this.pickMesh, this.hoverGuard)
   }
 
   get uuidOf(): string {
@@ -207,6 +249,16 @@ export class CardEntity {
     this.faceTexture = tex
     this.frontMat.map = tex
     this.frontMat.needsUpdate = true
+  }
+
+  /**
+   * 挂稀有度箔层（P2-R3D1）：tier → 共享 MeshPhysicalMaterial（≤5 实例注册表，
+   * 换引用不克隆）。normalMap 为当档程序化法线（TextureCache 体系缓存，可 null）。
+   * 仅渲染线在拿到卡面数据时调用；ghost/对手手牌不调用（箔层保持隐藏）。
+   */
+  setCoat(tier: RarityTier, normalMap: THREE.Texture | null): void {
+    this.coatMat = coatMaterialFor(tier, normalMap)
+    this.coatMesh.material = this.coatMat
   }
 
   /** 设置描边色（演出修正阶段二）：渲染线按卡牌派系/稀有度派生后喂入 */
@@ -271,6 +323,15 @@ export class CardEntity {
     this.frameMat.opacity = Math.max(baseOp, this.flashK * 0.95)
     if (this.flashK > 0) this.frameMat.color.copy(this.flashColor)
     else this.frameMat.color.copy(this.selected ? SELECT_COLOR : HOVER_COLOR)
+    // 拟真材质门（P2-R3D1）：状态翻转才换引用/可见性（渲染循环零分配）。
+    // low 档直通旧扁平材质（卡背换回 MeshBasic 引用）；箔层仅在 high 且
+    // 已设置档位时随牌面淡出同步隐藏（避免烧卡/飞入演出残留浮层）。
+    const high = fxEnabled('materials')
+    if (high !== this.matHigh) {
+      this.matHigh = high
+      this.backMesh.material = high ? this.backPhysMat : this.backMat
+    }
+    this.coatMesh.visible = high && this.coatMat !== null && this.opacity > 0.55
   }
 
   /** 归池前清位（池复用时也调用） */
@@ -293,6 +354,12 @@ export class CardEntity {
     this.faceTexture = null
     this.frontMat.map = null
     this.frontMat.needsUpdate = true
+    // 箔层归位（P2-R3D1）：档位清除、隐藏，材质引用回占位（共享实例只换引用不销毁）
+    this.coatMat = null
+    this.coatMesh.material = this.frontMat
+    this.coatMesh.visible = false
+    // 卡背材质按当前门归位（池复用不串路径）
+    this.backMesh.material = this.matHigh ? this.backPhysMat : this.backMat
     // 描边归位中性常态（材质为共享实例，此处只换引用不销毁）
     this.outlineHex = OUTLINE_NEUTRAL
     this.outlineMesh.material = outlineMaterial(this.outlineHex, false)
@@ -362,8 +429,9 @@ export class CardEntityPool {
           obj.geometry.dispose()
           const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
           for (const m of mats) {
-            // 描边材质为跨实体共享（cardOutline 注册表），只换引用不销毁
-            if (isSharedOutlineMaterial(m)) continue
+            // 描边材质（cardOutline 注册表）与拟真材质（cardMaterial 注册表）
+            // 均为跨实体共享，只换引用不销毁
+            if (isSharedOutlineMaterial(m) || isSharedCardMaterial(m)) continue
             m.dispose()
           }
         }

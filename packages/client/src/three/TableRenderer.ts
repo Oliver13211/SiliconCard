@@ -54,6 +54,11 @@ import { computeTiltTarget } from './tilt'
 import { fxEnabled, setEffectQuality, type EffectQuality } from './fx/quality'
 import { tableThemeFor } from './fx/theme'
 import { outlineColorFor } from './cardOutline'
+import { cardNormalCacheKey, cardNormalSpecFor, cardBackNormalSpec } from './cardMaterial/normalSpec'
+import { paintCardNormalCanvas, paintCardBackNormalCanvas } from './cardMaterial/normalPaint'
+import { normalTextureFor } from './cardMaterial/normalCache'
+import { backPhysicalMaterialFor } from './cardMaterial/materials'
+import { rarityTierOf, type RarityTier } from './cardArt/derive'
 
 export interface TableRendererOptions {
   /** 视角方（决定手牌归属与演出文案），默认 'P1' */
@@ -175,6 +180,9 @@ export function createTableRenderer(
   const pool = new CardEntityPool(scene.scene, makeCardBackTexture)
   const ghostPool = new CardEntityPool(scene.scene, makeCardBackTexture)
   const faceCache = new TextureCache()
+  // 卡面法线贴图缓存（P2-R3D1）：与卡面 TextureCache 同体系，键 = normal|<tier>，
+  // 每档一次绘制（≤5 张含卡背），无头环境 paint 返回 null 不占缓存位
+  const normalCache = new TextureCache()
   let cardBackTexture: THREE.Texture | null = null
 
   const hand = new Map<string, CardEntity>()
@@ -228,6 +236,17 @@ export function createTableRenderer(
   function cardFaceKey(id: string, cost?: number, attack?: number, health?: number): string {
     return `${id}|${cost ?? ''}|${attack ?? ''}|${health ?? ''}`
   }
+
+  /** 卡面/卡背法线纹理（P2-R3D1）：TextureCache 体系缓存，命中即复用不重绘 */
+  function getNormalTexture(tier: RarityTier | 'back'): THREE.Texture | null {
+    return normalTextureFor(normalCache, cardNormalCacheKey(tier), () =>
+      tier === 'back' ? paintCardBackNormalCanvas(cardBackNormalSpec()) : paintCardNormalCanvas(cardNormalSpecFor(tier)),
+    )
+  }
+
+  // 卡背共享物理材质即刻创建（P2-R3D1）：map = 全卡共用卡背纹理，法线可用即一并
+  // 注入（首个 CardEntity 构造时将命中同一共享实例）；无头环境法线 null 回落
+  backPhysicalMaterialFor(makeCardBackTexture(), getNormalTexture('back'))
 
   // —— 实体登记 ——
   function track(e: CardEntity): void {
@@ -424,6 +443,9 @@ export function createTableRenderer(
         if (tex) e.setFaceTexture(tex)
         // 立体描边（演出修正阶段二）：按派系上色，传说卡金边
         e.setOutline(outlineColorFor(def.faction, def.rarity))
+        // 拟真箔层（P2-R3D1）：稀有度档 → 共享 MeshPhysicalMaterial（≤5 实例）+ 当档法线
+        const tier = rarityTierOf(def.rarity)
+        e.setCoat(tier, getNormalTexture(tier))
         // 入场演出：卡背翻正 + 浮落（起手多张按序错峰；与 CARD_DRAWN 飞牌幽灵衔接）
         director.playHandEntrance(e, 0.22 + i * 0.07)
       }
@@ -465,6 +487,9 @@ export function createTableRenderer(
       if (tex && tex !== e.faceTexture) e.setFaceTexture(tex)
       // 立体描边（演出修正阶段二）：按派系上色，传说卡金边
       e.setOutline(outlineColorFor(def.faction, def.rarity))
+      // 拟真箔层（P2-R3D1）：场上单位同样挂共享物理箔层
+      const tier = rarityTierOf(def.rarity)
+      e.setCoat(tier, getNormalTexture(tier))
       e.show()
     }
     for (const [instanceId, e] of units) {
@@ -526,6 +551,7 @@ export function createTableRenderer(
     pool.dispose()
     ghostPool.dispose()
     faceCache.dispose()
+    normalCache.dispose()
     cardBackTexture?.dispose()
     hand.clear()
     units.clear()
@@ -544,6 +570,9 @@ export function createTableRenderer(
     },
     setFxQuality: (q) => {
       setEffectQuality(q)
+      // 拟真材质门同步（P2-R3D1/R3D2）：环境贴图挂摘 + 台面数据贴图降级 +
+      // 卡牌箔层/物理卡背（CardEntity.update 内读 fxEnabled 自行切换）
+      scene.setMaterialsEnabled(fxEnabled('materials'))
     },
     get isPlaying(): boolean {
       return director.timeline.active

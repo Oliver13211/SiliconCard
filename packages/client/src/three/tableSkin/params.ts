@@ -268,3 +268,72 @@ export const BACKDROP_GEOMETRY = {
   wallY: 4.4,
   wallZ: -11.5,
 } as const
+
+// —— 台面绒布凹凸/粗糙度参数（P2-R3D2 纯函数层；绘制在 textures.ts，场景装配在 SceneManager） ——
+
+/** 中央六角螺母徽记半径（textures.ts 台面 albedo 与凹凸贴图共用同一几何源） */
+export const EMBLEM_HEX_R = { outer: 30, inner: 19 } as const
+
+/** PCB 边框四角机箱螺丝的台面画布点位（albedo 与凹凸共用，无第二份硬编码） */
+export function screwPointsFor(w: number, h: number): CanvasPoint[] {
+  const play = playAreaFor(w, h)
+  return [
+    { x: play.x * 0.45, y: play.y * 0.5 },
+    { x: w - play.x * 0.45, y: play.y * 0.5 },
+    { x: play.x * 0.45, y: h - play.y * 0.5 },
+    { x: w - play.x * 0.45, y: h - play.y * 0.5 },
+  ]
+}
+
+/** 台面凹凸规格（法线贴图绘制输入，纯数据可 JSON 序列化） */
+export interface FeltEmbossSpec {
+  /** 14 个槽位格线凸棱（复用 slotMarksFor——布局常量改动时自动跟随） */
+  slots: RectMark[]
+  /** 4 个牌堆区浅槽 */
+  piles: RectMark[]
+  /** 中央六角螺母徽记（外/内半径，画布像素） */
+  emblem: { cx: number; cy: number; rOuter: number; rInner: number }
+  /** PCB 边框四角螺丝凸点 */
+  screws: CanvasPoint[]
+  /** 绒布织纹间距（px，与 textures.ts paintWeave 的 step 一致） */
+  weaveStep: number
+}
+
+/** 台面凹凸规格派生（纯函数，同输入恒同输出） */
+export function feltEmbossSpecFor(w: number, h: number): FeltEmbossSpec {
+  return {
+    slots: slotMarksFor(w, h),
+    piles: pileMarksFor(w, h),
+    emblem: { cx: w / 2, cy: h / 2, rOuter: EMBLEM_HEX_R.outer, rInner: EMBLEM_HEX_R.inner },
+    screws: screwPointsFor(w, h),
+    weaveStep: 7,
+  }
+}
+
+/** 台面粗糙度规格（roughnessMap 绝对粗糙度编码；roughnessMap 采样 G 通道） */
+export interface FeltRoughnessSpec {
+  /** 光池中心/半径（与台面 albedo 的顶灯光池同几何：r0 = h*0.1，r1 = h*0.62） */
+  cx: number
+  cy: number
+  r0: number
+  r1: number
+  /** 光池区粗糙度（更光滑，镜面感） */
+  pool: number
+  /** 绒布基底粗糙度 */
+  felt: number
+  /** 槽位内部粗糙度（略光滑于基底） */
+  slot: number
+}
+
+/** 台面粗糙度规格派生（纯函数；数值域 0..1） */
+export function feltRoughnessSpecFor(w: number, h: number): FeltRoughnessSpec {
+  return {
+    cx: w / 2,
+    cy: h / 2,
+    r0: h * 0.1,
+    r1: h * 0.62,
+    pool: 0.55,
+    felt: 0.92,
+    slot: 0.75,
+  }
+}

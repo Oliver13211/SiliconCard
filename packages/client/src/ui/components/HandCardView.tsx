@@ -28,13 +28,18 @@ export function HandCardView({
 }) {
   const def = cardDef(card.cardId)
   const playable = status.available
+  const name = def?.name ?? card.cardId
+  // title tooltip 携带全名（牌名两行截断后悬停可见全名；P2-UI1）
+  const tooltip = playable
+    ? [name, def?.flavor].filter(Boolean).join(' · ')
+    : `${name}（${status.reason ?? '现在打不出'}）`
   return (
     <button
       type="button"
       className={`sc-hand-card ${rarityClassName(def?.rarity)}${playable ? '' : ' is-disabled'}${selected ? ' is-selected' : ''}`}
       onClick={onClick}
       disabled={!playable}
-      title={playable ? (def?.flavor ?? card.cardId) : (status.reason ?? '现在打不出')}
+      title={tooltip}
       data-uid={card.uid}
     >
       {keyHint ? (
@@ -44,7 +49,7 @@ export function HandCardView({
       ) : null}
       <span className="sc-hand-face">
         <span className="sc-hand-cost">{card.cost}W</span>
-        <span className="sc-hand-name">{def?.name ?? card.cardId}</span>
+        <span className="sc-hand-name">{name}</span>
         <span className="sc-hand-type">{def ? typeLabel(def.type) : '??'}</span>
         {def?.type === 'gpu' ? (
           <span className="sc-hand-stats">

@@ -42,6 +42,8 @@ import { formatCombo } from '../keybinds/combo'
 import { useKeyCommands, type KeyCommandHandlers } from '../keybinds/useKeyCommands'
 import { useKeybinds } from '../keybinds/keybindsStore'
 import { KeyHintsOverlay } from '../keybinds/components/KeyHintsOverlay'
+import { PreviewTrigger } from '../preview'
+import { cardDef } from '../components/display'
 import type { PlayerView, TargetRef } from '@siliconcard/core'
 
 export function BattleScreen() {
@@ -275,6 +277,13 @@ function BattleInner(props: BattleInnerProps) {
                 {targeting.kind === 'play' ? '为目标选一个对象' : targeting.kind === 'attack' ? '选攻击目标' : '为技能选目标'}
                 （{targeting.targets.length} 个候选 · {formatCombo(binds.cycle_target)} 切 · {formatCombo(binds.confirm)} 定 · {formatCombo(binds.cancel)} 溜）
               </span>
+              {targeting.kind === 'play'
+                ? (() => {
+                    const pending = view.you.hand.find((card) => card.uid === targeting.uid)
+                    const pendingDef = pending ? cardDef(pending.cardId) : null
+                    return pendingDef ? <PreviewTrigger def={pendingDef} label="效果演示" /> : null
+                  })()
+                : null}
               <button type="button" className="sc-btn sc-btn--small" onClick={cancelTargeting}>
                 取消（ESC）
               </button>

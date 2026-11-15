@@ -51,6 +51,21 @@ export { buildFaceArtSvg, svgToDataUri } from './cardArt/svg'
 export { faceGround, LEGENDARY_GOLD } from './cardArt/ground'
 export type { FaceGroundSpec, GroundStop, GroundGlow } from './cardArt/ground'
 export { outlineColorFor, OUTLINE_LEGENDARY_GOLD, OUTLINE_NEUTRAL } from './cardOutline'
+export { cardNormalSpecFor, cardBackNormalSpec, cardNormalCacheKey } from './cardMaterial/normalSpec'
+export type { CardNormalSpec, BackNormalSpec, RidgeRectSpec, RidgeCircleSpec } from './cardMaterial/normalSpec'
+export { normalTextureFor } from './cardMaterial/normalCache'
+export { normalTiltColor, NORMAL_FLAT, paintRidgeRectPath, paintRidgeCircle, paintRidgeHexagon } from './cardMaterial/normalPaint'
+export {
+  coatMaterialFor,
+  backPhysicalMaterialFor,
+  setBackNormalMap,
+  isSharedCardMaterial,
+  cardMaterialCount,
+  cardMaterialLimit,
+  disposeSharedCardMaterials,
+} from './cardMaterial/materials'
+export { studioEnvLayout } from './cardMaterial/studioEnv'
+export type { EnvStripSpec } from './cardMaterial/studioEnv'
 export { handTransforms, handSlotTransform, handSlotAngle } from './handLayout'
 export { eventAnimationMap, KEYWORD_DISPLAY, SKILL_DISPLAY, SKILL_FACTION } from './anim/eventAnimationMap'
 export { AnimationDirector } from './anim/AnimationDirector'
@@ -64,6 +79,13 @@ export type { ParticlePresetName, ParticleEmitSpec } from './fx/stageFx'
 export { RingPool, PillarPool, BoltPool, BeamPool, ProgressFx, CameraShaker } from './fx/stageFx'
 export { tableThemeFor, mixHex } from './fx/theme'
 export type { TableThemeColors } from './fx/theme'
+export {
+  feltEmbossSpecFor,
+  feltRoughnessSpecFor,
+  screwPointsFor,
+  EMBLEM_HEX_R,
+} from './tableSkin/params'
+export type { FeltEmbossSpec, FeltRoughnessSpec } from './tableSkin/params'
 export { CAMERA_SHOTS } from './layout'
 export type { CameraShot } from './layout'
 export {

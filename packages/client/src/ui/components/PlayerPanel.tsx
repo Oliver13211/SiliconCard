@@ -25,7 +25,8 @@ export function ManaBar({
   const segments = Math.max(1, Math.round(player.maxMana / MANA_PER_TURN))
   const filled = player.maxMana > 0 ? player.mana / player.maxMana : 0
   return (
-    <div className="sc-mana" title={`供电：${player.mana}/${player.maxMana}W${locked ? ` · 下回合跳闸锁定 ${locked}W` : ''}`}>
+    // starved 挂在根节点：数值文字与条体同步转语义红（与 motion.css 红脉冲同源）
+    <div className={`sc-mana${starved ? ' is-starved' : ''}`} title={`供电：${player.mana}/${player.maxMana}W${locked ? ` · 下回合跳闸锁定 ${locked}W` : ''}`}>
       <div className={`sc-mana-track${starved ? ' is-starved' : ''}`}>
         <div className="sc-mana-fill" style={{ width: `${Math.round(filled * 100)}%` }} />
         <div className="sc-mana-ticks">
@@ -67,7 +68,8 @@ export function PlayerPanel({
           <strong>{player.heroName}</strong>
           <span className="sc-player-faction">{factionDisplayName(player.faction)}</span>
         </div>
-        <div className="sc-health">
+        {/* 余量档位同时挂在外层：低血时数值文字随条体一起转语义红 */}
+        <div className={`sc-health${hpTone}`}>
           <div className={`sc-health-track${hpTone}`}>
             <div className="sc-health-fill" style={{ width: `${Math.round(hpRatio * 100)}%` }} />
           </div>

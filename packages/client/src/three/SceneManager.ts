@@ -10,8 +10,15 @@
  * 上层（TableRenderer）经本类的公开 API 驱动。交付验收见 WF-VISUAL（截图评审）。
  *
  * 性能预算（中端核显 60fps）：渲染循环单 RAF；桌面与卡面用 MeshBasicMaterial
- * 免光照计算；阴影关闭；纹理缓存共享（tableSkin 纹理一次性生成 + 模块级缓存）；
- * 特效全池化（update 零分配）；一切可 dispose 的资源在 dispose() 释放。
+ * 免光照计算（卡面高光/反射由共享加色箔层承担）；阴影关闭；纹理缓存共享
+ * （tableSkin 纹理一次性生成 + 模块级缓存）；特效全池化（update 零分配）；
+ * 一切可 dispose 的资源在 dispose() 释放。
+ *
+ * P2-R3D1/R3D2 增补（拟真材质）：
+ * - 程序化环境贴图：studioEnv 光带面光源经 PMREM 一次性烘焙（仅 'materials'
+ *   门开启时），挂 scene.environment，卡牌金属框与台面获得真实反射；
+ * - 台面绒布：织纹法线贴图 + 粗糙度贴图（光池更光滑），'materials' 门控降级；
+ * - 实摄影双灯比：暖色顶主光 + 冷色补光（派系染色灯与 tick 平滑过渡零改动）。
  */
 
 import * as THREE from 'three'
@@ -22,6 +29,9 @@ import { FloatingTextPool } from './fx/textSprite'
 import { ScreenFlash, ShardsPool, SmokePool } from './fx/effects'
 import { ScreenImpactFx } from './fx/screenImpact'
 import { isSharedOutlineMaterial } from './cardOutline'
+import { isSharedCardMaterial } from './cardMaterial/materials'
+import { buildStudioEnvironment } from './cardMaterial/studioEnv'
+import { fxEnabled } from './fx/quality'
 import {
   BeamPool,
   BoltPool,
@@ -33,7 +43,14 @@ import {
 } from './fx/stageFx'
 import type { TableThemeColors } from './fx/theme'
 import { floorTintFor, wallTintFor, BACKDROP_GEOMETRY } from './tableSkin/params'
-import { getBackdropCanvas, getFloorCanvas, getSlotGlowCanvas, getTableTopCanvas } from './tableSkin/textures'
+import {
+  getBackdropCanvas,
+  getFloorCanvas,
+  getFeltNormalCanvas,
+  getFeltRoughnessCanvas,
+  getSlotGlowCanvas,
+  getTableTopCanvas,
+} from './tableSkin/textures'
 import { AmbientDust } from './tableSkin/dust'
 import type { PickInfo } from './CardEntity'
 
@@ -156,6 +173,15 @@ export class SceneManager {
   private readonly floorCurrent = new THREE.Color(floorTintFor(null))
   private readonly dust: AmbientDust
 
+  // —— 拟真材质（P2-R3D1/R3D2）：环境贴图 + 台面绒布法线/粗糙度，'materials' 门控 ——
+  /** PMREM 烘焙产物（envScene 小场景已销毁，只留 RT）；low 档不生成 */
+  private envRT: THREE.WebGLRenderTarget | null = null
+  /** 材质门当前状态（null = 尚未应用；setMaterialsEnabled 翻转时才重建管线状态） */
+  private materialsOn: boolean | null = null
+  private tableMat!: THREE.MeshStandardMaterial
+  private tableNormalTex: THREE.CanvasTexture | null = null
+  private tableRoughTex: THREE.CanvasTexture | null = null
+
   /** 最近一次拾取的归一化指针坐标（手牌 tilt 视差的驱动源，只读） */
   get pointerNDC(): THREE.Vector2 {
     return this.pointer
@@ -176,11 +202,16 @@ export class SceneManager {
     this.scene.add(this.camera)
     this.cameraRig = new CameraRig(this.camera)
 
-    // 灯光（桌面用 Standard 材质吃光；卡面 Basic 不受影响）
-    this.scene.add(new THREE.HemisphereLight('#cfe6ff', '#0a0f14', 1.1))
-    const dir = new THREE.DirectionalLight('#ffffff', 1.4)
-    dir.position.set(6, 12, 7)
-    this.scene.add(dir)
+    // 灯光（桌面用 Standard 材质吃光；卡面 albedo Basic 不受影响）。
+    // P2-R3D2 实摄影双灯比：暖色顶主光（key）+ 冷色反侧补光（fill），
+    // 塑造方向性明暗；派系染色灯在下方单独一組，tick 平滑过渡逻辑零改动。
+    this.scene.add(new THREE.HemisphereLight('#cfe6ff', '#0a0f14', 1.0))
+    const keyLight = new THREE.DirectionalLight('#ffc98a', 1.5)
+    keyLight.position.set(6, 12, 7)
+    this.scene.add(keyLight)
+    const fillLight = new THREE.DirectionalLight('#7fb0ff', 0.5)
+    fillLight.position.set(-7, 9, -3)
+    this.scene.add(fillLight)
     const rim = new THREE.PointLight('#35d0ff', 14, 22)
     rim.position.set(0, 4.5, -6)
     this.scene.add(rim)
@@ -193,6 +224,8 @@ export class SceneManager {
 
     this.buildTable()
     this.buildBackdrop()
+    // 拟真材质门（P2-R3D1）：构造时按全局质量档应用（TableRenderer 已先设档）
+    this.setMaterialsEnabled(fxEnabled('materials'))
 
     this.dust = new AmbientDust(this.scene)
     this.registerUpdatable(this.dust)
@@ -250,27 +283,33 @@ export class SceneManager {
     this.floorTarget.set(floorTintFor(colors))
   }
 
-  /** tableSkin 画布 → CanvasTexture（一次性生成已在模块内缓存；无头环境 null 回落） */
-  private makeSkinTexture(get: () => HTMLCanvasElement | null): THREE.CanvasTexture | null {
+  /** tableSkin 画布 → CanvasTexture（一次性生成已在模块内缓存；无头环境 null 回落）。
+   *  colorSpace：albedo 用 SRGB（默认）；法线/粗糙度等数据贴图必须线性。 */
+  private makeSkinTexture(
+    get: () => HTMLCanvasElement | null,
+    colorSpace: THREE.ColorSpace = THREE.SRGBColorSpace,
+  ): THREE.CanvasTexture | null {
     const canvas = get()
     if (!canvas) return null
     const tex = new THREE.CanvasTexture(canvas)
-    tex.colorSpace = THREE.SRGBColorSpace
+    tex.colorSpace = colorSpace
     tex.anisotropy = 4
     return tex
   }
 
   private buildTable(): void {
     const tex = this.makeSkinTexture(getTableTopCanvas)
-    const table = new THREE.Mesh(
-      new THREE.PlaneGeometry(TABLE_W, TABLE_D),
-      new THREE.MeshStandardMaterial({
-        map: tex ?? undefined,
-        color: tex ? '#ffffff' : '#0d1319',
-        roughness: 0.94,
-        metalness: 0.04,
-      }),
-    )
+    // P2-R3D2 台面绒布全套：织纹法线 + 粗糙度贴图（光池区域更光滑）。
+    // low 档由 applyTableMaterialGate 摘除数据贴图、直通旧贴图路径。
+    this.tableNormalTex = this.makeSkinTexture(getFeltNormalCanvas, THREE.NoColorSpace)
+    this.tableRoughTex = this.makeSkinTexture(getFeltRoughnessCanvas, THREE.NoColorSpace)
+    this.tableMat = new THREE.MeshStandardMaterial({
+      map: tex ?? undefined,
+      color: tex ? '#ffffff' : '#0d1319',
+      roughness: 0.94,
+      metalness: 0.04,
+    })
+    const table = new THREE.Mesh(new THREE.PlaneGeometry(TABLE_W, TABLE_D), this.tableMat)
     table.rotation.x = -Math.PI / 2
     table.position.y = -0.06
     this.scene.add(table)
@@ -293,6 +332,34 @@ export class SceneManager {
         this.scene.add(slot)
       }
     }
+  }
+
+  /**
+   * 拟真材质门（P2-R3D1/R3D2）：TableRenderer 构造与运行时 setFxQuality 调用。
+   * - 开：一次性烘焙程序化环境贴图挂 scene.environment + 台面挂法线/粗糙度贴图；
+   * - 关：environment 摘除（不销毁 RT，重开免重烘焙）+ 台面直通旧贴图路径。
+   * 状态翻转才动管线状态（needsUpdate 只在切换时触发一次重编译）。
+   */
+  setMaterialsEnabled(on: boolean): void {
+    if (this.materialsOn === on) return
+    this.materialsOn = on
+    if (on && !this.envRT) this.envRT = buildStudioEnvironment(this.renderer)
+    this.scene.environment = on && this.envRT ? this.envRT.texture : null
+    this.scene.environmentIntensity = 0.55
+    this.applyTableMaterialGate()
+  }
+
+  /** 台面材质降级（P2-R3D2 low 档）：摘除数据贴图、恢复旧粗糙度，不换材质实例不重建几何 */
+  private applyTableMaterialGate(): void {
+    const on = this.materialsOn === true
+    this.tableMat.normalMap = on ? this.tableNormalTex : null
+    this.tableMat.roughnessMap = on && this.tableRoughTex ? this.tableRoughTex : null
+    // roughnessMap 挂载时材质 roughness 作为乘数置 1（绝对粗糙度烘在贴图里）；
+    // 无贴图（low 档/无 DOM）恢复旧值 0.94，视觉与 R3D2 之前一致
+    this.tableMat.roughness = on && this.tableRoughTex ? 1.0 : 0.94
+    this.tableMat.normalScale.set(0.7, 0.7)
+    this.tableMat.envMapIntensity = 0.4
+    this.tableMat.needsUpdate = true
   }
 
   /**
@@ -497,14 +564,20 @@ export class SceneManager {
     this.progressFx.dispose()
     this.impact.dispose()
     this.shaker.dispose()
+    // 程序化环境贴图（P2-R3D1）：RT 及其烘焙纹理随场景销毁（重开场景会重新烘焙）
+    if (this.envRT) {
+      this.envRT.dispose()
+      this.envRT = null
+    }
     this.scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose()
         const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
         for (const m of mats) {
-          // 描边材质为跨实体共享（cardOutline 注册表，userData.shared 标记），
-          // 场景销毁只解挂不销毁，否则后续新建场景的描边会全部失效
-          if (isSharedOutlineMaterial(m)) continue
+          // 描边材质（cardOutline）与拟真材质（cardMaterial）均为跨实体共享
+          // （userData.shared 标记），场景销毁只解挂不销毁，否则后续新建场景
+          // 的描边/箔层会全部失效
+          if (isSharedOutlineMaterial(m) || isSharedCardMaterial(m)) continue
           const map = (m as THREE.MeshBasicMaterial).map
           if (map) map.dispose()
           m.dispose()

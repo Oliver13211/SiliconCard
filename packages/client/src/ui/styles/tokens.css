@@ -5,22 +5,34 @@
  * - 间距 / 圆角 / 字号 / 时长 / 缓动一律走变量，组件层禁止再散落魔法数；
  * - 玻璃面板 = 半透明渐变底 + backdrop-blur + 细边框 + 层次阴影（克制，不堆光晕）；
  * - 派系点缀色是 UI 提亮版（与 fallbackContent 的品牌色同源、3D 桌面染色呼应），
- *   经 data-faction 注入 --faction 后只作点缀（头像环/侧缘线），不参与语义色。
+ *   经 data-faction 注入 --faction 后只作点缀（头像环/侧缘线），不参与语义色；
+ * - 可读性基线（P2-UI1）：正文字号/行高整体上调，主要前景/背景组合满足 WCAG AA
+ *   （正文 ≥4.5:1，大字 ≥3:1）——组合核验见 scripts/check-contrast.mjs。
  */
 
 .sc-app {
-  /* —— 基础色板 —— */
+  /* —— 基础色板（前景色均按 AA 对照最亮常用底核过） —— */
   --sc-bg: #0a0d13;
   --sc-panel-solid: #12161f;
   --sc-panel-2: #161b26;
   --sc-line: rgba(150, 166, 197, 0.14);
   --sc-line-strong: rgba(150, 166, 197, 0.3);
-  --sc-text: #dce4f2;
-  --sc-dim: #8d97ad;
+  --sc-text: #e3eaf6;
+  --sc-dim: #a3aec4;
   --sc-accent: #58e6a8;
-  --sc-danger: #ff6b5e;
-  --sc-mana: #4da3ff;
+  --sc-danger: #ff7d71;
+  --sc-mana: #6cb3ff;
   --sc-gold: #ffc857;
+
+  /* —— 状态语义色（收敛别名，不发明新语义；组件只准引用这一层） ——
+     可打/正面（质保挡伤）  → ok      = accent 绿
+     禁用/供电不足/低血危险 → danger  = danger 红（与 starved 红脉冲同源）
+     提醒/终局/传说         → caution = gold 金
+     无关紧要/已灰显        → muted   = dim   */
+  --sc-status-ok: var(--sc-accent);
+  --sc-status-danger: var(--sc-danger);
+  --sc-status-caution: var(--sc-gold);
+  --sc-status-muted: var(--sc-dim);
 
   /* —— 玻璃拟态面板 —— */
   --sc-glass-bg: linear-gradient(180deg, rgba(27, 34, 52, 0.72), rgba(13, 17, 27, 0.66));
@@ -43,15 +55,17 @@
   --sc-space-5: 24px;
   --sc-space-6: 32px;
 
-  /* —— 字号层级 —— */
-  --sc-fs-xs: 11px;
-  --sc-fs-sm: 12px;
-  --sc-fs-md: 13px;
-  --sc-fs-base: 14px;
-  --sc-fs-lg: 16px;
-  --sc-fs-xl: 20px;
+  /* —— 字号层级（P2-UI1 可读性基线：正文 ≥14px、次要信息 ≥12px，HUD 数值独立档） —— */
+  --sc-fs-xs: 12px;
+  --sc-fs-sm: 13px;
+  --sc-fs-md: 14px;
+  --sc-fs-base: 15px;
+  --sc-fs-lg: 18px;
+  --sc-fs-xl: 22px;
   --sc-fs-2xl: 32px;
   --sc-fs-display: 64px;
+  /* HUD 数值专用档：血量/功耗数字一眼可见（加大加粗的唯一取值处） */
+  --sc-fs-hud: 18px;
 
   /* —— 阴影 —— */
   --sc-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -80,7 +94,7 @@
   color: var(--sc-text);
   font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
   font-size: var(--sc-fs-base);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .sc-app ::selection {

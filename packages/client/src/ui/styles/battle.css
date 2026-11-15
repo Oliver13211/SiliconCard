@@ -56,7 +56,7 @@
 }
 .sc-hero-hitbox.is-targetable {
   cursor: crosshair;
-  box-shadow: 0 0 0 2px var(--sc-danger), 0 0 18px rgba(255, 107, 94, 0.5);
+  box-shadow: 0 0 0 2px var(--sc-danger), 0 0 18px color-mix(in srgb, var(--sc-danger) 50%, transparent);
   border-radius: var(--sc-radius-lg);
 }
 .sc-player {
@@ -125,12 +125,16 @@
   color: var(--faction, var(--sc-dim));
 }
 
-/* —— 血条：现代渐变 + 圆角 + 余量动画（宽度过渡）+ 低血警戒 —— */
+/* —— 血条：现代渐变 + 圆角 + 余量动画（宽度过渡）+ 低血警戒 ——
+   数值区加大加粗走 --sc-fs-hud（P2-UI1）；低血时数值同步转语义红（tokens 状态色） */
 .sc-health {
   display: flex;
   align-items: center;
   gap: var(--sc-space-2);
   margin: var(--sc-space-1) 0;
+}
+.sc-health.is-low .sc-health-text {
+  color: var(--sc-status-danger);
 }
 .sc-health-track {
   position: relative;
@@ -164,12 +168,13 @@
 }
 .sc-health-track.is-low .sc-health-fill {
   background: linear-gradient(90deg, #ff5f54, #ff9068);
-  box-shadow: 0 0 12px rgba(255, 95, 84, 0.45);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sc-danger) 45%, transparent);
 }
 .sc-health-text {
-  font-size: var(--sc-fs-base);
-  font-weight: 700;
+  font-size: var(--sc-fs-hud);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  min-width: 112px;
 }
 .sc-armor {
   font-style: normal;
@@ -182,14 +187,19 @@
   color: var(--sc-dim);
 }
 .sc-fatigue {
-  color: var(--sc-danger);
+  color: var(--sc-status-danger);
+  font-weight: 700;
 }
 
-/* —— 功耗条：电光蓝渐变 + 余量动画；功耗不足红脉冲见 motion.css（.is-starved） —— */
+/* —— 功耗条：电光蓝渐变 + 余量动画；功耗不足红脉冲见 motion.css（.is-starved） ——
+   starved 时数值也转语义红（与红脉冲同源语义，tokens 状态色） */
 .sc-mana {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.sc-mana.is-starved .sc-mana-text {
+  color: var(--sc-status-danger);
 }
 .sc-mana-track {
   position: relative;
@@ -231,15 +241,16 @@
   border-right: none;
 }
 .sc-mana-text {
-  font-size: var(--sc-fs-md);
-  font-weight: 700;
+  font-size: var(--sc-fs-hud);
+  font-weight: 800;
   color: var(--sc-mana);
-  min-width: 86px;
+  min-width: 112px;
   font-variant-numeric: tabular-nums;
 }
 .sc-mana-locked {
   font-size: var(--sc-fs-sm);
-  color: var(--sc-danger);
+  color: var(--sc-status-danger);
+  font-weight: 700;
 }
 
 /* ————— 牌桌区与 3D 挂载点 ————— */
@@ -322,7 +333,7 @@
 .sc-unit.is-targetable {
   cursor: crosshair;
   border-color: var(--sc-danger);
-  box-shadow: 0 0 0 2px rgba(255, 107, 94, 0.75), 0 0 16px rgba(255, 107, 94, 0.4);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sc-danger) 75%, transparent), 0 0 16px color-mix(in srgb, var(--sc-danger) 40%, transparent);
 }
 
 /* —— 卡牌 2.5D 描边（演出修正阶段二·需求 2，原样保留）——
@@ -365,8 +376,13 @@
     0 6px 10px rgba(0, 0, 0, 0.45);
 }
 .sc-unit-name {
-  display: block;
-  font-size: var(--sc-fs-md);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: var(--sc-fs-base);
   font-weight: 700;
   line-height: 1.3;
 }
@@ -379,17 +395,17 @@
 .sc-unit-keywords em,
 .sc-hand-keywords {
   font-style: normal;
-  font-size: 10px;
+  font-size: var(--sc-fs-xs);
   color: var(--sc-gold);
 }
 .sc-unit-attack,
 .sc-unit-health {
   position: absolute;
   bottom: 6px;
-  font-size: 15px;
+  font-size: var(--sc-fs-hud);
   font-weight: 800;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 28px;
   display: grid;
   place-items: center;
   border-radius: var(--sc-radius-sm);
@@ -406,7 +422,7 @@
   color: #7ef2b6;
 }
 .sc-unit-health.is-hurt {
-  color: var(--sc-danger);
+  color: var(--sc-status-danger);
 }
 
 /* ————— 目标选择提示条 ————— */
@@ -421,11 +437,11 @@
   background: rgba(16, 20, 30, 0.86);
   backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
   -webkit-backdrop-filter: blur(var(--sc-glass-blur)) saturate(1.3);
-  border: 1px solid rgba(255, 107, 94, 0.65);
+  border: 1px solid color-mix(in srgb, var(--sc-danger) 65%, transparent);
   border-radius: var(--sc-radius-md);
   padding: var(--sc-space-2) 14px;
   font-size: var(--sc-fs-md);
-  box-shadow: 0 0 0 1px rgba(255, 107, 94, 0.18), var(--sc-shadow-2);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sc-danger) 18%, transparent), var(--sc-shadow-2);
 }
 
 /* ————— 己方操作区 ————— */
@@ -450,14 +466,16 @@
 .sc-btn--power.is-ready {
   border-color: var(--sc-gold);
   color: var(--sc-gold);
-  box-shadow: var(--sc-hairline), 0 0 14px rgba(255, 200, 87, 0.16);
+  box-shadow: var(--sc-hairline), 0 0 14px color-mix(in srgb, var(--sc-gold) 16%, transparent);
 }
 .sc-btn--turn {
   min-width: 132px;
 }
 
 /* ————— 手牌 ————— */
-/* M4-R3D5：容器加 perspective，卡体 hover 绕 Y 轴 180° 翻面（CSS 3D 预览详情） */
+/* M4-R3D5：容器加 perspective，卡体 hover 绕 Y 轴 180° 翻面（CSS 3D 预览详情）
+   P2-UI1 可读性：收窄装饰留白（左内边距 26→12，让位牌名）、费用徽标加大、
+   牌名两行截断（-webkit-line-clamp）+ 按钮 title 全名兜底（见 HandCardView） */
 .sc-hand {
   display: flex;
   gap: 10px;
@@ -474,7 +492,7 @@
   border-radius: var(--sc-radius-md);
   border: 1px solid var(--rim);
   background: linear-gradient(165deg, #1c2333, #11151f);
-  padding: 10px 12px 10px 26px;
+  padding: 10px 12px;
   text-align: left;
   cursor: pointer;
   /* button 默认垂直居中内容：短内容卡的牌名会下坠、与左上功耗徽标错位——
@@ -498,12 +516,12 @@
     0 10px 18px rgba(0, 0, 0, 0.55);
 }
 .sc-hand-card.is-disabled {
-  opacity: 0.55;
+  opacity: 0.62;
   cursor: not-allowed;
 }
 .sc-hand-card.is-selected {
   border-color: var(--sc-gold);
-  box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.5);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--sc-gold) 50%, transparent);
 }
 /* 传说档：渐变金边（呼应卡面金框与 3D 金描边）；hover/选中保持渐变，
    经 --rim-glow 辉光加亮；金色呼吸光由 motion.css 的 ::before 层负责 */
@@ -521,22 +539,27 @@
   position: absolute;
   top: 6px;
   left: 6px;
-  width: 34px;
-  height: 22px;
+  width: 40px;
+  height: 24px;
   display: grid;
   place-items: center;
   border-radius: 7px;
-  font-size: var(--sc-fs-xs);
+  font-size: var(--sc-fs-sm);
   font-weight: 800;
   color: var(--sc-mana);
-  background: rgba(77, 163, 255, 0.12);
-  border: 1px solid rgba(77, 163, 255, 0.4);
+  background: rgba(108, 179, 255, 0.14);
+  border: 1px solid rgba(108, 179, 255, 0.45);
   font-variant-numeric: tabular-nums;
 }
 .sc-hand-name {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   font-weight: 700;
-  font-size: var(--sc-fs-md);
+  font-size: var(--sc-fs-base);
   line-height: 1.25;
 }
 .sc-hand-type {
@@ -553,19 +576,19 @@
 }
 .sc-hand-reason {
   display: block;
-  font-size: 10px;
-  color: var(--sc-danger);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-status-danger);
   margin-top: var(--sc-space-1);
   line-height: 1.4;
 }
 
 /* —— 手牌 CSS 3D 翻转双面（M4-R3D5）：正面/背面互斥可见 ——
-   face 顶部预留功耗徽标带（徽标 top 6 + 高 22 → 底缘距卡顶 28px），
-   牌名永远从徽标下方开始，长牌名不再被徽标盖住首字 */
+   face 顶部预留功耗徽标带（徽标 top 6 + 高 24 → 底缘距卡顶 30px），
+   牌名永远从徽标下方开始（34px 起），长牌名不再被徽标盖住首字 */
 .sc-hand-face {
   display: flex;
   flex-direction: column;
-  padding-top: 20px;
+  padding-top: 24px;
   backface-visibility: hidden;
 }
 .sc-hand-back {
@@ -589,22 +612,24 @@
   color: var(--sc-accent, #35d0ff);
 }
 .sc-hand-back-flavor {
-  font-size: 10px;
+  font-size: var(--sc-fs-xs);
   font-style: italic;
-  color: #a7b3c0;
+  color: #b3bfce;
   line-height: 1.45;
 }
 .sc-hand-back-meta {
-  font-size: 10px;
-  color: #8b98a9;
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
 }
 .sc-hand-back-keywords {
-  font-size: 10px;
+  font-size: var(--sc-fs-xs);
   font-weight: 700;
   color: var(--sc-gold);
 }
 
-/* ————— 战报日志：玻璃侧栏，新条目滑入见 motion.css ————— */
+/* ————— 战报日志：玻璃侧栏，新条目滑入见 motion.css —————
+   P2-UI1：按回合分组折叠（回合头可点收起/展开，默认展开最近 2 回合），
+   关键事件（斩杀/终局/跳闸/质保破/传说入场）走 tokens 状态语义色高亮 */
 .sc-log {
   width: 280px;
   flex: none;
@@ -634,6 +659,72 @@
   flex-direction: column;
   gap: 6px;
 }
+/* —— 回合分组：回合头是按钮（收起/展开），组间用间距 + 细分隔线区隔 —— */
+.sc-log-group {
+  border-top: 1px solid rgba(150, 166, 197, 0.1);
+  padding-top: 4px;
+}
+.sc-log-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.sc-log-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 4px 2px;
+  cursor: pointer;
+  font-size: var(--sc-fs-sm);
+  font-weight: 700;
+  color: var(--sc-dim);
+  letter-spacing: 0.06em;
+  text-align: left;
+  border-radius: var(--sc-radius-sm);
+  transition: color var(--sc-dur-fast) ease;
+}
+.sc-log-head:hover {
+  color: var(--sc-text);
+}
+.sc-log-head:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 1px;
+}
+.sc-log-head-arrow {
+  flex: none;
+  display: inline-block;
+  font-size: var(--sc-fs-xs);
+  transition: transform var(--sc-dur-fast) var(--sc-ease-out);
+}
+.sc-log-head.is-open .sc-log-head-arrow {
+  transform: rotate(90deg);
+}
+/* 长回合标题截断（侧栏 280px 内不折行）；计数不折行 */
+.sc-log-head-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-log-head-count {
+  flex: none;
+  font-size: var(--sc-fs-xs);
+  font-weight: 400;
+  color: var(--sc-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sc-log-items {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0 4px 10px;
+}
 .sc-log-item {
   font-size: var(--sc-fs-sm);
   line-height: 1.55;
@@ -650,6 +741,27 @@
 .sc-log-item.is-end {
   color: var(--sc-gold);
   font-weight: 700;
+}
+/* —— 关键事件高亮：语义色统一取 tokens 状态色（左缘色条 + 加粗，不发明新色） —— */
+.sc-log-item.is-key {
+  font-weight: 700;
+  padding-left: 8px;
+  border-left: 2px solid currentColor;
+}
+.sc-log-item.is-lethal {
+  color: var(--sc-status-danger);
+}
+.sc-log-item.is-burn-out {
+  color: var(--sc-status-danger);
+}
+.sc-log-item.is-shield {
+  color: var(--sc-status-ok);
+}
+.sc-log-item.is-legendary {
+  color: var(--sc-status-caution);
+}
+.sc-log-item.is-game-end {
+  color: var(--sc-status-caution);
 }
 
 /* ————— 错误提示条 ————— */
@@ -668,7 +780,7 @@
   font-size: var(--sc-fs-md);
   z-index: 50;
   max-width: 70vw;
-  box-shadow: 0 0 0 1px rgba(255, 107, 94, 0.18), var(--sc-shadow-2);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sc-danger) 18%, transparent), var(--sc-shadow-2);
 }
 
 /* ————— 声音控制 ————— */
@@ -733,7 +845,7 @@
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  border: 1px solid rgba(255, 200, 87, 0.55);
+  border: 1px solid color-mix(in srgb, var(--sc-gold) 55%, transparent);
   background: rgba(18, 22, 31, 0.9);
   backdrop-filter: blur(var(--sc-glass-blur));
   -webkit-backdrop-filter: blur(var(--sc-glass-blur));
