@@ -1,6 +1,6 @@
-# 硅牌 SiliconCard · 规则书 v1.0.1（M0 定稿 + M1-ENG7 收口）
+# 硅牌 SiliconCard · 规则书 v1.0.2（M0 定稿 + M1-ENG7 收口 + P2-ENG1 电费抵扣券）
 
-> 版本 v1.0.1 · 2026-10-02（M1-ENG7：错误码 additive 扩容 + 三项契约评审裁决入册）· **本文件是跨包契约**
+> 版本 v1.0.2 · 2026-11-15（P2-ENG1：电费抵扣券——第 13 效果原语 `gainMana`、`CARD_DRAWN.source` 与 `CARD_BURNED.reason` additive 扩容、引擎内建特殊卡，均 additive 无破坏）· **本文件是跨包契约**
 > 状态机、schema、事件目录、关键词、派系技能以本文为准；修改走 [WF-ENGINE](agents/workflows.md)（含下游通报 client-3d / client-ui / card-content / qa-balance）。
 > 类型实现的唯一事实源：`packages/core/src/types/`，本文与类型一一对应。
 
@@ -19,15 +19,20 @@
 | `OPENING_HAND_SIZE` | 3 | 开局起手张数 | ✓ |
 | `HERO_POWER_COST` | 200 | 派系技能功耗（W） | ✓ |
 | `FIRST_PLAYER` | `'P1'` | 固定先手方 | ✓ |
+| `VOUCHER_BONUS` | 40 | 电费抵扣券打出后的本回合供电加成（W，P2-ENG1；**2026-11-15 bench 校准定值**，初稿 300W 实测严重过补——先手胜率 59.4%→32.2%，按验收区间 52–56% 降档定稿，见 §13）——唯一允许突破 `MAX_MANA` 的通道 | ✓ |
+| `VOUCHER_CARD_ID` | `'siliconcard-voucher'` | 电费抵扣券卡牌 id（引擎内建特殊卡，不进 content 可收集池） | ✓ |
+| `VOUCHER_UID` | `'vc1'` | 券的手牌 uid（**独立 `v` 命名空间**，不消耗 h/u 共用的 `nextInstanceId` 全局游标——旧回放兼容的关键不变量） | ✓ |
 
 ## 2. 回合流程
 
-1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 校验双方派系技能已注册（未注册抛 `FACTION_UNREGISTERED`，见 §4）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ `GAME_START` 事件 → 进入 P1 的第 1 回合。
-   **initGame 签名裁决（M1-ENG7 定稿）**：`initGame(setup): GameState` **维持只返回 state、不携带事件流**——`GAME_START` 与首个 `TURN_START` 由消费方按初始 state 合成（seed / turn / activePlayer / maxMana / drawCount=0 等字段齐备，无信息增量；开局演出不依赖引擎外发）。理由：四函数接口是架构铁律级稳定契约；回放序列化（§12）以 seed+actions 为唯一存档事实，开局事件可由回放器确定性重建。§6 的 `GAME_START`「发出时机」按语义时点（initGame 完成）解读，非 API 承诺。
+1. **开局**（`initGame`）：校验双方卡组（总数 = `DECK_SIZE`，否则抛 `DECK_INVALID`）→ 校验双方派系技能已注册（未注册抛 `FACTION_UNREGISTERED`，见 §4）→ 各抽 `OPENING_HAND_SIZE` 张构成起手（P1 先抽，交替）→ **向后手方追加发放一张「电费抵扣券」（P2-ENG1）**→ `GAME_START` 事件 → 进入 P1 的第 1 回合。
+   **电费抵扣券（P2-ENG1 定稿，先手平衡）**：后手方（`opponentOf(FIRST_PLAYER)`，即 P2）在起手发牌后**额外**获得一张引擎内建特殊卡「电费抵扣券」（§2.1 券机制见下）；发放事件为 `CARD_DRAWN{source:'coin_grant'}`，与 `GAME_START` 同属 initGame 开局语义时点（见下签名裁决，消费方按初始视图确定性合成）。券 uid 为独立命名空间常量 `VOUCHER_UID`（`'vc1'`），**不消耗** `nextInstanceId` 全局游标——init 后游标仍 = `2×OPENING_HAND_SIZE+1`，一期旧录制回放中的全部 `h*/u*` 引用保持有效（§12 旧回放兼容）。
+   **券机制细则**：① 打出后本回合供电 `+VOUCHER_BONUS`（40W），**可超 `MAX_MANA` 上限**（gainMana 原语为唯一越限通道，§5）；加成只作用于当回合 `mana`，供电曲线 `maxMana` 不动，回合切换即随 §2.2 曲线重置，不跨回合持有；② 券不占 30 张卡组名额、不经牌库（不可被抽牌复制、洗牌不涉及）；③ 券仅在后手方的**第 1 个自身回合**内可用，该回合结束仍未打出即失效消失（§2.5）；④ 过期/打出均不进墓地（过期非死亡、无结算效果）。
+   **initGame 签名裁决（M1-ENG7 定稿）**：`initGame(setup): GameState` **维持只返回 state、不携带事件流**——`GAME_START` 与首个 `TURN_START` 由消费方按初始 state 合成（seed / turn / activePlayer / maxMana / drawCount=0 等字段齐备，无信息增量；开局演出不依赖引擎外发）。理由：四函数接口是架构铁律级稳定契约；回放序列化（§12）以 seed+actions 为唯一存档事实，开局事件可由回放器确定性重建。§6 的 `GAME_START`「发出时机」按语义时点（initGame 完成）解读，非 API 承诺。**券发放事件同此裁决**（P2-ENG1：`CARD_DRAWN{source:'coin_grant'}` 在 initGame 内部开局序列中恰一次构造，消费方合成；引擎侧以「P2 初始手牌恰一张券」状态不变量锁定）。
 2. **回合开始**（`TURN_START`）：`turn +1`；该玩家自身第 k 回合 → `maxMana = min(k × MANA_PER_TURN, MAX_MANA)`（即 +100W/回合，至 1000W）；结算跳闸：`mana = maxMana - lockedMana`，发出 `BURN_OUT`（若 `lockedMana > 0`），随后清零；`heroPowerUsed = false`；场上所有己方单位 `attacksRemaining` 重置（windfury = 2，其余 1）、`attackedThisTurn = false`；抽 1 张牌（先手 P1 的第 1 回合不抽，`drawCount: 0` 作为补偿规则）；上述序列完成后结算 `turnStart` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死于序列尾部再判胜负）；
 3. **出牌阶段**：任意次 `PLAY_CARD` / `USE_HERO_POWER`（受功耗与合法性约束）；
 4. **攻击**：己方单位可宣告攻击（入场当回合不可攻击，除非 charge）；
-5. **回合结束**（`END_TURN`）：结算 `turnEnd` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死即在此收局，`GAME_END` 后不再烧牌/切换/进入对方回合）→ 手牌若 > `HAND_LIMIT`，从末尾烧牌（`CARD_BURNED`，烧掉的牌不进弃牌堆）→ 切换 `activePlayer`。
+5. **回合结束**（`END_TURN`）：结算 `turnEnd` 触发效果（M1-ENG6：全场双方单位按入场顺序，见 §5；触发致死即在此收局，`GAME_END` 后不再烧牌/切换/进入对方回合）→ **电费抵扣券过期（P2-ENG1）**：行动方处于自身第 1 个回合且手牌仍有券 → 移除并发 `CARD_BURNED{reason:'voucher_expired'}`（先于胜负判定与烧牌：回合以终局收尾时券同样视为已过期离手，终局状态与一期引擎语义对齐）→ 手牌若 > `HAND_LIMIT`，从末尾烧牌（`CARD_BURNED{reason:'hand_full'}`，烧掉的牌不进弃牌堆）→ 切换 `activePlayer`。
 
 ## 3. 动作与合法性（Action ⇄ RuleError）
 
@@ -67,10 +72,13 @@
 
 **accessory 在场形态（M1-ENG2 边界裁定，v1.0）**：打出后**进场上**成为 BoardUnit——占扩展槽并计入 `BOARD_LIMIT`、以 0/1 身板入场（定义无攻血字段）、不可攻击（attacksRemaining 恒 0）、可被效果指定、可死亡（光环随之回收）；driver 不占槽。
 
+**引擎内建特殊卡（P2-ENG1 定稿）**：「电费抵扣券」（`VOUCHER_CARD_ID` = `'siliconcard-voucher'`，type `driver`、cost 0、neutral、onPlay = `gainMana sourceOwner 40`，机制细则见 §2.1）为引擎内建卡——**不进 content 可收集池**，定义随 core 装配入口自动注册（与内置派系技能同模式，宿主经 core 注册 API 后写覆盖不受影响）；不占卡组名额、`initGame` 卡组校验不涉及它；cost 0 天然通过 `findCardDefinitionIssues` 的 0–1000 区间校验，无需特例豁免。卡面走 client cardArt 既有渲染：`art: { shape: 'voucher', palette: '#f7c948', glow: '#fff3c4' }`（金色；shape 不在已知形体表，按 pickShapeKind 契约确定性映射既有形体，数据驱动扩展通道）。
+
 ## 5. 效果系统
 
 - **声明式优先**：`EffectSpec.steps` 按**数组顺序**逐步结算；每步产生对应事件（伤害→`DAMAGE_DEALT` 等）；
-- **12 种原语**（`EffectStep`）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`，并可携带**可选 `tag` 子类过滤**（M1-ENG6 additive：非空字符串时仅命中卡牌定义 `tags` 含该标记的场上单位，如 `'miner'` 供「矿难」筛选；英雄无 tags，tag 过滤下天然排除；chosen 的 tag 合法性随出牌闸门校验）；`destroy` 不被三年质保抵挡、经既有死亡管线结算（§7）；`revive` 从 `sourceOwner` 墓地捞回显卡（`pick: lastOwnedGpu | random`，复活为新实例：新 instanceId、召唤失调重置、keywords/身板按定义恢复；复活即离墓；场满与池空同为静默 no-op 且不消耗 RNG）；
+- **13 种原语**（`EffectStep`，P2-ENG1 增补第 13 种）：`damage / heal / buff / grantKeyword / removeKeyword / draw / summon / destroy / revive / gainArmor / lockMana / gainMana / handler`；`TargetSelector` 支持 `chosen / random / all` × `TargetPool`，并可携带**可选 `tag` 子类过滤**（M1-ENG6 additive：非空字符串时仅命中卡牌定义 `tags` 含该标记的场上单位，如 `'miner'` 供「矿难」筛选；英雄无 tags，tag 过滤下天然排除；chosen 的 tag 合法性随出牌闸门校验）；`destroy` 不被三年质保抵挡、经既有死亡管线结算（§7）；`revive` 从 `sourceOwner` 墓地捞回显卡（`pick: lastOwnedGpu | random`，复活为新实例：新 instanceId、召唤失调重置、keywords/身板按定义恢复；复活即离墓；场满与池空同为静默 no-op 且不消耗 RNG）；
+- **gainMana 原语（P2-ENG1 定稿）**：`{ op: 'gainMana', player: EffectPlayer, amount }`——本回合供电 `+amount`，**唯一允许突破 `MAX_MANA` 上限的效果通道**（电费抵扣券的效果实现，其余任何路径的供电仍受 §2.2 曲线钳制）；只作用于当回合 `mana`，回合切换随曲线整体重置，越限部分天然失效；与 overload 锁定无残留交互（`lockedMana` 作用于下回合曲线，与本回合增益无关）；无目录事件（改动经状态可见，同 buff/lockMana）；
 - **命名 handler 逃生舱**：steps 表达不了的逻辑（如「开光追试试」的 30% 失败判定）在 `core/src/effects/` 按 `name` 注册，经 `{ op: 'handler', name }` 引用——注册处必须配单测；**光追失败事件定稿（M1-ENG7 契约评审：维持借位）**：经 `KEYWORD_TRIGGERED` 发出，keyword 字段定稿借用 `'overload'`（"开光追把机器整跳闸"梗义贴合失败演出）、`detail:'光追失败'` 供消费端分流、`instanceId` 用 skillId。评审理由：事件目录应为封闭原语集，不为单一技能的失败演出扩目录（17→18 会诱发 content 逐技能索取专属事件）；借位唯一代价是 keyword 字段语义外溢（overload 触发统计需按 detail 过滤），v1 无此分析需求。client-ui / client-3d 已随 M1-ENG7 汇报通报；后续如需独立演出再走 WF-ENGINE 提案；
 - **随机语义**：一切 `random` 选择与概率判定走引擎种子 RNG（§11），**顺序固定**：按步骤数组顺序、目标池的 board 顺序进行；
 - **触发时点**（`EffectTrigger`）：`battlecry`（入场/出牌）、`deathrattle`（死亡后，进入墓地前）、`onPlay`、`aura`（配合 `AuraSpec` 常驻修正，accessory 主用）、`turnStart / turnEnd / onAttack / onDamaged`；`turnStart / turnEnd` 的作用范围为**全场双方单位**（M1-ENG6 裁定：规则书未按拥有者限定；按入场顺序单层队列结算，以结算开始时的在场名单为准——中途离场不触发、中途召唤不入队）；
@@ -86,9 +94,9 @@
 | `GAME_START` | seed, firstPlayer | initGame 完成（签名裁决见 §2.1：initGame 只返回 state，本事件由消费方按初始 state 合成） | 3D 开局演出 |
 | `TURN_START` | turn, playerId, maxMana, drawCount | §2.2 | 功耗条刷新 |
 | `TURN_END` | turn, playerId | §2.5 | 回合切换演出 |
-| `CARD_DRAWN` | playerId, cardId\|null, source(`deck`/`fatigue`) | 每次抽牌 | 抽牌动画（source=fatigue 时播疲劳） |
+| `CARD_DRAWN` | playerId, cardId\|null, source(`deck`/`fatigue`/`coin_grant`，P2-ENG1 additive 扩展：`coin_grant` = 开局直接发放入手，不经牌库——电费抵扣券发放，initGame 开局语义时点见 §2.1) | 每次抽牌 / 开局发券 | 抽牌动画（source=fatigue 时播疲劳） |
 | `CARD_PLAYED` | playerId, uid, cardId, cost, target | 扣费入结算前 | 出牌落场/法术特效 |
-| `CARD_BURNED` | playerId, cardId, reason | 手牌超限烧牌 | 烧牌动画 |
+| `CARD_BURNED` | playerId, cardId, reason(`hand_full`/`voucher_expired`，P2-ENG1 additive 扩展：`voucher_expired` = 券过期作废，§2.5) | 手牌超限烧牌 / 券回合结束未打出 | 烧牌动画（券过期=作废演出） |
 | `MINION_SUMMONED` | unit, source(`play`/`effect`) | 单位入场 | 落场动画 |
 | `MINION_DIED` | unit, cause | 移入场外前 | 死亡碎裂 → 亡语 |
 | `ATTACK_DECLARED` | attackerId, target | 攻击判定前 | 冲撞动画 |
@@ -134,6 +142,7 @@
 - 任一玩家 `health + armor 受击后 ≤ 0` → 对方胜（`GAME_END{reason:'health_zero'}`）；**同时归零 → winner: null（平局）**；
 - `CONCEDE` → 对方胜（`reason:'concede'`）；
 - **疲劳**：deck 为空时抽牌 → `fatigue +1`，受到等同 fatigue 点的疲劳伤害（1,2,3,…），发出 `CARD_DRAWN{source:'fatigue'}` + `FATIGUE`；
+- **券与疲劳/墓地无交互（P2-ENG1）**：券不经牌库（不占洗牌、不触发疲劳节奏变化）、过期/打出均不进墓地——券不会延迟或加重任何一方的疲劳序列；
 - **收口保证（M1-ENG7 终审定稿）**：任一致命路径（战斗 / 出牌·战吼效果 / 技能 / onDamaged / 亡语 / turnStart / turnEnd / 疲劳 / 认输）终局时，`GAME_END` 必为该次 applyAction 事件流的**最后一个事件且恰好一次**；终局后一切动作抛 `GAME_ENDED`；
 - **结算信息完整性（M1-ENG7 定稿）**：结算画面所需数据 = `GAME_END` 事件（winner、reason）+ 终局 state（`turn` 总回合数、双方 heroName/faction/health/fatigue 等展示字段）+ `viewFor(...)`（winner/phase 同源透出）——不再扩事件载荷，客户端据此前三项即可渲染结算画面（"R.I.P 烧了"）。
 
@@ -156,10 +165,12 @@
 - 录制格式：`ReplayRecording { seed, players: [PlayerSetup, PlayerSetup], actions[] }`；
 - **存档序列化（M1-ENG7 交付）**：`serializeReplay(recording) => string` / `deserializeReplay(json) => ReplayRecording`——存档 = **canonicalJson 确定性输出**（键递归排序、剔除 undefined，含 `schemaVersion` 字段，当前 `REPLAY_SCHEMA_VERSION = 1`）；同一录制永远产出逐字节相同的 JSON 文本（seed+actions 存档 / 分享 / 回放的地基）；反序列化做**结构总闸门**（严格未知字段拒绝、目标形状校验、版本门禁），错误消息可读带路径；规则语义合法性（卡组张数、派系注册等）仍由 initGame 把关，两层校验职责分离；
 - 校验：`assertGoldenReplay(engine, recording, expectedHash)`——哈希不匹配即"黄金回放漂移"；
-- **快照基线（已锁定，M1-ENG7）**：`packages/core/src/__golden__/`——4 局完整对局（`*.golden.json`：recording 存档形态 + 期望终局哈希 + 终局事实 + 事件计数），风格各异：战斗分胜负 / 疲劳分胜负 / 认输 / 双方同时归零平局；测试逐一加载 `assertGoldenReplay`，CI（yarn test）即门禁；
+- **快照基线（已锁定，M1-ENG7；P2-ENG1 重录）**：`packages/core/src/__golden__/`——4 局完整对局（`*.golden.json`：recording 存档形态 + 期望终局哈希 + 终局事实 + 事件计数），风格各异：战斗分胜负 / 疲劳分胜负 / 认输 / 双方同时归零平局；测试逐一加载 `assertGoldenReplay`，CI（yarn test）即门禁；
+- **旧回放兼容（P2-ENG1 定稿）**：券的 uid 走独立命名空间（不消耗 `nextInstanceId` 全局游标）且 rng 链路零消耗——一期录制（seed+players+actions 存档）在新引擎上**逐动作重放仍全部合法**；对局跨过券过期点的录制，终局状态与一期**逐字节一致**（combat / fatigue / concede 三条基线哈希已实证零漂移）；唯一预期漂移面：对局在券过期前即终局（如 draw 平局基线，全局 turn 1 终局）时，终局状态恰多出 P2 手牌中的未过期券——属 initGame 行为变化的既定语义，`REPLAY_SCHEMA_VERSION` 维持 1（存档格式无破坏性变更）；
 - 规则变更后：漂移逐条归因为「预期变更（用 fixtures 确定性探针重生成基线）/ 意外回归（修复）」，流程见 WF-ENGINE。
 
 ## 13. 版本化
 
 - 本规则书 v1.0 契约自 **core `0.1.0`**（M1-ENG7 引擎链闭环）起对应；规则语义变更必须同时更新本文、类型与快照，并在 PR 描述中列出下游影响；
-- `EventCatalog` / `CardDefinition` schema 的破坏性变更需要升 core minor 版本并通报全部下游预设；错误码等 additive 扩容升 patch 号并在本文标注「additive 定稿」。
+- `EventCatalog` / `CardDefinition` schema 的破坏性变更需要升 core minor 版本并通报全部下游预设；错误码等 additive 扩容升 patch 号并在本文标注「additive 定稿」；
+- **v1.0.1 → v1.0.2（P2-ENG1，2026-11-15，additive 无破坏）**：① §1 新增 `VOUCHER_BONUS / VOUCHER_CARD_ID / VOUCHER_UID`；② §2.1 后手发放电费抵扣券 + 券机制细则，§2.5 券过期步骤；③ §5 第 13 原语 `gainMana`（`EffectStep` additive 扩容）；④ §6 `CARD_DRAWN.source` 增 `'coin_grant'`、`CARD_BURNED.reason` 增 `'voucher_expired'`（均 additive 枚举扩容，事件目录维持 17 种封闭集合——新增事件变体会强制渲染层 `[K in GameEvent['type']]` 全键映射扩键，故并入既有事件）；⑤ §4 引擎内建特殊卡条款；⑥ §9 券与疲劳/墓地无交互；⑦ §12 黄金基线全部重录 + 旧回放兼容结论；⑧ core `0.1.0 → 0.1.1`。下游通报：client-3d（无需改动：无新事件类型，动画映射不受影响）、client-ui（开局战报可按 `CARD_DRAWN{source:'coin_grant'}` 补券发放文案 + 手牌渲染券卡面，兜底渲染已可用）、cli（describe 文案已随本任务更新）、ai（用券启发式已随本任务落地）、qa-balance（bench 复测由主控安排，含券对局统计口径新增 `siliconcard-voucher` 场外卡兜底）。

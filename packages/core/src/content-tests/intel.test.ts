@@ -429,7 +429,7 @@ describe('M1-CNT intel 批次：驱动事件牌', () => {
       engine.applyAction(s, { type: 'PLAY_CARD', playerId: 'P2', uid: p2Card!.uid }),
     )
     expect(s.activePlayer).toBe('P1')
-    expect(s.players.P2.hand).toHaveLength(3)
+    expect(s.players.P2.hand).toHaveLength(4) // 起手 3 张 + 电费抵扣券（P2-ENG1）
     expect(s.board).toHaveLength(0)
   })
 })

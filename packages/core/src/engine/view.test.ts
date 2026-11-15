@@ -42,7 +42,7 @@ describe('viewFor —— 视角裁剪（rules.md §10）', () => {
     const view = viewFor(state, 'P1')
     const opp: PublicPlayerState = view.opponent
     expect(Object.keys(opp).sort()).toEqual(PUBLIC_KEYS)
-    expect(opp.handSize).toBe(3)
+    expect(opp.handSize).toBe(4) // 起手 3 张 + 电费抵扣券（P2-ENG1 后手补偿）
     expect(opp.deckSize).toBe(27)
     expect(opp.graveyardSize).toBe(0)
     expect(opp.faction).toBe('amd')

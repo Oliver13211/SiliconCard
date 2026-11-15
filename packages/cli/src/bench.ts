@@ -105,8 +105,15 @@ function main(argv: string[]): void {
   if (content.decks.length < 2) {
     throw new UsageError(`content 预组卡组不足 2 套（实际 ${content.decks.length}），无法两两循环`)
   }
+  // 教程卡组（P2-EDU1，tutorial- 前缀）是教学素材不是竞技卡组：
+  // 进跑分池会污染派系极差与先手统计（11 套脚本对手卡混入实测 spread 61.6pp），
+  // bench 池排除——客户端 SetupScreen 保留其彩蛋可见性（edu 设计取舍）。
+  const benchDecks = content.decks.filter((file) => !file.id.startsWith('tutorial-'))
+  if (benchDecks.length < 2) {
+    throw new UsageError(`content 预组卡组不足 2 套（实际 ${content.decks.length}），无法两两循环`)
+  }
 
-  const decks = content.decks.map((file) => ({
+  const decks = benchDecks.map((file) => ({
     name: file.id,
     faction: file.faction,
     deck: { cards: file.cards.map((c) => ({ ...c })) },

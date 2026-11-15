@@ -1,0 +1,11 @@
+{
+  "id": "tutorial-l3-s3-charge",
+  "name": "教学·超频组（冲锋演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "arm-dimensity-9300", "count": 8 },
+    { "cardId": "amd-rx-550", "count": 6 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 10 }
+  ]
+}

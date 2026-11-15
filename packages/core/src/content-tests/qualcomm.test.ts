@@ -232,7 +232,7 @@ describe('M4-CNT5 qualcomm 批次：schema 闸门', () => {
     expect(state.players.P1.faction).toBe('qualcomm')
     expect(state.players.P2.faction).toBe('intel')
     expect(state.players.P1.hand).toHaveLength(3)
-    expect(state.players.P2.hand).toHaveLength(3)
+    expect(state.players.P2.hand).toHaveLength(4) // 起手 3 张 + 电费抵扣券（P2-ENG1）
     expect(state.players.P1.deck).toHaveLength(DECK_SIZE - 3)
     expect(state.turn).toBe(1)
     expect(state.activePlayer).toBe('P1')

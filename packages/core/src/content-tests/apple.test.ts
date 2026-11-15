@@ -154,7 +154,7 @@ describe('M4-CNT5 apple 批次：schema 闸门', () => {
   it('10 张 ×3 组成 30 张卡组，经 initGame 真实开局（apple「能效比」vs amd 内置技能）', () => {
     const state = engine.initGame(appleSetup())
     expect(state.players.P1.hand).toHaveLength(3)
-    expect(state.players.P2.hand).toHaveLength(3)
+    expect(state.players.P2.hand).toHaveLength(4) // 起手 3 张 + 电费抵扣券（P2-ENG1）
     expect(state.players.P1.deck).toHaveLength(DECK_SIZE - 3)
     expect(state.turn).toBe(1)
     expect(state.activePlayer).toBe('P1')
@@ -190,7 +190,8 @@ describe('M4-CNT5 apple 批次：实打覆盖扫描', () => {
       )
       const fresh = plays.filter((action) => {
         const cardId = cardIdOfUid(state, action.uid)
-        return cardId !== undefined && !played.has(cardId)
+        // P2-ENG1：券非覆盖目标（引擎内建卡），排除出 fresh 集合，探针行为与一期对齐
+        return cardId !== undefined && ALL_IDS.includes(cardId) && !played.has(cardId)
       })
       const ownUnits = state.board.filter((unit) => unit.ownerId === active).length
       // 优先打出未见过的牌：driver 不占槽先行；单位牌留两个槽位余量防 7 槽塞满

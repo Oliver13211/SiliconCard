@@ -15,9 +15,14 @@ import {
   getFactionSkill,
   type Action,
   type EffectStep,
+  type Engine,
+  type EngineResult,
+  type GameState,
+  type PlayerId,
   type PlayerView,
   type TargetRef,
 } from '@siliconcard/core'
+import { RuleError } from '@siliconcard/core'
 
 /** handler 逃生舱步骤的直伤估计：按「1 点伤害 × 70% 成功率」口径（对齐光追类技能） */
 const HANDLER_FACE_DAMAGE_ESTIMATE = 0.7
@@ -110,4 +115,35 @@ export function isLethalAvailable(view: PlayerView, legal: readonly Action[]): b
 /** 斩杀模式下的候选：所有能对敌方 CPU 造成直伤的合法动作 */
 export function lethalCandidateActions(view: PlayerView, legal: readonly Action[]): Action[] {
   return legal.filter((action) => actionFaceDamage(action, view) > 0)
+}
+
+// —— 一步致胜枚举（P2-QA1）——
+
+/**
+ * 「打完这步就赢」的动作枚举：对 viewer 全部合法动作逐个经引擎真实结算
+ * （applyAction），终局且 winner === viewer 即致胜。不用伤害估计——护甲、
+ * 质保、嘲讽、亡语反制等全部由引擎结算兜底，构造性零误报（漏斩口径，
+ * plan 授权一步模拟深度）。
+ *
+ * 独立成函数于本模块的原因：player.ts（Hard 档 simLethal）与 review.ts
+ * （复盘漏斩判定）共用，避免 review → player 的既有依赖反向成环。
+ */
+export function findImmediateWinActions(engine: Engine, state: GameState, viewerId: PlayerId): Action[] {
+  const view = engine.viewFor(state, viewerId)
+  if (view.phase !== 'main' || view.activePlayer !== viewerId) return []
+  const legal = engine.getLegalActions(state, viewerId)
+  const winners: Action[] = []
+  for (const action of legal) {
+    if (action.type === 'CONCEDE') continue
+    let result: EngineResult
+    try {
+      result = engine.applyAction(state, action)
+    } catch (error) {
+      if (error instanceof RuleError) continue
+      throw error
+    }
+    const after = engine.viewFor(result.state, viewerId)
+    if (after.phase === 'ended' && after.winner === viewerId) winners.push(action)
+  }
+  return winners
 }

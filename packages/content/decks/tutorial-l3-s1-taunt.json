@@ -1,0 +1,11 @@
+{
+  "id": "tutorial-l3-s1-taunt",
+  "name": "教学·信仰充值组（嘲讽演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "intel-i9-9900k", "count": 10 },
+    { "cardId": "amd-rx-550", "count": 6 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 8 }
+  ]
+}

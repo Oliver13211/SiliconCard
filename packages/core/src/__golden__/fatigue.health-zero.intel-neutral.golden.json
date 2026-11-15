@@ -1,6 +1,6 @@
 {
   "name": "fatigue.health-zero.intel-neutral",
-  "description": "纯 END_TURN 探针：牌库枯竭疲劳分胜负（P2 先抽先疲劳，P1 胜）",
+  "description": "纯 END_TURN 探针：牌库枯竭疲劳分胜负（P2 先抽先疲劳，P1 胜）；P2-ENG1 电费抵扣券落地后重录（后手起手 +1 券，uid vc1 独立命名空间；券过期 reason=voucher_expired）",
   "probe": "fixtures.goldenFatigueProbe(seed=20261001)",
   "recording": {
     "actions": [
@@ -548,13 +548,13 @@
     "endReason": "health_zero",
     "finalTurn": 70,
     "eventCounts": {
-      "TURN_END": 69,
-      "TURN_START": 69,
+      "CARD_BURNED": 41,
       "CARD_DRAWN": 69,
-      "CARD_BURNED": 40,
       "DAMAGE_DEALT": 15,
       "FATIGUE": 15,
-      "GAME_END": 1
+      "GAME_END": 1,
+      "TURN_END": 69,
+      "TURN_START": 69
     }
   }
 }

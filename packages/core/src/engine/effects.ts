@@ -17,7 +17,8 @@
  * M1-ENG6 补全剩余原语：destroy（§7 质保不抵挡，经 removeUnitFromBoard(cause
  * 'destroy') 走既有死亡管线：亡语触发、进墓地、光环重算）与 revive（从 sourceOwner
  * 墓地复活，pick: lastOwnedGpu | random；新实例语义见 reviveFromGraveyard）。
- * 至此 §5 的 12 种原语全部实装。
+ * 至此 §5 的 12 种原语全部实装。P2-ENG1 增补第 13 原语 gainMana（本回合供电
+ * 增益，唯一可越 MAX_MANA 通道，电费抵扣券的效果通道；语义见 types/cards.ts）。
  */
 
 import type { CardType, EffectStep, InstanceId, TargetPool, TargetSelector } from '../types/cards'
@@ -197,6 +198,16 @@ function resolveEffectStep(ctx: EffectContext, step: EffectStep): void {
       if (step.amount <= 0) return
       const playerId = effectPlayerId(ctx, step.player)
       ctx.state.players[playerId].lockedMana += step.amount
+      return
+    }
+    case 'gainMana': {
+      // 本回合供电 +amount（P2-ENG1 第 13 原语，电费抵扣券通道）：唯一允许突破
+      // MAX_MANA 上限的效果语义（§5/§2.1）——直接加进当回合 mana，不与 maxMana
+      // 曲线交互；回合切换时 mana 随 beginTurn 曲线整体重置，越上限部分天然失效
+      // （不跨回合持有）。无目录事件（改动经状态可见，同 buff/lockMana）。
+      if (step.amount <= 0) return
+      const playerId = effectPlayerId(ctx, step.player)
+      ctx.state.players[playerId].mana += step.amount
       return
     }
     case 'destroy': {

@@ -23,6 +23,7 @@ import { applyUseHeroPower, legalHeroPowerActions, type UseHeroPowerAction } fro
 import { createRng } from './prng'
 import { applyPlayCard, legalPlayCardActions, type PlayCardAction } from './play'
 import { applyTurnEndEffects, beginTurn, burnExcessHand, checkGameEnd, opponentOf } from './turn'
+import { expireUnplayedVouchers } from './voucher'
 
 export function cloneState(state: Readonly<GameState>): GameState {
   return JSON.parse(JSON.stringify(state)) as GameState
@@ -51,6 +52,9 @@ export function applyAction(state: Readonly<GameState>, action: Action): EngineR
       events.push({ type: 'TURN_END', turn: next.turn, playerId: action.playerId })
       // turnEnd 触发效果（§2.5 序列先于烧牌；M1-ENG6 接通，全场单位按 board 顺序）
       applyTurnEndEffects(next, action.playerId, events, rng)
+      // 电费抵扣券过期（P2-ENG1，§2.1/§2.5）：行动方自身第 1 回合结束仍未打出即失效，
+      // 先于胜负判定与手牌烧牌（终局收尾同样过期，过期不进墓地）
+      expireUnplayedVouchers(next, action.playerId, events)
       // turnEnd 触发可能致死（如回合末伤害）：结算后即判胜负；终局则 GAME_END
       // 收尾于事件流并停止推进（不再烧牌/切换/进入对方回合，§3 对局结束语义）
       checkGameEnd(next, events)

@@ -36,6 +36,7 @@ import { ReplayPlayerScreen } from './replay/ReplayPlayerScreen'
 import { ReplaySaveToast } from './replay/ReplaySaveToast'
 import { CodexScreen, useCodexStore } from './codex'
 import { StatsScreen } from './stats/StatsScreen'
+import { TutorialScreen, TutorialHintLayer, useTutorialStore } from './tutorial'
 
 /** 退场淡出时长（需 ≥ motion.css 的 sc-screen-out 0.22s） */
 const SCREEN_EXIT_MS = 240
@@ -50,7 +51,12 @@ function ScreenOutlet({ screen }: { screen: Screen }) {
     case 'lan':
       return <LanScreen />
     case 'battle':
-      return <BattleScreen />
+      return (
+        <>
+          <BattleScreen />
+          <TutorialHintLayer />
+        </>
+      )
     case 'result':
       return <ResultScreen />
     case 'rules':
@@ -107,11 +113,16 @@ export function SiliconCardApp() {
   // > 图鉴 > 回放库 > 常规屏（P2-UI3/P2-UI4/P2-DATA1 接线约定）
   const player = useReplayStore((s) => s.player)
   const codexOpen = useCodexStore((s) => s.open)
+  // 教程（P2-EDU1）：顶层分支优先于一切屏——教程对战复用 gameStore 通道，
+  // 分支替换 ScreenOutlet 避免 BattleScreen 双渲染（挂载约定见 ui/tutorial/index.ts）
+  const tutorialOpen = useTutorialStore((s) => s.open)
 
   return (
     <div className="sc-app" data-motion={motion}>
       <ReplaySaveToast />
-      {player ? (
+      {tutorialOpen ? (
+        <TutorialScreen />
+      ) : player ? (
         <ReplayPlayerScreen />
       ) : codexOpen ? (
         <CodexScreen />

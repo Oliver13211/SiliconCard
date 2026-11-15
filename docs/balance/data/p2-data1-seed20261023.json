@@ -1,573 +1,579 @@
 {
-  "generatedAt": "2026-10-23T13:46:42.334Z",
-  "gamesTotal": 27300,
+  "generatedAt": "2026-11-15T09:51:30.399Z",
+  "gamesTotal": 7000,
   "seed": 20261023,
   "difficulty": "normal",
-  "gamesPerDirection": 600,
-  "mirrorGamesPerDirection": 150,
-  "spread": 0.07291666666666663,
-  "firstPlayerWinRate": 0.5983730158730158,
-  "durationMs": 411632,
+  "gamesPerDirection": 150,
+  "mirrorGamesPerDirection": 50,
+  "spread": 0.06,
+  "firstPlayerWinRate": 0.5565079365079365,
+  "durationMs": 29845,
   "factions": [
+    {
+      "faction": "arm",
+      "deckId": "arm-reference-swarm",
+      "winRate": 0.5233333333333333,
+      "games": 1800
+    },
     {
       "faction": "nvidia",
       "deckId": "nvidia-flagship-faith",
-      "winRate": 0.5430555555555555,
-      "games": 7200
+      "winRate": 0.5183333333333333,
+      "games": 1800
     },
     {
       "faction": "qualcomm",
       "deckId": "qualcomm-ai-everything",
-      "winRate": 0.5129166666666667,
-      "games": 7200
-    },
-    {
-      "faction": "arm",
-      "deckId": "arm-reference-swarm",
-      "winRate": 0.5066666666666667,
-      "games": 7200
+      "winRate": 0.5138888888888888,
+      "games": 1800
     },
     {
       "faction": "amd",
       "deckId": "amd-war-future",
-      "winRate": 0.4948611111111111,
-      "games": 7200
-    },
-    {
-      "faction": "apple",
-      "deckId": "apple-efficiency-faith",
-      "winRate": 0.4865277777777778,
-      "games": 7200
+      "winRate": 0.5105555555555555,
+      "games": 1800
     },
     {
       "faction": "intel",
       "deckId": "intel-driver-magic",
-      "winRate": 0.48583333333333334,
-      "games": 7200
+      "winRate": 0.4905555555555556,
+      "games": 1800
     },
     {
       "faction": "neutral",
       "deckId": "neutral-system-builder",
-      "winRate": 0.4701388888888889,
-      "games": 7200
+      "winRate": 0.48,
+      "games": 1800
+    },
+    {
+      "faction": "apple",
+      "deckId": "apple-efficiency-faith",
+      "winRate": 0.4633333333333333,
+      "games": 1800
     }
   ],
   "cards": [
     {
+      "cardId": "siliconcard-voucher",
+      "name": "电费抵扣券",
+      "played": 0.672,
+      "playedWinRate": 0.4653486394557823
+    },
+    {
       "cardId": "apple-m1-ultra",
       "name": "M1 Ultra",
-      "played": 0.6397435897435897,
-      "playedWinRate": 0.5639278557114229
+      "played": 0.626,
+      "playedWinRate": 0.542332268370607
     },
     {
       "cardId": "qualcomm-snapdragon-x-elite",
       "name": "骁龙 X Elite",
-      "played": 0.5971794871794872,
-      "playedWinRate": 0.5691283812795191
+      "played": 0.5915,
+      "playedWinRate": 0.5748098055790364
     },
     {
       "cardId": "intel-i9-9900k",
       "name": "i9-9900K",
-      "played": 0.5815384615384616,
-      "playedWinRate": 0.5553350970017636
-    },
-    {
-      "cardId": "qualcomm-snapdragon-x-plus",
-      "name": "骁龙 X Plus",
-      "played": 0.5729487179487179,
-      "playedWinRate": 0.5133139404788544
-    },
-    {
-      "cardId": "qualcomm-snapdragon-8-gen-3",
-      "name": "骁龙 8 Gen 3",
-      "played": 0.5717948717948718,
-      "playedWinRate": 0.49013452914798206
+      "played": 0.579,
+      "playedWinRate": 0.5535405872193437
     },
     {
       "cardId": "apple-macbook-air-m2",
       "name": "MacBook Air M2",
-      "played": 0.5687179487179487,
-      "playedWinRate": 0.5076645626690712
+      "played": 0.5725,
+      "playedWinRate": 0.46026200873362444
+    },
+    {
+      "cardId": "qualcomm-snapdragon-x-plus",
+      "name": "骁龙 X Plus",
+      "played": 0.564,
+      "playedWinRate": 0.5195035460992907
+    },
+    {
+      "cardId": "qualcomm-snapdragon-8-gen-3",
+      "name": "骁龙 8 Gen 3",
+      "played": 0.561,
+      "playedWinRate": 0.4919786096256685
     },
     {
       "cardId": "qualcomm-snapdragon-888",
       "name": "骁龙 888",
-      "played": 0.5624358974358974,
-      "playedWinRate": 0.5083200364713928
-    },
-    {
-      "cardId": "qualcomm-windows-on-arm",
-      "name": "Windows on ARM",
-      "played": 0.5578205128205128,
-      "playedWinRate": 0.4833371638703746
+      "played": 0.5585,
+      "playedWinRate": 0.5076096687555953
     },
     {
       "cardId": "apple-macbook-pro-16-m1-max",
       "name": "MacBook Pro 16 M1 Max",
-      "played": 0.5544871794871795,
-      "playedWinRate": 0.5530635838150288
+      "played": 0.5545,
+      "playedWinRate": 0.5338142470694319
     },
     {
-      "cardId": "qualcomm-g3x-gen-2",
-      "name": "骁龙 G3x Gen 2",
-      "played": 0.5411538461538462,
-      "playedWinRate": 0.5228618810708363
+      "cardId": "qualcomm-windows-on-arm",
+      "name": "Windows on ARM",
+      "played": 0.548,
+      "playedWinRate": 0.4744525547445255
     },
     {
       "cardId": "apple-airdrop",
       "name": "隔空投送",
-      "played": 0.5380769230769231,
-      "playedWinRate": 0.5310936383130808
+      "played": 0.536,
+      "playedWinRate": 0.5009328358208955
     },
     {
-      "cardId": "amd-rx-550",
-      "name": "Radeon RX 550",
-      "played": 0.5267948717948718,
-      "playedWinRate": 0.4675103431491847
-    },
-    {
-      "cardId": "qualcomm-snapdragon-8cx",
-      "name": "骁龙 8cx",
-      "played": 0.5214102564102564,
-      "playedWinRate": 0.5099582001475289
-    },
-    {
-      "cardId": "qualcomm-copilot-plus-pc",
-      "name": "Copilot+ PC",
-      "played": 0.5194871794871795,
-      "playedWinRate": 0.4471865745310958
-    },
-    {
-      "cardId": "amd-rx-480",
-      "name": "Radeon RX 480",
-      "played": 0.5169230769230769,
-      "playedWinRate": 0.5262896825396826
+      "cardId": "qualcomm-g3x-gen-2",
+      "name": "骁龙 G3x Gen 2",
+      "played": 0.5345,
+      "playedWinRate": 0.5322731524789522
     },
     {
       "cardId": "amd-rx-470",
       "name": "Radeon RX 470",
-      "played": 0.5152564102564102,
-      "playedWinRate": 0.47648668823090323
+      "played": 0.533,
+      "playedWinRate": 0.5131332082551595
     },
     {
-      "cardId": "amd-rx-6400",
-      "name": "Radeon RX 6400",
-      "played": 0.5143589743589744,
-      "playedWinRate": 0.4653539381854437
+      "cardId": "amd-rx-550",
+      "name": "Radeon RX 550",
+      "played": 0.5275,
+      "playedWinRate": 0.4824644549763033
     },
     {
-      "cardId": "apple-t2-security",
-      "name": "T2 安全芯片",
-      "played": 0.5074358974358975,
-      "playedWinRate": 0.5419403739262254
+      "cardId": "qualcomm-snapdragon-8cx",
+      "name": "骁龙 8cx",
+      "played": 0.524,
+      "playedWinRate": 0.5229007633587787
+    },
+    {
+      "cardId": "qualcomm-copilot-plus-pc",
+      "name": "Copilot+ PC",
+      "played": 0.515,
+      "playedWinRate": 0.44660194174757284
+    },
+    {
+      "cardId": "amd-rx-480",
+      "name": "Radeon RX 480",
+      "played": 0.5065,
+      "playedWinRate": 0.5380059230009872
     },
     {
       "cardId": "intel-arc-a380",
       "name": "Arc A380",
-      "played": 0.5066666666666667,
-      "playedWinRate": 0.4652074898785425
+      "played": 0.50625,
+      "playedWinRate": 0.47358024691358025
+    },
+    {
+      "cardId": "amd-rx-6400",
+      "name": "Radeon RX 6400",
+      "played": 0.5015,
+      "playedWinRate": 0.4626121635094716
+    },
+    {
+      "cardId": "apple-t2-security",
+      "name": "T2 安全芯片",
+      "played": 0.499,
+      "playedWinRate": 0.5080160320641283
     },
     {
       "cardId": "neutral-p106-100",
       "name": "P106-100",
-      "played": 0.48445054945054944,
-      "playedWinRate": 0.4905296586140411
+      "played": 0.4905,
+      "playedWinRate": 0.5040046599679627
     },
     {
       "cardId": "apple-mac-pro-2013",
       "name": "Mac Pro 2013",
-      "played": 0.47705128205128206,
-      "playedWinRate": 0.6342381080354743
+      "played": 0.488,
+      "playedWinRate": 0.5901639344262295
     },
     {
       "cardId": "nvidia-cmp-170hx",
       "name": "CMP 170HX",
-      "played": 0.4682051282051282,
-      "playedWinRate": 0.5350492880613362
-    },
-    {
-      "cardId": "arm-dimensity-9300",
-      "name": "天玑 9300",
-      "played": 0.4546153846153846,
-      "playedWinRate": 0.5843203609701072
-    },
-    {
-      "cardId": "nvidia-rtx-5060",
-      "name": "RTX 5060",
-      "played": 0.4512820512820513,
-      "playedWinRate": 0.5670454545454545
-    },
-    {
-      "cardId": "arm-exynos-8895",
-      "name": "Exynos 8895",
-      "played": 0.44076923076923075,
-      "playedWinRate": 0.5235602094240838
+      "played": 0.4675,
+      "playedWinRate": 0.5197860962566845
     },
     {
       "cardId": "nvidia-gt-1030",
       "name": "GT 1030",
-      "played": 0.44076923076923075,
-      "playedWinRate": 0.5177428737638162
+      "played": 0.4555,
+      "playedWinRate": 0.4840834248079034
     },
     {
-      "cardId": "intel-uhd-770",
-      "name": "UHD Graphics 770",
-      "played": 0.43596153846153846,
-      "playedWinRate": 0.414497867960594
+      "cardId": "nvidia-rtx-5060",
+      "name": "RTX 5060",
+      "played": 0.4525,
+      "playedWinRate": 0.5370165745856353
     },
     {
       "cardId": "arm-mali-g710",
       "name": "Mali-G710",
-      "played": 0.43525641025641026,
-      "playedWinRate": 0.4762886597938144
+      "played": 0.4375,
+      "playedWinRate": 0.4948571428571429
     },
     {
-      "cardId": "arm-mali-400",
-      "name": "Mali-400 MP",
-      "played": 0.42653846153846153,
-      "playedWinRate": 0.426209798617373
+      "cardId": "intel-uhd-770",
+      "name": "UHD Graphics 770",
+      "played": 0.43675,
+      "playedWinRate": 0.4275901545506583
+    },
+    {
+      "cardId": "arm-dimensity-9300",
+      "name": "天玑 9300",
+      "played": 0.434,
+      "playedWinRate": 0.618663594470046
     },
     {
       "cardId": "apple-unified-memory",
       "name": "统一内存",
-      "played": 0.42205128205128206,
-      "playedWinRate": 0.49878493317132444
+      "played": 0.4305,
+      "playedWinRate": 0.4657375145180023
     },
     {
-      "cardId": "arm-helio-g99",
-      "name": "Helio G99",
-      "played": 0.4196153846153846,
-      "playedWinRate": 0.47296058661778184
-    },
-    {
-      "cardId": "arm-cortex-a55",
-      "name": "Cortex-A55 四小核",
-      "played": 0.41012820512820514,
-      "playedWinRate": 0.43919974992185057
-    },
-    {
-      "cardId": "neutral-g502-hero",
-      "name": "罗技 G502 HERO",
-      "played": 0.4005860805860806,
-      "playedWinRate": 0.5268379663496708
-    },
-    {
-      "cardId": "neutral-gt-1030",
-      "name": "GT 1030",
-      "played": 0.39972527472527475,
-      "playedWinRate": 0.4849484536082474
-    },
-    {
-      "cardId": "qualcomm-x55-modem",
-      "name": "骁龙 X55 基带",
-      "played": 0.39615384615384613,
-      "playedWinRate": 0.4388349514563107
+      "cardId": "arm-exynos-8895",
+      "name": "Exynos 8895",
+      "played": 0.426,
+      "playedWinRate": 0.5410798122065728
     },
     {
       "cardId": "apple-genius-bar",
       "name": "天才吧",
-      "played": 0.38974358974358975,
-      "playedWinRate": 0.4644736842105263
+      "played": 0.413,
+      "playedWinRate": 0.4467312348668281
     },
     {
-      "cardId": "intel-i9-14900k",
-      "name": "i9-14900K",
-      "played": 0.38884615384615384,
-      "playedWinRate": 0.533135509396637
+      "cardId": "arm-helio-g99",
+      "name": "Helio G99",
+      "played": 0.41,
+      "playedWinRate": 0.5036585365853659
     },
     {
-      "cardId": "neutral-dxracer-king",
-      "name": "迪锐克斯 KING 电竞椅",
-      "played": 0.38046153846153846,
-      "playedWinRate": 0.6250842431594554
+      "cardId": "neutral-gt-1030",
+      "name": "GT 1030",
+      "played": 0.4042857142857143,
+      "playedWinRate": 0.4816254416961131
     },
     {
-      "cardId": "neutral-cherry-mx-8-0",
-      "name": "CHERRY MX 8.0",
-      "played": 0.37051282051282053,
-      "playedWinRate": 0.4867358708189158
+      "cardId": "arm-cortex-a55",
+      "name": "Cortex-A55 四小核",
+      "played": 0.404,
+      "playedWinRate": 0.47277227722772275
     },
     {
-      "cardId": "intel-nuc-13-extreme",
-      "name": "NUC 13 Extreme",
-      "played": 0.3676923076923077,
-      "playedWinRate": 0.4504881450488145
+      "cardId": "neutral-g502-hero",
+      "name": "罗技 G502 HERO",
+      "played": 0.4034285714285714,
+      "playedWinRate": 0.5361189801699717
     },
     {
-      "cardId": "intel-arc-b580",
-      "name": "Arc B580",
-      "played": 0.36525641025641026,
-      "playedWinRate": 0.5507195507195507
+      "cardId": "arm-mali-400",
+      "name": "Mali-400 MP",
+      "played": 0.4005,
+      "playedWinRate": 0.4419475655430712
+    },
+    {
+      "cardId": "qualcomm-x55-modem",
+      "name": "骁龙 X55 基带",
+      "played": 0.3955,
+      "playedWinRate": 0.44374209860935526
     },
     {
       "cardId": "apple-rosetta-2",
       "name": "Rosetta 2",
-      "played": 0.3507692307692308,
-      "playedWinRate": 0.560672514619883
+      "played": 0.383,
+      "playedWinRate": 0.5313315926892951
     },
     {
-      "cardId": "intel-laminar-cooler",
-      "name": "Laminar 公版涡轮",
-      "played": 0.35,
-      "playedWinRate": 0.4776556776556777
+      "cardId": "neutral-dxracer-king",
+      "name": "迪锐克斯 KING 电竞椅",
+      "played": 0.3799,
+      "playedWinRate": 0.6304290602790208
+    },
+    {
+      "cardId": "intel-nuc-13-extreme",
+      "name": "NUC 13 Extreme",
+      "played": 0.374,
+      "playedWinRate": 0.4679144385026738
+    },
+    {
+      "cardId": "intel-i9-14900k",
+      "name": "i9-14900K",
+      "played": 0.3715,
+      "playedWinRate": 0.5881561238223418
+    },
+    {
+      "cardId": "neutral-cherry-mx-8-0",
+      "name": "CHERRY MX 8.0",
+      "played": 0.3680833333333333,
+      "playedWinRate": 0.49241566674213266
     },
     {
       "cardId": "intel-arc-a750",
       "name": "Arc A750",
-      "played": 0.34525641025641024,
-      "playedWinRate": 0.47233568510954327
+      "played": 0.3575,
+      "playedWinRate": 0.4811188811188811
     },
     {
-      "cardId": "neutral-furmark",
-      "name": "FurMark 烤机",
-      "played": 0.34516483516483515,
-      "playedWinRate": 0.4414199299586119
+      "cardId": "intel-arc-b580",
+      "name": "Arc B580",
+      "played": 0.3505,
+      "playedWinRate": 0.5734664764621968
     },
     {
       "cardId": "nvidia-dlss-upscale",
       "name": "DLSS 超分辨率",
-      "played": 0.3425641025641026,
-      "playedWinRate": 0.4940119760479042
+      "played": 0.3465,
+      "playedWinRate": 0.4603174603174603
+    },
+    {
+      "cardId": "neutral-furmark",
+      "name": "FurMark 烤机",
+      "played": 0.34485714285714286,
+      "playedWinRate": 0.43620546810273403
+    },
+    {
+      "cardId": "intel-laminar-cooler",
+      "name": "Laminar 公版涡轮",
+      "played": 0.343,
+      "playedWinRate": 0.4912536443148688
     },
     {
       "cardId": "neutral-b650m-plus",
       "name": "B650M 重炮手",
-      "played": 0.3424615384615385,
-      "playedWinRate": 0.4634621144055106
+      "played": 0.3405,
+      "playedWinRate": 0.47048458149779737
     },
     {
       "cardId": "intel-av1-encode",
       "name": "AV1 硬编码",
-      "played": 0.34025641025641024,
-      "playedWinRate": 0.43142426525998495
-    },
-    {
-      "cardId": "intel-arc-a770-16g",
-      "name": "Arc A770 16GB",
-      "played": 0.3296153846153846,
-      "playedWinRate": 0.4087903539478802
+      "played": 0.3335,
+      "playedWinRate": 0.4272863568215892
     },
     {
       "cardId": "arm-lineageos",
       "name": "LineageOS 刷机包",
-      "played": 0.32846153846153847,
-      "playedWinRate": 0.41100702576112413
-    },
-    {
-      "cardId": "intel-microcode-0x129",
-      "name": "0x129 微码补丁",
-      "played": 0.31833333333333336,
-      "playedWinRate": 0.4212645992750705
-    },
-    {
-      "cardId": "amd-radeon-pro-duo",
-      "name": "Radeon Pro Duo",
-      "played": 0.31384615384615383,
-      "playedWinRate": 0.5633169934640523
-    },
-    {
-      "cardId": "amd-r9-290",
-      "name": "Radeon R9 290",
-      "played": 0.3108974358974359,
-      "playedWinRate": 0.500618556701031
-    },
-    {
-      "cardId": "amd-rx-7900-xtx",
-      "name": "Radeon RX 7900 XTX",
-      "played": 0.3073076923076923,
-      "playedWinRate": 0.5340008343763037
+      "played": 0.3215,
+      "playedWinRate": 0.40902021772939345
     },
     {
       "cardId": "amd-riser",
       "name": "PCIe Riser 延长线",
-      "played": 0.30256410256410254,
-      "playedWinRate": 0.4716101694915254
+      "played": 0.3205,
+      "playedWinRate": 0.4836193447737909
     },
     {
-      "cardId": "intel-xtu-undervolt",
-      "name": "XTU 降压超频",
-      "played": 0.29935897435897435,
-      "playedWinRate": 0.45910064239828696
+      "cardId": "intel-microcode-0x129",
+      "name": "0x129 微码补丁",
+      "played": 0.32,
+      "playedWinRate": 0.4046875
     },
     {
       "cardId": "apple-applecare-plus",
       "name": "AppleCare+",
-      "played": 0.29615384615384616,
-      "playedWinRate": 0.4623376623376623
+      "played": 0.3195,
+      "playedWinRate": 0.4209702660406886
     },
     {
-      "cardId": "amd-rx-580",
-      "name": "Radeon RX 580",
-      "played": 0.29525641025641025,
-      "playedWinRate": 0.5214937038645245
+      "cardId": "intel-arc-a770-16g",
+      "name": "Arc A770 16GB",
+      "played": 0.318,
+      "playedWinRate": 0.41037735849056606
+    },
+    {
+      "cardId": "amd-r9-290",
+      "name": "Radeon R9 290",
+      "played": 0.3155,
+      "playedWinRate": 0.526148969889065
+    },
+    {
+      "cardId": "amd-radeon-pro-duo",
+      "name": "Radeon Pro Duo",
+      "played": 0.313,
+      "playedWinRate": 0.5750798722044729
     },
     {
       "cardId": "amd-chill",
       "name": "Radeon Chill",
-      "played": 0.29217948717948716,
-      "playedWinRate": 0.4146555506801229
+      "played": 0.2995,
+      "playedWinRate": 0.41402337228714525
     },
     {
-      "cardId": "neutral-barracuda-2tb",
-      "name": "Barracuda 2TB",
-      "played": 0.28512820512820514,
-      "playedWinRate": 0.4524280575539568
+      "cardId": "intel-xtu-undervolt",
+      "name": "XTU 降压超频",
+      "played": 0.295,
+      "playedWinRate": 0.4864406779661017
+    },
+    {
+      "cardId": "amd-rx-580",
+      "name": "Radeon RX 580",
+      "played": 0.2905,
+      "playedWinRate": 0.5507745266781411
+    },
+    {
+      "cardId": "amd-rx-7900-xtx",
+      "name": "Radeon RX 7900 XTX",
+      "played": 0.29,
+      "playedWinRate": 0.5396551724137931
     },
     {
       "cardId": "neutral-nh-d15",
       "name": "猫头鹰 NH-D15",
-      "played": 0.2791025641025641,
-      "playedWinRate": 0.42497320471597
+      "played": 0.28108333333333335,
+      "playedWinRate": 0.4147643047731989
+    },
+    {
+      "cardId": "neutral-barracuda-2tb",
+      "name": "Barracuda 2TB",
+      "played": 0.2733,
+      "playedWinRate": 0.46176362971094037
     },
     {
       "cardId": "nvidia-titan-z",
       "name": "GTX Titan Z",
-      "played": 0.2734615384615385,
-      "playedWinRate": 0.5761837787154243
+      "played": 0.273,
+      "playedWinRate": 0.5366300366300366
     },
     {
       "cardId": "nvidia-rtx-5080",
       "name": "RTX 5080",
-      "played": 0.26461538461538464,
-      "playedWinRate": 0.5310077519379846
-    },
-    {
-      "cardId": "intel-igpu-rescue",
-      "name": "核显顶上",
-      "played": 0.2642948717948718,
-      "playedWinRate": 0.4137763764249333
-    },
-    {
-      "cardId": "amd-xianyu",
-      "name": "闲鱼捡漏",
-      "played": 0.26282051282051283,
-      "playedWinRate": 0.4765853658536585
-    },
-    {
-      "cardId": "nvidia-gtx-480",
-      "name": "GTX 480",
-      "played": 0.2605128205128205,
-      "playedWinRate": 0.7047244094488189
-    },
-    {
-      "cardId": "amd-adrenalin",
-      "name": "Adrenalin 战未来",
-      "played": 0.25987179487179485,
-      "playedWinRate": 0.444992599901332
+      "played": 0.271,
+      "playedWinRate": 0.48523985239852396
     },
     {
       "cardId": "arm-immortalis-g925",
       "name": "Immortalis-G925",
-      "played": 0.25653846153846155,
-      "playedWinRate": 0.6841579210394803
+      "played": 0.2695,
+      "playedWinRate": 0.6827458256029685
     },
     {
-      "cardId": "nvidia-rtx-5070",
-      "name": "RTX 5070",
-      "played": 0.2494871794871795,
-      "playedWinRate": 0.5369989722507709
+      "cardId": "nvidia-gtx-480",
+      "name": "GTX 480",
+      "played": 0.2585,
+      "playedWinRate": 0.6924564796905223
+    },
+    {
+      "cardId": "amd-adrenalin",
+      "name": "Adrenalin 战未来",
+      "played": 0.2575,
+      "playedWinRate": 0.44271844660194176
+    },
+    {
+      "cardId": "intel-igpu-rescue",
+      "name": "核显顶上",
+      "played": 0.2555,
+      "playedWinRate": 0.44422700587084146
     },
     {
       "cardId": "neutral-h150i-lcd",
       "name": "H150i LCD 水冷",
-      "played": 0.24842948717948718,
-      "playedWinRate": 0.42575151593342797
-    },
-    {
-      "cardId": "nvidia-rtx-4090",
-      "name": "RTX 4090",
-      "played": 0.24064102564102563,
-      "playedWinRate": 0.6153436334576452
+      "played": 0.2525,
+      "playedWinRate": 0.4153465346534653
     },
     {
       "cardId": "arm-neoverse",
       "name": "Neoverse 云手机集群",
-      "played": 0.23653846153846153,
-      "playedWinRate": 0.36368563685636857
+      "played": 0.245,
+      "playedWinRate": 0.35918367346938773
+    },
+    {
+      "cardId": "nvidia-rtx-4090",
+      "name": "RTX 4090",
+      "played": 0.2435,
+      "playedWinRate": 0.5626283367556468
+    },
+    {
+      "cardId": "amd-xianyu",
+      "name": "闲鱼捡漏",
+      "played": 0.242,
+      "playedWinRate": 0.47107438016528924
+    },
+    {
+      "cardId": "nvidia-rtx-5070",
+      "name": "RTX 5070",
+      "played": 0.233,
+      "playedWinRate": 0.5321888412017167
     },
     {
       "cardId": "nvidia-12v-2x6",
       "name": "12V-2×6 烧蚀",
-      "played": 0.23012820512820512,
-      "playedWinRate": 0.577158774373259
-    },
-    {
-      "cardId": "intel-driver-hotfix",
-      "name": "Hotfix 热修复",
-      "played": 0.19448717948717947,
-      "playedWinRate": 0.41924851680949243
+      "played": 0.216,
+      "playedWinRate": 0.5370370370370371
     },
     {
       "cardId": "amd-the-merge",
       "name": "以太坊合并",
-      "played": 0.18807692307692309,
-      "playedWinRate": 0.4233128834355828
+      "played": 0.1855,
+      "playedWinRate": 0.42587601078167114
+    },
+    {
+      "cardId": "intel-driver-hotfix",
+      "name": "Hotfix 热修复",
+      "played": 0.18425,
+      "playedWinRate": 0.3989145183175034
     },
     {
       "cardId": "intel-beta-driver",
       "name": "BETA 通道驱动",
-      "played": 0.1696153846153846,
-      "playedWinRate": 0.47543461829176115
+      "played": 0.1645,
+      "playedWinRate": 0.48632218844984804
     },
     {
       "cardId": "nvidia-game-ready-driver",
       "name": "Game Ready 驱动",
-      "played": 0.14961538461538462,
-      "playedWinRate": 0.49271636675235647
+      "played": 0.154,
+      "playedWinRate": 0.5324675324675324
     },
     {
       "cardId": "nvidia-rtx-5090",
       "name": "RTX 5090",
-      "played": 0.14871794871794872,
-      "playedWinRate": 0.7551724137931034
+      "played": 0.132,
+      "playedWinRate": 0.7613636363636364
     },
     {
       "cardId": "neutral-990-pro",
       "name": "990 PRO",
-      "played": 0.12403846153846154,
-      "playedWinRate": 0.45839793281653746
-    },
-    {
-      "cardId": "nvidia-rtx-5090d",
-      "name": "RTX 5090D",
-      "played": 0.11384615384615385,
-      "playedWinRate": 0.5754504504504504
+      "played": 0.12283333333333334,
+      "playedWinRate": 0.4335142469470828
     },
     {
       "cardId": "nvidia-multi-frame-gen",
       "name": "多帧生成",
-      "played": 0.10564102564102563,
-      "playedWinRate": 0.4890776699029126
+      "played": 0.108,
+      "playedWinRate": 0.4166666666666667
     },
     {
       "cardId": "amd-afmf",
       "name": "AFMF 流体补帧",
-      "played": 0.09333333333333334,
-      "playedWinRate": 0.41483516483516486
+      "played": 0.0945,
+      "playedWinRate": 0.3968253968253968
+    },
+    {
+      "cardId": "nvidia-rtx-5090d",
+      "name": "RTX 5090D",
+      "played": 0.0915,
+      "playedWinRate": 0.5792349726775956
     },
     {
       "cardId": "qualcomm-adreno-driver",
       "name": "Adreno 驱动",
-      "played": 0.0926923076923077,
-      "playedWinRate": 0.44951590594744123
+      "played": 0.0915,
+      "playedWinRate": 0.46994535519125685
     },
     {
       "cardId": "neutral-trident-z5-ddr5",
       "name": "芝奇幻锋戟 DDR5-8000",
-      "played": 0.07794871794871795,
-      "playedWinRate": 0.5575657894736842
+      "played": 0.0775,
+      "playedWinRate": 0.4967741935483871
     },
     {
       "cardId": "neutral-focus-gx-850",
       "name": "FOCUS GX-850",
-      "played": 0.04788461538461539,
-      "playedWinRate": 0.49129852744310576
+      "played": 0.0485,
+      "playedWinRate": 0.4072164948453608
     },
     {
       "cardId": "neutral-rog-thor-1600t",
       "name": "ROG THOR 1600T",
-      "played": 0.03371794871794872,
-      "playedWinRate": 0.5779467680608364
+      "played": 0.0375,
+      "playedWinRate": 0.5866666666666667
     }
   ]
 }

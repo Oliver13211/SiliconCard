@@ -1,0 +1,17 @@
+{
+  "id": "tutorial-l2-boot",
+  "name": "教学·上机实战组（信仰充值配套）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "amd-rx-550", "count": 10 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 4 },
+    { "cardId": "neutral-p106-100", "count": 2 },
+    { "cardId": "amd-rx-470", "count": 2 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-888", "count": 2 },
+    { "cardId": "intel-arc-a750", "count": 2 },
+    { "cardId": "intel-arc-b580", "count": 2 },
+    { "cardId": "arm-mali-g710", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-x-elite", "count": 2 }
+  ]
+}

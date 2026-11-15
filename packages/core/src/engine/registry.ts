@@ -153,6 +153,7 @@ function findEffectStepIssues(step: EffectStep): string | null {
     }
     case 'gainArmor':
     case 'lockMana':
+    case 'gainMana': // P2-ENG1 第 13 原语：本回合供电增益（可越上限，语义见 types/cards.ts）
       if (!Number.isInteger(step.amount) || step.amount < 0) return `${step.op} amount 必须为非负整数`
       return null
     case 'handler':

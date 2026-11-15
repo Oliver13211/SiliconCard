@@ -138,7 +138,10 @@ describe('重驱时间轴：stableHash 对齐与开局事件', () => {
 describe('上帝视角切片（不改 core：双官方 viewFor 组合）', () => {
   it('双方手牌全量可见：P1 盲区（对手手牌内容）由 P2 切片补齐', () => {
     const timeline = buildReplayTimeline(buildInterestingRecording())
-    const midState = timeline.states[Math.floor(timeline.states.length / 2)] as (typeof timeline.states)[number]
+    // 券入局后中点可能恰逢一方空手（handSize=0），取双方均有手牌的状态验证切片补齐
+    const midState = (timeline.states.find(
+      (s) => s.players.P1.hand.length > 0 && s.players.P2.hand.length > 0,
+    ) ?? timeline.states[Math.floor(timeline.states.length / 2)]) as (typeof timeline.states)[number]
     const slices = replaySlicesOf(midState)
 
     // 对局视角的盲区：P1 视图只给 handSize 计数（PublicPlayerState 无 hand 字段）

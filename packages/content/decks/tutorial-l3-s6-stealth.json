@@ -1,0 +1,13 @@
+{
+  "id": "tutorial-l3-s6-stealth",
+  "name": "教学·无输出亮机组（潜行演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "apple-macbook-air-m2", "count": 10 },
+    { "cardId": "intel-uhd-770", "count": 4 },
+    { "cardId": "arm-mali-400", "count": 4 },
+    { "cardId": "neutral-gt-1030", "count": 4 },
+    { "cardId": "nvidia-gt-1030", "count": 4 },
+    { "cardId": "amd-rx-6400", "count": 4 }
+  ]
+}

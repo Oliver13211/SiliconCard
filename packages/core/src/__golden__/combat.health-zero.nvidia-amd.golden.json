@@ -1,6 +1,6 @@
 {
   "name": "combat.health-zero.nvidia-amd",
-  "description": "出牌+贪心攻击探针：战斗交换分出胜负（health_zero，攻击 CPU 致死）",
+  "description": "出牌+贪心攻击探针：战斗交换分出胜负（health_zero，攻击 CPU 致死）；P2-ENG1 电费抵扣券落地后重录（后手起手 +1 券，uid vc1 独立命名空间；券过期 reason=voucher_expired）",
   "probe": "fixtures.goldenCombatProbe(seed=20261001)",
   "recording": {
     "actions": [
@@ -17,6 +17,11 @@
         "playerId": "P2",
         "type": "PLAY_CARD",
         "uid": "h2"
+      },
+      {
+        "playerId": "P2",
+        "type": "PLAY_CARD",
+        "uid": "vc1"
       },
       {
         "playerId": "P2",
@@ -785,16 +790,16 @@
     "endReason": "health_zero",
     "finalTurn": 30,
     "eventCounts": {
-      "CARD_PLAYED": 35,
-      "MINION_SUMMONED": 35,
-      "TURN_END": 29,
-      "TURN_START": 29,
-      "CARD_DRAWN": 29,
       "ATTACK_DECLARED": 46,
+      "CARD_DRAWN": 29,
+      "CARD_PLAYED": 36,
       "DAMAGE_DEALT": 76,
+      "GAME_END": 1,
       "KEYWORD_TRIGGERED": 11,
       "MINION_DIED": 31,
-      "GAME_END": 1
+      "MINION_SUMMONED": 35,
+      "TURN_END": 29,
+      "TURN_START": 29
     }
   }
 }

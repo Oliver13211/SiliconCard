@@ -22,6 +22,7 @@ import type { HandCard } from '@siliconcard/core'
 import { useReplayPlayerStore, REPLAY_SPEEDS, REPLAY_EVENT_INTERVAL_MS, replayPlayerTick } from './playerStore'
 import { MARKER_LABEL, type ReplayMarkerKind } from './replayDriver'
 import { useReplayStore } from './replayStore'
+import { ReviewPanel } from './ReviewPanel'
 import { ReplayTable3D } from './ReplayTable3D'
 import { PlayerPanel } from '../components/PlayerPanel'
 import { HandCardView } from '../components/HandCardView'
@@ -55,7 +56,7 @@ function GodHandRow({ cards, side }: { cards: readonly HandCard[]; side: 'self' 
   )
 }
 
-function ControlBar() {
+function ControlBar({ reviewOpen, onToggleReview }: { reviewOpen: boolean; onToggleReview: () => void }) {
   const cursor = useReplayPlayerStore((s) => s.cursor)
   const playing = useReplayPlayerStore((s) => s.playing)
   const speed = useReplayPlayerStore((s) => s.speed)
@@ -89,6 +90,14 @@ function ControlBar() {
         </button>
         <button type="button" className="sc-btn" onClick={jumpToNextMarker} disabled={cursor >= total}>
           下一关键事件
+        </button>
+        <button
+          type="button"
+          className={`sc-btn sc-rplayer-review-toggle${reviewOpen ? ' is-active' : ''}`}
+          onClick={onToggleReview}
+          aria-expanded={reviewOpen}
+        >
+          AI 复盘
         </button>
         <div className="sc-rplayer-speeds" role="group" aria-label="回放速度">
           {REPLAY_SPEEDS.map((option) => (
@@ -192,6 +201,8 @@ export function ReplayPlayerScreen() {
   const speed = useReplayPlayerStore((s) => s.speed)
   const load = useReplayPlayerStore((s) => s.load)
   const [showHelp, setShowHelp] = useState(false)
+  // AI 复盘报告卡（P2-QA1）：开关只在本屏，评分数据在 ReviewPanel 内即用即弃
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   // 挂载即装载：录制体来自 replayStore.player（库屏「播放」写入的挂载约定）
   useEffect(() => {
@@ -286,10 +297,12 @@ export function ReplayPlayerScreen() {
             <p className="sc-rplayer-god-hint">上帝视角：双方手牌全开 · 种子 {meta.seed} · {meta.factions[0]} vs {meta.factions[1]}</p>
           </header>
 
-          <ControlBar />
+          <ControlBar reviewOpen={reviewOpen} onToggleReview={() => setReviewOpen((value) => !value)} />
         </main>
         <EventLogSidebar />
       </div>
+
+      {reviewOpen ? <ReviewPanel onClose={() => setReviewOpen(false)} /> : null}
 
       {showHelp ? <KeyHintsOverlay scope="replay" onClose={() => setShowHelp(false)} /> : null}
     </div>

@@ -54,8 +54,8 @@ describe('回合开始序列（rules.md §2.2）', () => {
     expect(state.players.P1.deck).toHaveLength(27)
 
     const { state: afterOne, events } = runEndTurns(1)
-    // turn 2 = P2 首回合：抽 1 张
-    expect(afterOne.players.P2.hand).toHaveLength(4)
+    // turn 2 = P2 首回合：抽 1 张（起手 3 张 + 电费抵扣券 + 抽牌 = 5，P2-ENG1）
+    expect(afterOne.players.P2.hand).toHaveLength(5)
     expect(afterOne.players.P2.deck).toHaveLength(26)
     expect(afterOne.players.P1.hand).toHaveLength(3) // P1 未动作
     const drawn = events.filter((e) => e.type === 'CARD_DRAWN')

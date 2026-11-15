@@ -81,6 +81,12 @@ export type EffectStep =
   | { op: 'revive'; pick: 'lastOwnedGpu' | 'random'; to: 'sourceOwnerBoard'; count?: number }
   | { op: 'gainArmor'; player: EffectPlayer; amount: number }
   | { op: 'lockMana'; player: EffectPlayer; amount: number }
+  /**
+   * 本回合供电 +amount（P2-ENG1 新增第 13 原语）：唯一允许突破 MAX_MANA 上限的
+   * 效果通道，仅作用于当回合（回合切换即随 beginTurn 曲线重置，不跨回合持有）；
+   * 其余任何路径的供电仍受上限钳制。无目录事件（改动经状态可见，同 buff）。
+   */
+  | { op: 'gainMana'; player: EffectPlayer; amount: number }
   | { op: 'handler'; name: string }
 
 /** 光环：在场期间对 scope 内单位的常驻修正 */

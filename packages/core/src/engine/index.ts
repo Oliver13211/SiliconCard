@@ -13,6 +13,9 @@ import type { Engine } from '../engine'
 import { applyAction, getLegalActions } from './apply'
 import { initGame } from './init'
 import { viewFor } from './view'
+// 电费抵扣券定义随装配入口自动注册（P2-ENG1；与内置派系技能同模式：
+// 宿主 import createEngine / @siliconcard/core 即生效，content 包无此卡）
+import './voucher'
 
 /** 创建无头规则引擎实例 */
 export function createEngine(): Engine {

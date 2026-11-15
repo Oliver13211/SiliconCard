@@ -9,6 +9,7 @@
  *
  * 决策流程（每次调用产出「下一个动作」，由调用方结算后再取下一个）：
  * 1. 斩杀线检测：本回合可用打脸伤害 ≥ 对方（血量+护甲）→ 只走直伤打脸，尽快收束；
+ * 1.5 电费抵扣券（P2-ENG1）：手牌有「+VOUCHER_BONUS 内可解锁」的打不出高费卡 → 先用券（基本启发式）；
  * 2. 逐合法动作一次模拟评估（Normal 深度 = 1，不做全宽度搜索）：
  *    engine.applyAction 在引擎内部对副本结算（真状态 RNG 不被消费），
  *    以 evaluateView 给每个候选打分——出牌/攻击/技能的价值差异全部由引擎
@@ -29,6 +30,8 @@
 
 import {
   RuleError,
+  VOUCHER_BONUS,
+  VOUCHER_CARD_ID,
   type Action,
   type Engine,
   type GameState,
@@ -36,7 +39,7 @@ import {
   type PlayerView,
 } from '@siliconcard/core'
 import { evaluateView } from './evaluate'
-import { actionFaceDamage, isLethalAvailable, lethalCandidateActions } from './lethal'
+import { actionFaceDamage, findImmediateWinActions, isLethalAvailable, lethalCandidateActions } from './lethal'
 import { createAiRng, deriveAiSeed } from './rng'
 import { revealState } from './sealed'
 
@@ -62,6 +65,10 @@ export interface DifficultyProfile {
   replyCap: number
   /** 反制预演损失的折扣系数 */
   replyDiscount: number
+  /** 一步模拟致胜（Hard 专属，P2-QA1）：决策前经引擎真实结算枚举「打完就赢」的
+   * 动作并直接执行——覆盖启发式伤害口径的斩杀盲区（如 driver/战吼打脸的
+   * 目标选择）。Normal/Easy 关闭以保持 bench 口径（QA2/校准基线不动）。 */
+  simLethal: boolean
 }
 
 export const DIFFICULTY_PROFILES: Readonly<Record<Difficulty, DifficultyProfile>> = {
@@ -75,6 +82,7 @@ export const DIFFICULTY_PROFILES: Readonly<Record<Difficulty, DifficultyProfile>
     replyLookahead: false,
     replyCap: 0,
     replyDiscount: 0,
+    simLethal: false,
   },
   normal: {
     noiseAmplitude: 1.2,
@@ -86,6 +94,7 @@ export const DIFFICULTY_PROFILES: Readonly<Record<Difficulty, DifficultyProfile>
     replyLookahead: false,
     replyCap: 0,
     replyDiscount: 0,
+    simLethal: false,
   },
   hard: {
     noiseAmplitude: 0,
@@ -97,6 +106,7 @@ export const DIFFICULTY_PROFILES: Readonly<Record<Difficulty, DifficultyProfile>
     replyLookahead: true,
     replyCap: 24,
     replyDiscount: 0.5,
+    simLethal: true,
   },
 }
 
@@ -125,6 +135,31 @@ export interface AiPlayer {
 interface ScoredCandidate {
   action: Action
   score: number
+}
+
+/**
+ * 电费抵扣券启用判定（P2-ENG1 基本启发式）：
+ * 己方手牌持有券、且存在另一张「当前供电打不出（cost > mana）、+VOUCHER_BONUS 内打得出
+ * （cost ≤ mana + VOUCHER_BONUS）」的卡 → 返回券的 PLAY_CARD 动作（否则 null）。
+ * 只读 PlayerView 与 getLegalActions 枚举；券打出后下一决策循环自然评估是否
+ * 追打被启用的卡（值不值由 evaluateView 的真实结算模拟说话，本判定只负责开闸）。
+ */
+function voucherEnablingPlay(
+  view: PlayerView,
+  legal: readonly Action[],
+): Extract<Action, { type: 'PLAY_CARD' }> | null {
+  const voucherUid = view.you.hand.find((card) => card.cardId === VOUCHER_CARD_ID)?.uid
+  if (voucherUid === undefined) return null
+  const mana = view.you.mana
+  const enables = view.you.hand.some(
+    (card) => card.uid !== voucherUid && card.cost > mana && card.cost <= mana + VOUCHER_BONUS,
+  )
+  if (!enables) return null
+  const play = legal.find(
+    (action): action is Extract<Action, { type: 'PLAY_CARD' }> =>
+      action.type === 'PLAY_CARD' && action.uid === voucherUid,
+  )
+  return play ?? null
 }
 
 export function createAiPlayer(options: CreateAiPlayerOptions): AiPlayer {
@@ -166,6 +201,15 @@ export function createAiPlayer(options: CreateAiPlayerOptions): AiPlayer {
     if (!endTurn) return null
     if (legal.length === 1) return endTurn
 
+    // 1.2) 一步模拟致胜（Hard 专属，P2-QA1）：启发式伤害口径存在双向盲区（2026-11-15
+    // 实证——driver/战吼打脸牌可斩杀时，致命检测既可能漏报也可能高估误选不致胜的
+    // 目标），故 Hard 先经引擎真实结算精确枚举「打完就赢」的动作直接执行，再回落
+    // 启发式；Normal/Easy 关闭保持 bench 口径（QA2/校准基线不动）。
+    if (profile.simLethal) {
+      const winAction = findImmediateWinActions(engine, raw, playerId)[0]
+      if (winAction) return winAction
+    }
+
     // 1) 斩杀线检测（Easy 按概率漏检；Normal/Hard 必检）
     const skipLethal = profile.lethalSkipRate > 0 && rng.nextFloat() < profile.lethalSkipRate
     if (!skipLethal && isLethalAvailable(view, legal)) {
@@ -180,6 +224,12 @@ export function createAiPlayer(options: CreateAiPlayerOptions): AiPlayer {
       }
       if (best) return best
     }
+
+    // 1.5) 电费抵扣券（P2-ENG1 基本启发式，不做深度搜索）：手牌里有「现在打不出、
+    // +VOUCHER_BONUS 内打得出」的卡时先用券，下一决策循环凭新增供电打出该卡。
+    // 只消费 view.you.hand（防作弊闸门不变）；券过期前（自身第 1 回合）天然只会在此窗口命中。
+    const voucherPlay = voucherEnablingPlay(view, legal)
+    if (voucherPlay) return voucherPlay
 
     // 2) 逐合法动作一次模拟评估（CONCEDE 永不评估、永不入选）
     const scored: ScoredCandidate[] = []

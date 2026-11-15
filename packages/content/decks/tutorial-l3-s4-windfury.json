@@ -1,0 +1,13 @@
+{
+  "id": "tutorial-l3-s4-windfury",
+  "name": "教学·双芯 GPU 组（风怒演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "apple-m1-ultra", "count": 6 },
+    { "cardId": "amd-rx-550", "count": 6 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 6 },
+    { "cardId": "intel-arc-a750", "count": 3 },
+    { "cardId": "intel-arc-b580", "count": 3 }
+  ]
+}

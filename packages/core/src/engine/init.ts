@@ -26,10 +26,11 @@ import { RuleError } from '../engine'
 import type { GameEvent } from '../types/events'
 import type { DeckEntry, GameSetup, GameState, PlayerSetup, PlayerState } from '../types/state'
 import { findFactionSkillIssues, getFactionSkill } from './factions'
-import { beginTurn, drawCard } from './turn'
+import { beginTurn, drawCard, opponentOf } from './turn'
 import type { Rng } from './prng'
 import { createRng } from './prng'
 import { findCardDefinitionIssues, getCardDefinition } from './registry'
+import { grantVoucherToPlayer } from './voucher'
 
 export function initGame(setup: GameSetup): GameState {
   if (!setup || !setup.players || setup.players.length !== 2) {
@@ -62,6 +63,10 @@ export function initGame(setup: GameSetup): GameState {
   }
 
   dealOpeningHands(state, events)
+  // P2-ENG1 先手平衡：常规起手发牌之后，向后手方追加发放一张电费抵扣券
+  // （不占卡组名额、独立 uid 命名空间不消耗全局游标；发 CARD_DRAWN{source:'coin_grant'}）。
+  // 与 GAME_START 同属 initGame 开局语义时点（initGame 不携带事件流，签名裁决不变）。
+  grantVoucherToPlayer(state, opponentOf(FIRST_PLAYER), events)
   events.push({ type: 'GAME_START', seed: setup.seed, firstPlayer: FIRST_PLAYER })
   // 进入 P1 的第 1 回合：复用回合开始序列（turn 0 → 1，P1 首回合不抽牌；
   // 场上无单位，turnStart 触发自然为空）

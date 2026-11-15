@@ -1,0 +1,13 @@
+{
+  "id": "tutorial-l3-s7-overload",
+  "name": "教学·跳闸组（过载演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "arm-exynos-8895", "count": 8 },
+    { "cardId": "amd-rx-550", "count": 6 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 6 },
+    { "cardId": "intel-arc-a750", "count": 2 },
+    { "cardId": "intel-arc-b580", "count": 2 }
+  ]
+}

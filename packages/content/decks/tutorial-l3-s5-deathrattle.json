@@ -1,0 +1,12 @@
+{
+  "id": "tutorial-l3-s5-deathrattle",
+  "name": "教学·蓝屏传家宝组（亡语演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "arm-helio-g99", "count": 10 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 8 },
+    { "cardId": "intel-arc-a750", "count": 3 },
+    { "cardId": "intel-arc-b580", "count": 3 }
+  ]
+}

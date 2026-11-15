@@ -1,0 +1,10 @@
+{
+  "id": "tutorial-script-dummy",
+  "name": "教学·脚本靶机组（对面专用）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "intel-arc-a380", "count": 12 },
+    { "cardId": "amd-rx-550", "count": 12 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 }
+  ]
+}

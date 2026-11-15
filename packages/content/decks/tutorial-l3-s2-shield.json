@@ -1,0 +1,11 @@
+{
+  "id": "tutorial-l3-s2-shield",
+  "name": "教学·三年质保组（圣盾演示）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "amd-rx-550", "count": 10 },
+    { "cardId": "apple-applecare-plus", "count": 5 },
+    { "cardId": "qualcomm-snapdragon-8cx", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 9 }
+  ]
+}

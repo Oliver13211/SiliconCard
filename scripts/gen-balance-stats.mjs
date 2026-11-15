@@ -55,11 +55,18 @@ function listJsonFiles(dir) {
 
 /** 派系预组：id / faction 来自 packages/content/decks/*.json */
 function loadDecks() {
-  return listJsonFiles(DECKS_DIR).map((path) => {
-    const j = JSON.parse(readFileSync(path, 'utf8'))
-    return { deckId: j.id, faction: j.faction }
-  })
+  return listJsonFiles(DECKS_DIR)
+    .map((path) => {
+      const j = JSON.parse(readFileSync(path, 'utf8'))
+      return { deckId: j.id, faction: j.faction }
+    })
+    // 教程卡组（P2-EDU1，tutorial- 前缀）是教学素材：bench 池已排除（cli bench.ts），
+    // 本聚合与之同口径——否则 bench 结果缺对应预组统计而报错。
+    .filter((deck) => !deck.deckId.startsWith('tutorial-'))
 }
+
+/** 引擎内建特殊卡名（不在 content 卡 JSON 中，bench 统计仍会出现） */
+const BUILTIN_CARD_NAMES = new Map([['siliconcard-voucher', '电费抵扣券']])
 
 /** 卡名映射：cardId → name（卡 JSON 的 id 字段优先，缺失回退文件名） */
 function loadCardNames() {
@@ -111,7 +118,8 @@ function aggregate(raw, decks, cardNames) {
 
   const cards = raw.cards
     .map((c) => {
-      const name = cardNames.get(c.cardId)
+      // 引擎内建特殊卡（P2-ENG1 电费抵扣券）不经 content JSON，名称在此兜底
+      const name = cardNames.get(c.cardId) ?? BUILTIN_CARD_NAMES.get(c.cardId)
       if (!name) fail(`卡名缺失：bench 出现 ${c.cardId} 但 content 卡 JSON 中找不到`)
       return { cardId: c.cardId, name, played: c.playRate, playedWinRate: c.winRateWhenPlayed }
     })

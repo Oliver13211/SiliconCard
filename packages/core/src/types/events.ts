@@ -19,10 +19,21 @@ export type GameEvent =
   | { type: 'GAME_START'; seed: number; firstPlayer: PlayerId }
   | { type: 'TURN_START'; turn: number; playerId: PlayerId; maxMana: number; drawCount: number }
   | { type: 'TURN_END'; turn: number; playerId: PlayerId }
-  /** cardId 为 null 表示从疲劳伤害中"抽牌"（deck 已空） */
-  | { type: 'CARD_DRAWN'; playerId: PlayerId; cardId: CardId | null; source: 'deck' | 'fatigue' }
+  /**
+   * cardId 为 null 表示从疲劳伤害中"抽牌"（deck 已空）。
+   * source 语义（P2-ENG1 additive 扩展）：'deck' 牌库抽取 / 'fatigue' 疲劳 /
+   * 'coin_grant' 开局直接发放入手（电费抵扣券，不经牌库与抽牌流程）。
+   * 事件目录维持 17 种定稿：新增 GameEvent 变体会强制 three/anim 与 ui/preview
+   * 的 `[K in GameEvent['type']]` 全键映射表扩键（禁碰文件），故券发放并入本事件。
+   */
+  | { type: 'CARD_DRAWN'; playerId: PlayerId; cardId: CardId | null; source: 'deck' | 'fatigue' | 'coin_grant' }
   | { type: 'CARD_PLAYED'; playerId: PlayerId; uid: string; cardId: CardId; cost: number; target: TargetRef | null }
-  | { type: 'CARD_BURNED'; playerId: PlayerId; cardId: CardId; reason: 'hand_full' }
+  /**
+   * 卡牌未经打出离开手牌。reason（P2-ENG1 additive 扩展）：
+   * 'hand_full' 手牌超限烧牌 / 'voucher_expired' 电费抵扣券过期作废（自身第 1 回合
+   * 结束未打出；过期不进墓地、无任何结算效果，见 rules.md §2.5）。
+   */
+  | { type: 'CARD_BURNED'; playerId: PlayerId; cardId: CardId; reason: 'hand_full' | 'voucher_expired' }
   | { type: 'MINION_SUMMONED'; unit: BoardUnit; source: 'play' | 'effect' }
   | { type: 'MINION_DIED'; unit: BoardUnit; cause: 'damage' | 'destroy' | 'sacrifice' }
   | { type: 'ATTACK_DECLARED'; attackerId: InstanceId; target: TargetRef }

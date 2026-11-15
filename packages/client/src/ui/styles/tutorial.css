@@ -1,0 +1,445 @@
+/**
+ * 教程样式（P2-EDU1）—— 只用 tokens.css 既有令牌，风格与全站一致。
+ * 覆盖层 pointer-events 策略：教学层容器整体穿透，仅控件自身可点，
+ * 不遮蔽对战 HUD（BattleScreen 复用线零改动）。
+ */
+
+.sc-tutorial--page {
+  min-height: 100vh;
+  padding: 32px clamp(16px, 5vw, 64px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-5);
+  background: var(--sc-bg);
+  color: var(--sc-text);
+}
+
+.sc-tutorial-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sc-space-4);
+}
+
+.sc-tutorial-head-actions {
+  display: flex;
+  gap: var(--sc-space-2);
+  flex-shrink: 0;
+}
+
+.sc-tutorial-kicker {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-tutorial-sub {
+  margin: var(--sc-space-2) 0 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-md);
+  max-width: 720px;
+}
+
+.sc-tutorial-brief {
+  margin: 0;
+  padding: var(--sc-space-4);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-glass-bg-soft);
+  line-height: 1.7;
+  max-width: 880px;
+}
+
+.sc-tutorial-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sc-space-4);
+}
+
+.sc-tutorial-level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sc-space-1);
+  padding: var(--sc-space-4);
+  text-align: left;
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-glass-bg-soft);
+  color: var(--sc-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.sc-tutorial-level:hover {
+  border-color: var(--sc-accent);
+  transform: translateY(-2px);
+}
+
+.sc-tutorial-level.is-done {
+  border-color: var(--sc-status-ok);
+}
+
+.sc-tutorial-level-no {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-tutorial-level-name {
+  font-size: var(--sc-fs-lg);
+  font-weight: 700;
+}
+
+.sc-tutorial-level-sub {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-tutorial-level-state {
+  margin-top: var(--sc-space-2);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-tutorial-level.is-done .sc-tutorial-level-state {
+  color: var(--sc-status-ok);
+}
+
+.sc-tutorial-sections h2,
+.sc-tutorial-launch {
+  margin: 0;
+}
+
+.sc-tutorial-sections h2 {
+  font-size: var(--sc-fs-md);
+  margin-bottom: var(--sc-space-3);
+  color: var(--sc-text);
+}
+
+.sc-tutorial-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sc-space-3);
+}
+
+.sc-tutorial-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  padding: var(--sc-space-3);
+  text-align: left;
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-glass-bg-soft);
+  color: var(--sc-text);
+  cursor: pointer;
+}
+
+.sc-tutorial-section:hover {
+  border-color: var(--sc-accent);
+}
+
+.sc-tutorial-section.is-done {
+  border-color: var(--sc-status-ok);
+}
+
+.sc-tutorial-section-key {
+  font-weight: 700;
+  color: var(--sc-gold);
+}
+
+.sc-tutorial-section-name {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-sm);
+}
+
+.sc-tutorial-section-state {
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-tutorial-section.is-done .sc-tutorial-section-state {
+  color: var(--sc-status-ok);
+}
+
+.sc-tutorial-faction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sc-space-3);
+}
+
+.sc-tutorial-faction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  padding: var(--sc-space-3);
+  text-align: left;
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-glass-bg-soft);
+  color: var(--sc-text);
+  cursor: pointer;
+}
+
+.sc-tutorial-faction.is-active {
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 0 1px var(--sc-accent);
+}
+
+.sc-tutorial-faction-blurb {
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-tutorial-launch {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sc-tutorial-foot {
+  margin: 0;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+}
+
+/* —— 对战包装层 —— */
+
+.sc-tutorial-battle {
+  position: relative;
+  min-height: 100vh;
+}
+
+.sc-tutorial-tag {
+  padding: 4px 12px;
+  border-radius: var(--sc-radius-pill);
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+  backdrop-filter: blur(var(--sc-glass-blur));
+}
+
+.sc-tutorial-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.sc-tutorial-dots i {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sc-radius-pill);
+  border: 1px solid var(--sc-line);
+  font-size: 11px;
+  font-style: normal;
+  color: var(--sc-dim);
+  background: var(--sc-panel-solid);
+}
+
+.sc-tutorial-dots i.is-on {
+  border-color: var(--sc-accent);
+  color: var(--sc-accent);
+}
+
+.sc-tutorial-hud-actions {
+  display: flex;
+  gap: var(--sc-space-2);
+  pointer-events: auto;
+}
+
+/* 教练簇：全部教程 UI 收拢在手牌上方居中（气泡 + 目标 + 顶行标签/按钮）。
+   absolute 锚定 .sc-tutorial-battle（占满视口）；不用 fixed——上游祖先带
+   transform/backdrop-filter 时 fixed 的 containing block 会被劫持，几何不可控。 */
+.sc-tutorial-coach {
+  position: absolute;
+  bottom: 284px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+  align-items: stretch;
+  max-width: min(640px, calc(100vw - 48px));
+  pointer-events: none;
+}
+
+/* 目标选择条（.sc-target-bar）激活时教练簇收起为单行顶栏：
+   气泡/目标条让位（目标条本身就有操作指引），高亮目标单位完整可见可点 */
+.sc-tutorial-coach.is-raised {
+  bottom: 284px;
+}
+
+.sc-tutorial-coach.is-raised .sc-tutorial-bubble,
+.sc-tutorial-coach.is-raised .sc-tutorial-objective {
+  display: none;
+}
+
+.sc-tutorial-coach-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-3);
+}
+
+.sc-tutorial-coach-top .sc-tutorial-tag {
+  flex-shrink: 0;
+}
+
+.sc-tutorial-coach-top .sc-tutorial-dots {
+  flex-shrink: 0;
+}
+
+.sc-tutorial-bubble {
+  padding: var(--sc-space-3) var(--sc-space-4);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  box-shadow: var(--sc-glass-shadow);
+  backdrop-filter: blur(var(--sc-glass-blur));
+  animation: sc-tutorial-bubble-in 0.24s ease;
+}
+
+.sc-tutorial-bubble strong {
+  color: var(--sc-gold);
+  font-size: var(--sc-fs-md);
+}
+
+.sc-tutorial-bubble p {
+  margin: var(--sc-space-1) 0 0;
+  font-size: var(--sc-fs-sm);
+  line-height: 1.6;
+  color: var(--sc-text);
+}
+
+.sc-tutorial-nudge {
+  color: var(--sc-danger) !important;
+  font-weight: 600;
+  animation: sc-tutorial-shake 0.32s ease;
+}
+
+.sc-tutorial-objective {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sc-space-2);
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: var(--sc-radius-pill);
+  border: 1px solid var(--sc-line);
+  background: var(--sc-panel-solid);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-tutorial-objective strong {
+  color: var(--sc-accent);
+}
+
+@keyframes sc-tutorial-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sc-tutorial-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* —— 过关 / 失败结算 —— */
+
+.sc-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 8, 12, 0.66);
+  animation: sc-tutorial-fade-in 0.24s ease;
+}
+
+.sc-tutorial-overlay-card {
+  width: min(520px, calc(100vw - 48px));
+  padding: var(--sc-space-5);
+  border-radius: var(--sc-radius-lg);
+  background: var(--sc-panel-solid);
+  border: 1px solid var(--sc-glass-border);
+  box-shadow: var(--sc-glass-shadow);
+}
+
+.sc-tutorial-overlay-card h2 {
+  margin: 0 0 var(--sc-space-3);
+  color: var(--sc-status-ok);
+}
+
+.sc-tutorial-overlay-card.is-fail h2 {
+  color: var(--sc-danger);
+}
+
+.sc-tutorial-overlay-card p {
+  margin: 0 0 var(--sc-space-4);
+  line-height: 1.7;
+  color: var(--sc-text);
+}
+
+.sc-tutorial-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sc-space-2);
+}
+
+@keyframes sc-tutorial-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* —— 真实对局提示气泡（可选挂载件）—— */
+
+.sc-tutorial-hint {
+  position: fixed;
+  left: 12px;
+  bottom: 190px;
+  z-index: 30;
+  max-width: 300px;
+  padding: var(--sc-space-3);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  backdrop-filter: blur(var(--sc-glass-blur));
+  pointer-events: none;
+}
+
+.sc-tutorial-hint strong {
+  color: var(--sc-gold);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-tutorial-hint p {
+  margin: var(--sc-space-1) 0 0;
+  font-size: var(--sc-fs-xs);
+  line-height: 1.6;
+  color: var(--sc-text);
+}
+
+.sc-tutorial-hint-foot {
+  color: var(--sc-dim) !important;
+}

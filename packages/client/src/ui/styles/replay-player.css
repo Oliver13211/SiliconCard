@@ -360,3 +360,303 @@
   font-variant-numeric: tabular-nums;
   color: var(--sc-dim);
 }
+
+/* —— AI 复盘报告卡（P2-QA1）：悬浮于播放器右上，即用即弃不落库 —— */
+
+.sc-rplayer-review {
+  position: absolute;
+  top: var(--sc-space-4);
+  right: var(--sc-space-4);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-3);
+  width: min(360px, calc(100vw - 2 * var(--sc-space-4)));
+  max-height: calc(100% - 2 * var(--sc-space-4));
+  padding: var(--sc-space-4);
+  overflow-y: auto;
+  background: var(--sc-glass-bg);
+  border: 1px solid var(--sc-glass-border);
+  border-radius: var(--sc-radius-lg);
+  box-shadow: var(--sc-glass-shadow);
+  backdrop-filter: blur(var(--sc-glass-blur));
+  animation: sc-fade-in var(--sc-dur-base) var(--sc-ease-out) both;
+}
+
+.sc-rplayer-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sc-space-2);
+}
+
+.sc-rplayer-review-title {
+  margin: 0;
+  font-size: var(--sc-fs-md);
+  color: var(--sc-text);
+}
+
+.sc-rplayer-review-close {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius-sm);
+  background: var(--sc-panel-2);
+  color: var(--sc-dim);
+  cursor: pointer;
+  transition: color var(--sc-dur-fast) ease, border-color var(--sc-dur-fast) ease;
+}
+
+.sc-rplayer-review-close:hover {
+  color: var(--sc-text);
+  border-color: var(--sc-line-strong);
+}
+
+.sc-rplayer-review-close:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+/* 总评大字：按分段配色（≥85 好 / ≥65 中 / 其余差） */
+.sc-rplayer-review-score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sc-space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-rplayer-review-score strong {
+  font-size: var(--sc-fs-2xl);
+  line-height: 1;
+}
+
+.sc-rplayer-review-score span {
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-review-score.is-good strong {
+  color: var(--sc-accent);
+}
+
+.sc-rplayer-review-score.is-mid strong {
+  color: var(--sc-mana);
+}
+
+.sc-rplayer-review-score.is-rough strong {
+  color: var(--sc-danger);
+}
+
+/* 提示横幅：截断说明（金）与漏斩（红） */
+.sc-rplayer-review-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-2);
+  margin: 0;
+  padding: var(--sc-space-2) var(--sc-space-3);
+  border-radius: var(--sc-radius-md);
+  background: rgba(255, 200, 87, 0.12);
+  border: 1px solid rgba(255, 200, 87, 0.4);
+  color: var(--sc-gold);
+  font-size: var(--sc-fs-xs);
+}
+
+.sc-rplayer-review-banner.is-lethal {
+  background: rgba(255, 125, 113, 0.12);
+  border-color: rgba(255, 125, 113, 0.45);
+  color: var(--sc-danger);
+}
+
+.sc-rplayer-review-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sc-space-2);
+}
+
+/* S/A/B/C 分布条 */
+.sc-rplayer-review-dist {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--sc-radius-pill);
+  background: var(--sc-panel-2);
+}
+
+.sc-rplayer-review-dist-seg {
+  height: 100%;
+}
+
+.sc-rplayer-review-dist-seg.is-s {
+  background: var(--sc-accent);
+}
+
+.sc-rplayer-review-dist-seg.is-a {
+  background: var(--sc-mana);
+}
+
+.sc-rplayer-review-dist-seg.is-b {
+  background: var(--sc-gold);
+}
+
+.sc-rplayer-review-dist-seg.is-c {
+  background: var(--sc-danger);
+}
+
+.sc-rplayer-review-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sc-space-3);
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-review-legend-item::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: var(--sc-radius-pill);
+  vertical-align: baseline;
+}
+
+.sc-rplayer-review-legend-item.is-s::before {
+  background: var(--sc-accent);
+}
+
+.sc-rplayer-review-legend-item.is-a::before {
+  background: var(--sc-mana);
+}
+
+.sc-rplayer-review-legend-item.is-b::before {
+  background: var(--sc-gold);
+}
+
+.sc-rplayer-review-legend-item.is-c::before {
+  background: var(--sc-danger);
+}
+
+/* 逐步评分曲线：与时间轴标记同一事件坐标系（left = eventIndex / total） */
+.sc-rplayer-review-section-title {
+  margin: 0;
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-review-curve {
+  position: relative;
+  height: 18px;
+  border-bottom: 1px solid var(--sc-line-strong);
+}
+
+.sc-rplayer-review-dot {
+  position: absolute;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-radius: var(--sc-radius-pill);
+  cursor: pointer;
+  transition: transform var(--sc-dur-fast) var(--sc-ease-out);
+}
+
+.sc-rplayer-review-dot:hover {
+  transform: scale(1.4);
+}
+
+.sc-rplayer-review-dot:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.sc-rplayer-review-dot.is-s {
+  background: var(--sc-accent);
+}
+
+.sc-rplayer-review-dot.is-a {
+  background: var(--sc-mana);
+}
+
+.sc-rplayer-review-dot.is-b {
+  background: var(--sc-gold);
+}
+
+.sc-rplayer-review-dot.is-c {
+  background: var(--sc-danger);
+}
+
+/* Top 失误列表 */
+.sc-rplayer-review-misses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sc-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-rplayer-review-miss {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sc-space-2);
+  width: 100%;
+  padding: var(--sc-space-1) var(--sc-space-2);
+  border: none;
+  border-radius: var(--sc-radius-sm);
+  background: transparent;
+  color: var(--sc-dim);
+  font-size: var(--sc-fs-xs);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--sc-dur-fast) ease, color var(--sc-dur-fast) ease;
+}
+
+.sc-rplayer-review-miss:hover {
+  background: rgba(150, 166, 197, 0.12);
+  color: var(--sc-text);
+}
+
+.sc-rplayer-review-miss:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.sc-rplayer-review-miss.is-lethal {
+  width: auto;
+  border: 1px solid rgba(255, 125, 113, 0.45);
+  border-radius: var(--sc-radius-pill);
+  color: var(--sc-danger);
+}
+
+.sc-rplayer-review-miss-index {
+  flex: none;
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--sc-danger);
+}
+
+.sc-rplayer-review-hint {
+  margin: 0;
+  font-size: var(--sc-fs-xs);
+  color: var(--sc-dim);
+}
+
+.sc-rplayer-review-empty {
+  margin: 0;
+  font-size: var(--sc-fs-sm);
+  color: var(--sc-dim);
+}
+
+/* 控制条上的「AI 复盘」开关选中态：与变速档位同语言（accent 描边 + 同款渐变玻璃面） */
+.sc-rplayer-review-toggle.is-active {
+  background:
+    linear-gradient(180deg, rgba(88, 230, 168, 0.22), rgba(88, 230, 168, 0.08)),
+    var(--sc-panel-2);
+  border-color: var(--sc-accent);
+  font-weight: 700;
+}

@@ -1,0 +1,21 @@
+{
+  "id": "tutorial-l4-faction",
+  "name": "教学·派系毕业战组（双方通用）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "amd-rx-550", "count": 3 },
+    { "cardId": "intel-arc-a380", "count": 3 },
+    { "cardId": "qualcomm-snapdragon-x-plus", "count": 2 },
+    { "cardId": "neutral-furmark", "count": 2 },
+    { "cardId": "arm-cortex-a55", "count": 2 },
+    { "cardId": "intel-arc-a750", "count": 2 },
+    { "cardId": "intel-arc-b580", "count": 2 },
+    { "cardId": "amd-rx-480", "count": 2 },
+    { "cardId": "neutral-g502-hero", "count": 2 },
+    { "cardId": "intel-arc-a770-16g", "count": 2 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-x-elite", "count": 2 },
+    { "cardId": "arm-mali-g710", "count": 2 },
+    { "cardId": "intel-i9-9900k", "count": 2 }
+  ]
+}

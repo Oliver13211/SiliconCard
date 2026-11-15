@@ -320,7 +320,12 @@ export function runFactionBalance(engine: Engine, config: FactionBalanceConfig):
       d.deck.cards.some((entry) => entry.cardId === cardId),
     )
     stat.deckGames = decksContainingCard.reduce((sum, d) => sum + (gamesOfDeck.get(d.name) ?? 0), 0)
-    if (decksContainingCard.length === 0 && stat.plays > 0) stat.deckGames = crossGames // 兜底：token 等场外来源
+    if (decksContainingCard.length === 0 && stat.plays > 0) {
+      // 兜底：token 等场外来源（含引擎内建的电费抵扣券，P2-ENG1）——镜像局的
+      // 对方席同样可能打出，参与数口径 = 全部对局数（crossGames 只含非镜像局，
+      // 旧口径在镜像局触发 gamesWithPlay > deckGames 的潜伏不一致，随券修正）
+      stat.deckGames = pairs.reduce((sum, pair) => sum + pair.games, 0)
+    }
   }
 
   const rates = [...deckStats.values()].filter((s) => s.games > 0).map((s) => s.winRate)

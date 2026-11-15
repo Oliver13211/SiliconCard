@@ -42,19 +42,26 @@ describe('initGame —— 开局构建（rules.md §2.1）', () => {
     expect(P2.mana).toBe(0)
   })
 
-  it('起手各 3 张、P1 先抽交替发牌，uid 全局唯一', () => {
+  it('起手各 3 张、P1 先抽交替发牌，uid 全局唯一；P2 额外获得电费抵扣券（P2-ENG1）', () => {
     const state = initGame(makeSetup())
     const p1 = state.players.P1
     const p2 = state.players.P2
     expect(p1.hand).toHaveLength(3)
-    expect(p2.hand).toHaveLength(3)
+    expect(p2.hand).toHaveLength(4) // 起手 3 张 + 电费抵扣券（后手补偿，不占卡组名额）
     expect(p1.deck).toHaveLength(DECK_SIZE - 3)
     expect(p2.deck).toHaveLength(DECK_SIZE - 3)
     // 发牌顺序 P1,P2,P1,P2,P1,P2 → uid 按序占用全局计数
     expect(p1.hand.map((c) => c.uid)).toEqual(['h1', 'h3', 'h5'])
-    expect(p2.hand.map((c) => c.uid)).toEqual(['h2', 'h4', 'h6'])
+    expect(p2.hand.map((c) => c.uid)).toEqual(['h2', 'h4', 'h6', 'vc1'])
     const all = [...p1.hand, ...p2.hand].map((c) => c.uid)
-    expect(new Set(all).size).toBe(6)
+    expect(new Set(all).size).toBe(7)
+    // P2-ENG1 uid 隔离不变量：券不消耗 nextInstanceId 全局游标（旧回放兼容的关键）
+    expect(state.nextInstanceId).toBe(7)
+    expect(state.players.P2.hand[3]).toMatchObject({
+      uid: 'vc1',
+      cardId: 'siliconcard-voucher',
+      cost: 0,
+    })
   })
 
   it('起手牌不消耗牌库以外的张数，rng.state 为整数并随状态序列化', () => {

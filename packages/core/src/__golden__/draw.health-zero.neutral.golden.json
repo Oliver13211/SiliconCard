@@ -1,6 +1,6 @@
 {
   "name": "draw.health-zero.neutral",
-  "description": "单动作炸机对局：全场 30 点 → 双方同时归零 → winner null 平局（§9）",
+  "description": "单动作炸机对局：全场 30 点 → 双方同时归零 → winner null 平局（§9）；P2-ENG1 电费抵扣券落地后重录（后手起手 +1 券，uid vc1 独立命名空间；券过期 reason=voucher_expired）",
   "probe": "fixtures.goldenDrawProbe()",
   "recording": {
     "actions": [
@@ -40,7 +40,7 @@
     "seed": 20261001
   },
   "expected": {
-    "stateHash": "f5b529b0",
+    "stateHash": "7bbf3b04",
     "winner": null,
     "endReason": "health_zero",
     "finalTurn": 1,

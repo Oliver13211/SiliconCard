@@ -1,6 +1,6 @@
 {
   "name": "concede.amd-intel",
-  "description": "出牌+技能互拼 8 回合后 P2 认输（concede 结局，双方派系技能事件在案）",
+  "description": "出牌+技能互拼 8 回合后 P2 认输（concede 结局，双方派系技能事件在案）；P2-ENG1 电费抵扣券落地后重录（后手起手 +1 券，uid vc1 独立命名空间；券过期 reason=voucher_expired）",
   "probe": "fixtures.goldenConcedeProbe(seed=20261001, rounds=8)",
   "recording": {
     "actions": [
@@ -182,15 +182,16 @@
     "endReason": "concede",
     "finalTurn": 9,
     "eventCounts": {
+      "CARD_BURNED": 1,
+      "CARD_DRAWN": 11,
       "CARD_PLAYED": 14,
+      "DAMAGE_DEALT": 3,
+      "GAME_END": 1,
+      "HERO_POWER_USED": 6,
+      "MINION_DIED": 3,
       "MINION_SUMMONED": 14,
       "TURN_END": 8,
-      "TURN_START": 8,
-      "CARD_DRAWN": 11,
-      "HERO_POWER_USED": 6,
-      "DAMAGE_DEALT": 3,
-      "MINION_DIED": 3,
-      "GAME_END": 1
+      "TURN_START": 8
     }
   }
 }

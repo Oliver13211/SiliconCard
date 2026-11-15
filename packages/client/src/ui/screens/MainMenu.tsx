@@ -7,6 +7,7 @@ import { useGameStore } from '../store/gameStore'
 import { useUiPrefs, type MotionPref } from '../store/uiPrefsStore'
 import { useReplayStore } from '../replay/replayStore'
 import { useCodexStore } from '../codex/codexStore'
+import { openTutorial } from '../tutorial/bridge'
 
 const MOTION_LABEL: Record<MotionPref, string> = {
   auto: '动效：跟随系统',
@@ -33,6 +34,9 @@ export function MainMenu() {
       <div className="sc-menu-actions">
         <button type="button" className="sc-btn sc-btn--primary" onClick={() => goto('setup')}>
           上电开打
+        </button>
+        <button type="button" className="sc-btn" onClick={() => openTutorial()}>
+          新手教程
         </button>
         <button type="button" className="sc-btn" onClick={() => goto('lan')}>
           局域网对战

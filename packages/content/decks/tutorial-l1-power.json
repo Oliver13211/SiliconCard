@@ -1,0 +1,17 @@
+{
+  "id": "tutorial-l1-power",
+  "name": "教学·通电基础组（低功耗全家桶）",
+  "faction": "neutral",
+  "cards": [
+    { "cardId": "amd-rx-550", "count": 6 },
+    { "cardId": "intel-arc-a380", "count": 4 },
+    { "cardId": "qualcomm-snapdragon-x-plus", "count": 4 },
+    { "cardId": "intel-arc-b580", "count": 3 },
+    { "cardId": "intel-arc-a750", "count": 3 },
+    { "cardId": "qualcomm-snapdragon-x-elite", "count": 2 },
+    { "cardId": "intel-arc-a770-16g", "count": 2 },
+    { "cardId": "neutral-cherry-mx-8-0", "count": 2 },
+    { "cardId": "qualcomm-snapdragon-888", "count": 2 },
+    { "cardId": "arm-mali-g710", "count": 2 }
+  ]
+}

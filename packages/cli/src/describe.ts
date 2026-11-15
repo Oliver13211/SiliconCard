@@ -111,6 +111,8 @@ function stepText(step: EffectStep): string {
       return `${step.player === 'sourceOwner' ? '己方' : '对手'}获得 ${step.amount} 点护甲`
     case 'lockMana':
       return `${step.player === 'sourceOwner' ? '己方' : '对手'}下回合锁定 ${step.amount}W 功耗`
+    case 'gainMana':
+      return `${step.player === 'sourceOwner' ? '己方' : '对手'}本回合供电 +${step.amount}W（可超上限）`
     case 'handler':
       return HANDLER_TEXT[step.name] ?? `特殊效果（handler: ${step.name}）`
   }
@@ -274,6 +276,11 @@ export function eventToLine(view: PlayerView, event: GameEvent, sideNames?: Read
       return `${who(event.playerId)} 结束第 ${event.turn} 回合`
     case 'CARD_DRAWN': {
       if (event.source === 'fatigue') return `${who(event.playerId)} 牌库已空，进入疲劳`
+      if (event.source === 'coin_grant') {
+        // coin_grant 恒携带具体 cardId（电费抵扣券）；cardId null 仅属疲劳抽牌分支
+        const name = event.cardId ? (getCardDefinition(event.cardId)?.name ?? event.cardId) : '电费抵扣券'
+        return `${who(event.playerId)} 作为后手获得先手补偿：「${name}」（打出后本回合供电 +300W，可超上限；回合结束未用作废）`
+      }
       return `${who(event.playerId)} 抽 1 张牌`
     }
     case 'CARD_PLAYED': {
@@ -281,6 +288,9 @@ export function eventToLine(view: PlayerView, event: GameEvent, sideNames?: Read
       return `${who(event.playerId)} 打出「${def?.name ?? event.cardId}」（${event.cost}W）`
     }
     case 'CARD_BURNED':
+      if (event.reason === 'voucher_expired') {
+        return `${who(event.playerId)} 的「${getCardDefinition(event.cardId)?.name ?? event.cardId}」本回合没用掉，过期作废`
+      }
       return `${who(event.playerId)} 手牌超限，烧掉「${getCardDefinition(event.cardId)?.name ?? event.cardId}」`
     case 'MINION_SUMMONED': {
       const def = getCardDefinition(event.unit.cardId)

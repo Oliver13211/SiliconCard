@@ -70,3 +70,13 @@ export type {
 } from './matchup'
 
 export { AI_CARD_POOL, makeAiDeckSpec, registerAiCardPool } from './cardPool'
+
+// —— AI 复盘评分引擎（P2-QA1）：只消费 core 公开接口与 ReplayRecording，client 传 plain 录制体 ——
+export { runMatchReview, gradeForDelta, findImmediateWinActions } from './review'
+export {
+  REVIEW_GRADE_WEIGHTS,
+  REVIEW_DELTA_A,
+  REVIEW_DELTA_C,
+  REVIEW_ADAPTIVE_ACTION_LIMIT,
+} from './review'
+export type { MatchReview, MatchReviewOptions, ReviewGrade, ReviewStep } from './review'

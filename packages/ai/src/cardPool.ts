@@ -160,7 +160,8 @@ export const AI_CARD_POOL: readonly CardDefinition[] = [
     name: '开箱即砖',
     faction: 'neutral',
     type: 'gpu',
-    cost: 400,
+    // cost 140 = 100W 首回合 + VOUCHER_BONUS(40)：券后恰好解锁的“砖”（复盘/券启发式用例依赖）
+    cost: 140,
     attack: 4,
     health: 5,
     rarity: 'common',
